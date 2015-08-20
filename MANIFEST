@@ -1,0 +1,14 @@
+Build.PL
+Changes
+MANIFEST
+lib/Web/Components.pm
+lib/Web/Components/Role/Component.pm
+lib/Web/Components/Role/Loading.pm
+lib/Web/Components/Util.pm
+t/02pod.t
+t/03podcoverage.t
+t/05kwalitee.t
+t/06yaml.t
+t/07podspelling.t
+t/10test_script.t
+t/boilerplate.pm

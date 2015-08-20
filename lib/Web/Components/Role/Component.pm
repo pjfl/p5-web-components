@@ -1,8 +1,22 @@
-package Web::Components;
+package Web::Components::Role::Component;
 
-use 5.010001;
-use strictures;
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use namespace::autoclean;
+
+use Web::ComposableRequest::Constants qw( TRUE );
+use Unexpected::Types                 qw( HashRef NonEmptySimpleStr
+                                          NonNumericSimpleStr Object );
+use Moo::Role;
+
+has 'application' => is => 'ro',   isa => Object,
+   handles        => [ 'config', 'debug', 'log' ], required => TRUE;
+
+has 'components'  => is => 'ro',   isa => HashRef, default => sub { {} },
+   weak_ref       => TRUE;
+
+has 'encoding'    => is => 'lazy', isa => NonEmptySimpleStr,
+   builder        => sub { $_[ 0 ]->config->encoding };
+
+has 'moniker'     => is => 'ro',   isa => NonNumericSimpleStr, required => TRUE;
 
 1;
 
@@ -14,11 +28,11 @@ __END__
 
 =head1 Name
 
-Web::Components - One-line description of the modules purpose
+Web::Components::Role::Component - One-line description of the modules purpose
 
 =head1 Synopsis
 
-   use Web::Components;
+   use Web::Components::Role::Component;
    # Brief but working code examples
 
 =head1 Description
