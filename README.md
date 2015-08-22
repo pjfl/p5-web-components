@@ -1,25 +1,46 @@
 # Name
 
-Web::Components - One-line description of the modules purpose
+Web::Components - MVC pattern for Web::Simple
 
 # Synopsis
 
-    use Web::Components;
-    # Brief but working code examples
+    package Component::Server;
+
+    use Class::Usul;
+    use Moo;
+
+    has 'app'  => is => 'lazy', builder => sub {
+       Class::Usul->new( config => { appclass => __PACKAGE__  } ) },
+       handles => [ 'config', 'log' ];
+
+    with q(Web::Components::Role::Loading);
 
 # Description
 
+MVC pattern for Web::Simple. See ["Web::Components::Role::Loading"](#web-components-role-loading)
+
 # Configuration and Environment
 
-Defines the following attributes;
+Defines no attributes
 
 # Subroutines/Methods
 
+Defines no methods
+
 # Diagnostics
+
+None
 
 # Dependencies
 
-- [Class::Usul](https://metacpan.org/pod/Class::Usul)
+- [Exporter::Tiny](https://metacpan.org/pod/Exporter::Tiny)
+- [HTTP::Message](https://metacpan.org/pod/HTTP::Message)
+- [Module::Pluggable](https://metacpan.org/pod/Module::Pluggable)
+- [Moo](https://metacpan.org/pod/Moo)
+- [Try::Tiny](https://metacpan.org/pod/Try::Tiny)
+- [Unexpected](https://metacpan.org/pod/Unexpected)
+- [Web::ComposableRequest](https://metacpan.org/pod/Web::ComposableRequest)
+- [Web::Simple](https://metacpan.org/pod/Web::Simple)
 
 # Incompatibilities
 

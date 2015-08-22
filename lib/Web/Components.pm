@@ -2,7 +2,7 @@ package Web::Components;
 
 use 5.010001;
 use strictures;
-use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 2 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.1.%d', q$Rev: 3 $ =~ /\d+/gmx );
 
 1;
 
@@ -14,32 +14,56 @@ __END__
 
 =head1 Name
 
-Web::Components - One-line description of the modules purpose
+Web::Components - MVC pattern for Web::Simple
 
 =head1 Synopsis
 
-   use Web::Components;
-   # Brief but working code examples
+   package Component::Server;
+
+   use Class::Usul;
+   use Moo;
+
+   has 'app'  => is => 'lazy', builder => sub {
+      Class::Usul->new( config => { appclass => __PACKAGE__  } ) },
+      handles => [ 'config', 'log' ];
+
+   with q(Web::Components::Role::Loading);
 
 =head1 Description
 
+MVC pattern for Web::Simple. See L</Web::Components::Role::Loading>
+
 =head1 Configuration and Environment
 
-Defines the following attributes;
-
-=over 3
-
-=back
+Defines no attributes
 
 =head1 Subroutines/Methods
 
+Defines no methods
+
 =head1 Diagnostics
+
+None
 
 =head1 Dependencies
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Exporter::Tiny>
+
+=item L<HTTP::Message>
+
+=item L<Module::Pluggable>
+
+=item L<Moo>
+
+=item L<Try::Tiny>
+
+=item L<Unexpected>
+
+=item L<Web::ComposableRequest>
+
+=item L<Web::Simple>
 
 =back
 

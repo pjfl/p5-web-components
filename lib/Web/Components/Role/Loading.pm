@@ -2,14 +2,13 @@ package Web::Components::Role::Loading;
 
 use namespace::autoclean;
 
-use HTTP::Status                 qw( HTTP_BAD_REQUEST HTTP_FOUND
-                                     HTTP_INTERNAL_SERVER_ERROR );
+use HTTP::Status          qw( HTTP_BAD_REQUEST HTTP_FOUND
+                              HTTP_INTERNAL_SERVER_ERROR );
 use Try::Tiny;
-use Unexpected::Types            qw( ArrayRef HashRef Object );
-use Web::Components::Util        qw( exception is_arrayref
-                                     load_components throw );
+use Unexpected::Types     qw( ArrayRef HashRef Object );
+use Web::Components::Util qw( deref exception is_arrayref
+                              load_components throw );
 use Web::ComposableRequest;
-use Web::ComposableRequest::Util qw( merge_attributes );
 use Web::Simple::Role;
 
 requires qw( config log );
@@ -20,9 +19,7 @@ my $_build_factory_args = sub {
 
    $self->can( 'l10n' ) and $localiser = sub { $self->l10n->localize( @_ ) };
 
-   my $attr = merge_attributes {}, $self->config, {}, [ 'name' ];
-
-   my $prefix; exists $attr->{name} and $prefix = $attr->{name};
+   my $prefix = deref $self->config, 'name';
 
    return sub {
       my ($self, $attr) = @_;
@@ -35,11 +32,11 @@ my $_build_factory_args = sub {
 
 # Public attributes
 has 'controllers'     => is => 'lazy', isa => ArrayRef[Object], builder => sub {
-   my $controllers    =  load_components $_[ 0 ], 'Controller';
+   my $controllers    =  load_components 'Controller', application => $_[ 0 ];
    return [ map { $controllers->{ $_ } } sort keys %{ $controllers } ] };
 
 has 'models'          => is => 'lazy', isa => HashRef[Object], builder => sub {
-   load_components $_[ 0 ], 'Model', { views => $_[ 0 ]->views, } };
+   load_components 'Model', application => $_[ 0 ], views => $_[ 0 ]->views };
 
 has 'request_factory' => is => 'lazy', isa => Object, builder => sub {
    Web::ComposableRequest->new
@@ -47,7 +44,7 @@ has 'request_factory' => is => 'lazy', isa => Object, builder => sub {
         config        => $_[ 0 ]->config, ) };
 
 has 'views'           => is => 'lazy', isa => HashRef[Object],
-   builder            => sub { load_components $_[ 0 ], 'View' };
+   builder            => sub { load_components 'View', application => $_[ 0 ] };
 
 # Private functions
 my $_header = sub {
@@ -170,14 +167,24 @@ __END__
 
 =head1 Name
 
-Web::Components::Role::Loading - One-line description of the modules purpose
+Web::Components::Role::Loading - Loads and instantiates MVC components
 
 =head1 Synopsis
 
-   use Web::Components::Role::Loading;
-   # Brief but working code examples
+   package Component::Server;
+
+   use Class::Usul;
+   use Moo;
+
+   has 'app'  => is => 'lazy', builder => sub {
+      Class::Usul->new( config => { appclass => __PACKAGE__  } ) },
+      handles => [ 'config', 'log' ];
+
+   with q(Web::Components::Role::Loading);
 
 =head1 Description
+
+Loads and instantiates MVC components
 
 =head1 Configuration and Environment
 
@@ -185,17 +192,47 @@ Defines the following attributes;
 
 =over 3
 
+=item C<controllers>
+
+An array reference of controller object reference sorted into C<moniker>
+order
+
+=item C<models>
+
+A hash reference of model object references
+
+=item C<request_factory>
+
+An instance of L<Web::ComposableRequest>
+
+=item C<view>
+
+A hash reference of view object references
+
 =back
 
 =head1 Subroutines/Methods
 
+=head2 C<dispatch_request>
+
+Installs a response filter that processes and renders the responses from
+the controller methods
+
 =head1 Diagnostics
+
+None
 
 =head1 Dependencies
 
 =over 3
 
-=item L<Class::Usul>
+=item L<HTTP::Message>
+
+=item L<Try::Tiny>
+
+=item L<Unexpected>
+
+=item L<Web::Simple>
 
 =back
 

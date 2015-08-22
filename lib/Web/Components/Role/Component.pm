@@ -2,21 +2,35 @@ package Web::Components::Role::Component;
 
 use namespace::autoclean;
 
+use Web::Components::Util             qw( deref );
 use Web::ComposableRequest::Constants qw( TRUE );
 use Unexpected::Types                 qw( HashRef NonEmptySimpleStr
                                           NonNumericSimpleStr Object );
 use Moo::Role;
 
-has 'application' => is => 'ro',   isa => Object,
-   handles        => [ 'config', 'debug', 'log' ], required => TRUE;
-
 has 'components'  => is => 'ro',   isa => HashRef, default => sub { {} },
    weak_ref       => TRUE;
 
+has 'config'      => is => 'ro',   isa => HashRef | Object, required => TRUE;
+
 has 'encoding'    => is => 'lazy', isa => NonEmptySimpleStr,
-   builder        => sub { $_[ 0 ]->config->encoding };
+   builder        => sub { deref $_[ 0 ]->config, 'encoding' };
+
+has 'log'         => is => 'ro',   isa => Object, required => TRUE;
 
 has 'moniker'     => is => 'ro',   isa => NonNumericSimpleStr, required => TRUE;
+
+around 'BUILDARGS' => sub {
+   my ($orig, $self, @args) = @_; my $attr = $orig->( $self, @args ); my $app;
+
+   (exists $attr->{application} and $app = $attr->{application})
+      or return $attr;
+
+   $app->can( 'config' ) and $attr->{config} //= $app->config;
+   $app->can( 'log'    ) and $attr->{log   } //= $app->log;
+
+   return $attr;
+};
 
 1;
 
@@ -28,14 +42,17 @@ __END__
 
 =head1 Name
 
-Web::Components::Role::Component - One-line description of the modules purpose
+Web::Components::Role::Component - Attributes used when instantiating a Web::Components object
 
 =head1 Synopsis
 
-   use Web::Components::Role::Component;
-   # Brief but working code examples
+   use Moo;
+
+   with 'Web::Components::Role::Component';
 
 =head1 Description
+
+Attributes used when instantiating a Web::Components object
 
 =head1 Configuration and Environment
 
@@ -43,17 +60,51 @@ Defines the following attributes;
 
 =over 3
 
+=item C<components>
+
+A hash reference of component object references. This is not fully populated
+until all of the components have been loaded
+
+=item C<config>
+
+A required object or hash reference
+
+=item C<encoding>
+
+A non empty simple string that defaults to the value of the configuration
+attribute of the same name
+
+=item C<log>
+
+A required object reference. The log object should support the C<log> call
+as well as the usual log level calls
+
+=item C<moniker>
+
+A required non numeric simple string. This is the component name
+
 =back
 
 =head1 Subroutines/Methods
 
+=head2 C<BUILDARGS>
+
+If supplied with an object reference called C<application> the C<config> and
+C<log> attribute values will be set from it if otherwise undefined
+
 =head1 Diagnostics
+
+None
 
 =head1 Dependencies
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Moo>
+
+=item L<Web::ComposableRequest>
+
+=item L<Unexpected>
 
 =back
 
