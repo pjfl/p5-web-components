@@ -1,4 +1,4 @@
-package Web::Components::Role::Component;
+package Web::Components::Role;
 
 use namespace::autoclean;
 
@@ -11,7 +11,7 @@ use Moo::Role;
 has 'components'  => is => 'ro',   isa => HashRef, default => sub { {} },
    weak_ref       => TRUE;
 
-has 'config'      => is => 'ro',   isa => HashRef | Object, required => TRUE;
+has 'config'      => is => 'ro',   isa => Object | HashRef, required => TRUE;
 
 has 'encoding'    => is => 'lazy', isa => NonEmptySimpleStr,
    builder        => sub { deref $_[ 0 ]->config, 'encoding' };
@@ -42,13 +42,13 @@ __END__
 
 =head1 Name
 
-Web::Components::Role::Component - Attributes used when instantiating a Web::Components object
+Web::Components::Role - Attributes used when instantiating a Web::Components object
 
 =head1 Synopsis
 
    use Moo;
 
-   with 'Web::Components::Role::Component';
+   with 'Web::Components::Role';
 
 =head1 Description
 

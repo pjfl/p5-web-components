@@ -1,4 +1,4 @@
-package Web::Components::Role::Loading;
+package Web::Components::Loader;
 
 use namespace::autoclean;
 
@@ -30,21 +30,28 @@ my $_build_factory_args = sub {
    };
 };
 
+my $_build__factory = sub {
+   my $self = shift;
+
+   return Web::ComposableRequest->new
+      ( buildargs => $_build_factory_args->( $self ), config => $self->config );
+};
+
 # Public attributes
-has 'controllers'     => is => 'lazy', isa => ArrayRef[Object], builder => sub {
-   my $controllers    =  load_components 'Controller', application => $_[ 0 ];
-   return [ map { $controllers->{ $_ } } sort keys %{ $controllers } ] };
+has 'controllers' => is => 'lazy', isa => ArrayRef[Object], builder => sub {
+   my $compos     =  load_components 'Controller', application => $_[ 0 ];
+   return            [ map { $compos->{ $_ } } sort keys %{ $compos } ] };
 
-has 'models'          => is => 'lazy', isa => HashRef[Object], builder => sub {
-   load_components 'Model', application => $_[ 0 ], views => $_[ 0 ]->views };
+has 'models'      => is => 'lazy', isa => HashRef[Object], builder => sub {
+   load_components   'Model', application => $_[ 0 ], views => $_[ 0 ]->views };
 
-has 'request_factory' => is => 'lazy', isa => Object, builder => sub {
-   Web::ComposableRequest->new
-      ( buildargs     => $_build_factory_args->( $_[ 0 ] ),
-        config        => $_[ 0 ]->config, ) };
+has 'views'       => is => 'lazy', isa => HashRef[Object],
+   builder        => sub { load_components 'View', application => $_[ 0 ] };
 
-has 'views'           => is => 'lazy', isa => HashRef[Object],
-   builder            => sub { load_components 'View', application => $_[ 0 ] };
+# Private attributes
+# TODO: Set isa to RequestFactory when Unexpected types next pushed to CPAN
+has '_factory'    => is => 'lazy', isa => Object,
+   builder        => $_build__factory, handles => [ 'new_from_simple_request' ];
 
 # Private functions
 my $_header = sub {
@@ -77,7 +84,7 @@ my $_redirect = sub {
 my $_render_view = sub {
    my ($self, $moniker, $method, $req, $stash) = @_;
 
-   is_arrayref $stash and return $stash;
+   is_arrayref $stash and return $stash; # Plack response short circuits view
 
    exists $stash->{redirect} and return $self->$_redirect( $req, $stash );
 
@@ -123,9 +130,7 @@ my $_render = sub {
 
    my $opts = { domain => $moniker }; my ($req, $res);
 
-   try   {
-      $req = $self->request_factory->new_from_simple_request( $opts, @request );
-   }
+   try   { $req = $self->new_from_simple_request( $opts, @request ) }
    catch { $res = $self->$_internal_server_error( $_ ) };
 
    $res and return $res;
@@ -167,7 +172,7 @@ __END__
 
 =head1 Name
 
-Web::Components::Role::Loading - Loads and instantiates MVC components
+Web::Components::Loader - Loads and instantiates MVC components
 
 =head1 Synopsis
 
@@ -180,7 +185,7 @@ Web::Components::Role::Loading - Loads and instantiates MVC components
       Class::Usul->new( config => { appclass => __PACKAGE__  } ) },
       handles => [ 'config', 'log' ];
 
-   with q(Web::Components::Role::Loading);
+   with q(Web::Components::Loader);
 
 =head1 Description
 
