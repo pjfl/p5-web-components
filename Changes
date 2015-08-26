@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Updated POD. Added model loading test
           - Renamed roles to Loader and Role
           - No longer calls req->loc_default unconditionally
           - Added tests and POD

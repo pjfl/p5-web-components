@@ -135,6 +135,10 @@ must define C<config> and C<log> attributes
 The configuration object or hash reference must define the C<appclass> and
 C<components> attributes
 
+The C<components> attribute (one of the collection references held by
+L<Web::Components::Loader>) is passed to the component constructor method and
+is used by a component to discover it's dependencies
+
 =head2 C<throw>
 
    throw 'message', [ 'arg1', 'arg2' ];

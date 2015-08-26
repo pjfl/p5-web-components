@@ -9,15 +9,15 @@ Web::Components - MVC pattern for Web::Simple
     use Class::Usul;
     use Moo;
 
-    has 'app'  => is => 'lazy', builder => sub {
+    has '_usul' => is => 'lazy', builder => sub {
        Class::Usul->new( config => { appclass => __PACKAGE__  } ) },
-       handles => [ 'config', 'log' ];
+       handles  => [ 'config', 'debug', 'l10n', 'lock', 'log' ];
 
-    with q(Web::Components::Role::Loading);
+    with 'Web::Components::Loader';
 
 # Description
 
-MVC pattern for Web::Simple. See ["Web::Components::Role::Loading"](#web-components-role-loading)
+MVC pattern for Web::Simple. See [Web::Components::Loader](https://metacpan.org/pod/Web::Components::Loader)
 
 # Configuration and Environment
 

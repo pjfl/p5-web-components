@@ -3,23 +3,40 @@ use t::boilerplate;
 use Test::More;
 
 use_ok 'Web::Components';
-require_ok 'Web::Components::Role';
 
-{  package Component::Server;
+{  package TestApp::Model::Dummy;
 
-   use Class::Usul;
+   use Class::Usul::Types qw( SimpleStr );
    use Moo;
 
-   has 'app'  => is => 'lazy', builder => sub {
-      Class::Usul->new( config => { appclass => __PACKAGE__  } ) },
-      handles => [ 'config', 'debug', 'l10n', 'log' ];
+   with 'Web::Components::Role';
 
-   with q(Web::Components::Loader);
+   has '+moniker' => default => 'dummy';
+
+   has 'foo' => is => 'ro', isa => SimpleStr, default => 'bar';
+
+   $INC{ 'TestApp/Model/Dummy.pm' } = __FILE__;
 }
 
-my $server = Component::Server->new;
+{  package TestApp::Server;
+
+   use Class::Usul;
+   use Class::Usul::Types qw( Plinth );
+   use Moo;
+
+   has '_usul' => is => 'lazy', isa => Plinth, builder => sub {
+      Class::Usul->new( config => { appclass => 'TestApp' } ) },
+      handles  => [ 'config', 'debug', 'l10n', 'lock', 'log' ];
+
+   with q(Web::Components::Loader);
+
+   $INC{ 'TestApp/Server.pm' } = __FILE__;
+}
+
+my $server = TestApp::Server->new;
 
 is $server->dispatch_request, 0, 'Default dispatch';
+is $server->models->{dummy}->foo, 'bar', 'Loads model';
 
 done_testing;
 

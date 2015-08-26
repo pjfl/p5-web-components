@@ -63,7 +63,8 @@ Defines the following attributes;
 =item C<components>
 
 A hash reference of component object references. This is not fully populated
-until all of the components have been loaded
+until all of the components have been loaded. It can be used by components to
+discover other dependant components
 
 =item C<config>
 
@@ -72,16 +73,18 @@ A required object or hash reference
 =item C<encoding>
 
 A non empty simple string that defaults to the value of the configuration
-attribute of the same name
+attribute of the same name. Used to set input and output decoding / encoding
 
 =item C<log>
 
-A required object reference. The log object should support the C<log> call
-as well as the usual log level calls
+A required object reference of type C<Logger>. The log object should support
+the C<log> call as well as the usual log level calls
 
 =item C<moniker>
 
-A required non numeric simple string. This is the component name
+A required non numeric simple string. This is the component name. It is used
+to uniquely identify a component in the component collections held by the role
+L<Web::Components::Loader>
 
 =back
 
@@ -90,7 +93,7 @@ A required non numeric simple string. This is the component name
 =head2 C<BUILDARGS>
 
 If supplied with an object reference called C<application> the C<config> and
-C<log> attribute values will be set from it if otherwise undefined
+C<log> attribute values will be set from it if they are otherwise undefined
 
 =head1 Diagnostics
 
