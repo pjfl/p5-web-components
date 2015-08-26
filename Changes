@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - No longer calls req->loc_default unconditionally
           - Added tests and POD
           - Works with App::Doh
 

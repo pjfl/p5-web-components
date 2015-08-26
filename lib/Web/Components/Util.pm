@@ -36,8 +36,10 @@ sub load_components ($;@) {
    my $search_path = shift; my $opts = { @_ };
 
    $search_path or throw( Unspecified, [ 'search path' ] );
+
+   my $app      = $opts->{application};
    # If the app object is defined it must have a config attribute
-   my $app = $opts->{application}; my $config = $opts->{config} // $app->config;
+   my $config   = $opts->{config} // $app->config;
    # The config object/hash ref is required. It must have an appclass attribute
    my $comp_cfg = deref $config, 'components'; $comp_cfg //= {};
    my $appclass = deref $config, 'appclass';

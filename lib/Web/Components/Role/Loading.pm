@@ -64,8 +64,8 @@ my $_redirect = sub {
    my $redirect = $stash->{redirect}; my $message = $redirect->{message};
 
    if ($message and $req->can( 'session' )) {
-      # TODO: This here unconditionally, really?
-      $self->log->info( $req->loc_default( @{ $message } ) );
+      $req->can( 'loc_default' )
+         and $self->log->info( $req->loc_default( @{ $message } ) );
 
       my $mid; $mid = $req->session->add_status_message( $message )
          and $redirect->{location}->query_form( 'mid', $mid );
