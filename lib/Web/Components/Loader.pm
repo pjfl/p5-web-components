@@ -201,7 +201,7 @@ attributes that default to component references should be marked as lazy
 
 =head1 Configuration and Environment
 
-This role requires C<config> and C<log> methods in the consumimg class
+This role requires C<config> and C<log> methods in the consuming class
 
 Defines the following attributes;
 

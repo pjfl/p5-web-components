@@ -28,7 +28,7 @@ use_ok 'Web::Components';
       Class::Usul->new( config => { appclass => 'TestApp' } ) },
       handles  => [ 'config', 'debug', 'l10n', 'lock', 'log' ];
 
-   with q(Web::Components::Loader);
+   with 'Web::Components::Loader';
 
    $INC{ 'TestApp/Server.pm' } = __FILE__;
 }
