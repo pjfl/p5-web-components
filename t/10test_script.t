@@ -6,14 +6,13 @@ use_ok 'Web::Components';
 
 {  package TestApp::Model::Dummy;
 
-   use Class::Usul::Types qw( SimpleStr );
    use Moo;
 
    with 'Web::Components::Role';
 
    has '+moniker' => default => 'dummy';
 
-   has 'foo' => is => 'ro', isa => SimpleStr, default => 'bar';
+   has 'foo' => is => 'ro', default => 'bar';
 
    $INC{ 'TestApp/Model/Dummy.pm' } = __FILE__;
 }
@@ -21,10 +20,9 @@ use_ok 'Web::Components';
 {  package TestApp::Server;
 
    use Class::Usul;
-   use Class::Usul::Types qw( Plinth );
    use Moo;
 
-   has '_usul' => is => 'lazy', isa => Plinth, builder => sub {
+   has '_usul' => is => 'lazy', builder => sub {
       Class::Usul->new( config => { appclass => 'TestApp' } ) },
       handles  => [ 'config', 'debug', 'l10n', 'lock', 'log' ];
 

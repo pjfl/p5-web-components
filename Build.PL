@@ -7,9 +7,7 @@ my $perl_ver = 5.010001;
 my $name     = 'Web-Components'; $name =~ s{ - }{::}gmx;
 my $prereqs  = {
   'build_requires' => {
-    'Module::Build' => '0.4004',
-    'Test::Requires' => '0.06',
-    'version' => '0.88'
+    'Module::Build' => '0.4004'
   },
   'configure_requires' => {
     'Module::Build' => '0.4004',
@@ -29,9 +27,13 @@ my $prereqs  = {
     'strictures' => '2'
   },
   'test_requires' => {
+    'Class::Usul' => 'v0.65.0',
     'File::Spec' => '0',
+    'Module::Build' => '0.4004',
     'Module::Metadata' => '0',
-    'Sys::Hostname' => '0'
+    'Sys::Hostname' => '0',
+    'Test::Requires' => '0.06',
+    'version' => '0.88'
   },
 };
 my $testing  = sub { $ENV{AUTOMATED_TESTING}
