@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+0.4.1     2015-08-28 15:38:13
           - Added strictures to Loader for Kwalitee's benefit
 
 0.3.1     2015-08-27 15:12:19
