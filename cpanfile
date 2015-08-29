@@ -12,6 +12,7 @@ requires "strictures" => "2";
 
 on 'build' => sub {
   requires "Module::Build" => "0.4004";
+  requires "version" => "0.88";
 };
 
 on 'test' => sub {

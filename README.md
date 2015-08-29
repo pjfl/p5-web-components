@@ -1,3 +1,9 @@
+<div>
+    <a href="https://travis-ci.org/pjfl/p5-web-components"><img src="https://travis-ci.org/pjfl/p5-web-components.svg?branch=master" alt="Travis CI Badge"></a>
+    <a href="http://badge.fury.io/pl/Web-Components"><img src="https://badge.fury.io/pl/Web-Components.svg" alt="CPAN Badge"></a>
+    <a href="http://cpants.cpanauthors.org/dist/Web-Components"><img src="http://cpants.cpanauthors.org/dist/Web-Components.png" alt="Kwalitee Badge"></a>
+</div>
+
 # Name
 
 Web::Components - MVC pattern for Web::Simple

@@ -7,7 +7,8 @@ my $perl_ver = 5.010001;
 my $name     = 'Web-Components'; $name =~ s{ - }{::}gmx;
 my $prereqs  = {
   'build_requires' => {
-    'Module::Build' => '0.4004'
+    'Module::Build' => '0.4004',
+    'version' => '0.88'
   },
   'configure_requires' => {
     'Module::Build' => '0.4004',
