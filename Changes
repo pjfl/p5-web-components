@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Added dynamic component setup
           - Added badge markup
           - Use BuildRequires not TestRequires for Kwalitee
 

@@ -8,10 +8,26 @@ use Scalar::Util                      qw( blessed );
 use Web::ComposableRequest::Constants qw( EXCEPTION_CLASS TRUE );
 use Web::ComposableRequest::Util      qw( is_hashref );
 use Unexpected::Functions             qw( Unspecified );
+use Moo::Role ();
 
 our @EXPORT_OK  = qw( deref exception first_char
                       is_arrayref load_components throw );
 
+# Private functions
+my $_setup_component = sub {
+   my ($compos, $comp_cfg, $opts, $appclass, $class, $composite) = @_;
+
+   $composite //= $class;
+
+  (my $klass = $class) =~ s{ \A $appclass :: }{}mx;
+   my $attr  = { %{ $comp_cfg->{ $klass } // {} }, %{ $opts } };
+   my $comp  = $composite->new( $attr );
+
+   $compos->{ $comp->moniker } = $comp;
+   return;
+};
+
+# Public functions
 sub deref ($$) {
    my ($x, $k) = @_;
 
@@ -33,32 +49,41 @@ sub is_arrayref (;$) {
 }
 
 sub load_components ($;@) {
-   my $search_path = shift; my $opts = { @_ };
+   my $base = shift; my $opts = (is_hashref $_[ 0 ]) ? $_[ 0 ] : { @_ };
 
-   $search_path or throw( Unspecified, [ 'search path' ] );
+   $base or throw( Unspecified, [ 'component base' ] );
 
    my $app      = $opts->{application};
    # If the app object is defined it must have a config attribute
    my $config   = $opts->{config} // $app->config;
-   # The config object/hash ref is required. It must have an appclass attribute
-   my $comp_cfg = deref $config, 'components'; $comp_cfg //= {};
    my $appclass = deref $config, 'appclass';
+   # The config object/hash ref is required. It must have an appclass attribute
+   $appclass or throw( Unspecified, [ 'config appclass' ] ); my $search_path;
 
-   $appclass or throw( Unspecified, [ 'config appclass' ] );
-
-   if (first_char $search_path eq '+') { $search_path = substr $search_path, 1 }
-   else { $search_path = "${appclass}::${search_path}" }
+   if (first_char $base eq '+') { $search_path = $base = substr $base, 1 }
+   else { $search_path = "${appclass}::${base}" }
 
    my $depth    = () = split m{ :: }mx, $search_path, -1; $depth += 1;
    my $finder   = Module::Pluggable::Object->new
       ( max_depth   => $depth,           min_depth => $depth,
         search_path => [ $search_path ], require   => TRUE, );
-   my $compos   = $opts->{components} = {}; # Dependency injection
+   my $compos   = $opts->{components} //= {}; # Dependency injection
+   my $comp_cfg = (deref $config, 'components') // {};
 
    for my $class ($finder->plugins) {
-     (my $klass = $class) =~ s{ \A $appclass :: }{}mx;
-      my $attr  = { %{ $comp_cfg->{ $klass } // {} }, %{ $opts } };
-      my $comp  = $class->new( $attr ); $compos->{ $comp->moniker } = $comp;
+      $_setup_component->( $compos, $comp_cfg, $opts, $appclass, $class );
+   }
+
+   my $cfgcomps = deref $config, 'config_comps';
+
+   ($cfgcomps and $cfgcomps = $cfgcomps->{ $base }) or return $compos;
+
+   for my $moniker (keys %{ $cfgcomps }) {
+      my $class = $base.(ucfirst $moniker);
+      my @roles = @{ $cfgcomps->{ $moniker } };
+      my $cwr   = Moo::Role->create_class_with_roles( $search_path, @roles );
+
+      $_setup_component->( $compos, $comp_cfg, $opts, $appclass, $class, $cwr );
    }
 
    return $compos;
