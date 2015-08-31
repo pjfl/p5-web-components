@@ -14,6 +14,19 @@ our @EXPORT_OK  = qw( deref exception first_char
                       is_arrayref load_components throw );
 
 # Private functions
+my $_qualify = sub {
+   my ($appclass, $roles) = @_; $roles //= [];
+
+   for (my $i = 0, my $len = @{ $roles }; $i < $len; $i++) {
+      if (first_char( $roles->[ $i ] ) eq '+') {
+         $roles->[ $i ] = substr $roles->[ $i ], 1;
+      }
+      else { $roles->[ $i ] = "${appclass}::".$roles->[ $i ] }
+   }
+
+   return $roles;
+};
+
 my $_setup_component = sub {
    my ($compos, $comp_cfg, $opts, $appclass, $class, $composite) = @_;
 
@@ -80,7 +93,7 @@ sub load_components ($;@) {
 
    for my $moniker (keys %{ $cfgcomps }) {
       my $class = $base.(ucfirst $moniker);
-      my @roles = @{ $cfgcomps->{ $moniker } };
+      my @roles = @{ $_qualify->( $appclass, $cfgcomps->{ $moniker } ) };
       my $cwr   = Moo::Role->create_class_with_roles( $search_path, @roles );
 
       $_setup_component->( $compos, $comp_cfg, $opts, $appclass, $class, $cwr );

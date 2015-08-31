@@ -1,7 +1,7 @@
 package Web::Components::Loader;
 
-use namespace::autoclean;
 use strictures;
+use namespace::autoclean;
 
 use HTTP::Status          qw( HTTP_BAD_REQUEST HTTP_FOUND
                               HTTP_INTERNAL_SERVER_ERROR );
