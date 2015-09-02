@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Toolchain updates
           - Qualify role names in dynamic components
           - Added dynamic component setup
           - Added badge markup
