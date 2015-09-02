@@ -19,6 +19,7 @@ nytprof.out
 pm_to_blib
 README
 README.pod
+lib/Web/Components/Role/TT.pm
 t/ipc_srlock*
 *.tar.gz
 Web-Components-*
