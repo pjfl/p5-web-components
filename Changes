@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Fewer test dependencies in boilerplate
           - Toolchain updates
           - Qualify role names in dynamic components
           - Added dynamic component setup
