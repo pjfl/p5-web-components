@@ -1,5 +1,7 @@
 Revision history for Web::Components
 
+          - Use containerised builds for Travis CI
+          - Smarter changelog parsing in git hook
           - Fewer test dependencies in boilerplate
           - Toolchain updates
           - Qualify role names in dynamic components

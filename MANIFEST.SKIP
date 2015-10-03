@@ -62,5 +62,7 @@ Thumbs.db
 
 # Avoid archives of this distribution
 \bWeb-Components-v?[\d\.\_]+
+lib/Web/Components/Forms.pm
 lib/Web/Components/Role/TT.pm
 lib/Web/Components/Role/Email.pm
+lib/Web/Components/Role/Forms.pm

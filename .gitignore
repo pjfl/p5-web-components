@@ -19,8 +19,12 @@ nytprof.out
 pm_to_blib
 README
 README.pod
+lib/Web/Components/Forms
+lib/Web/Components/Forms.pm
 lib/Web/Components/Role/TT.pm
 lib/Web/Components/Role/Email.pm
+lib/Web/Components/Role/Forms.pm
+lib/Web/Components/Role/
 t/ipc_srlock*
 *.tar.gz
 Web-Components-*
