@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+0.5.1     2015-10-03 13:51:18
           - Use containerised builds for Travis CI
           - Smarter changelog parsing in git hook
           - Fewer test dependencies in boilerplate
