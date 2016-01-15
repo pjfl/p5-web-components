@@ -1,5 +1,8 @@
 Revision history for Web::Components
 
+          - Tunnel method parameters now configurable
+          - Toolchain update
+
 0.5.1     2015-10-03 13:51:18
           - Use containerised builds for Travis CI
           - Smarter changelog parsing in git hook

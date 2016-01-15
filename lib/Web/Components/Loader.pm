@@ -6,7 +6,8 @@ use namespace::autoclean;
 use HTTP::Status          qw( HTTP_BAD_REQUEST HTTP_FOUND
                               HTTP_INTERNAL_SERVER_ERROR );
 use Try::Tiny;
-use Unexpected::Types     qw( ArrayRef HashRef Object RequestFactory );
+use Unexpected::Types     qw( ArrayRef HashRef NonEmptySimpleStr
+                              Object RequestFactory );
 use Web::Components::Util qw( deref exception is_arrayref
                               load_components throw );
 use Web::ComposableRequest;
@@ -15,6 +16,12 @@ use Web::Simple::Role;
 requires qw( config log );
 
 # Attribute constructors
+my $_build_controllers = sub {
+   my $compos = load_components 'Controller', application => $_[ 0 ];
+
+   return [ map { $compos->{ $_ } } sort keys %{ $compos } ];
+};
+
 my $_build_factory_args = sub {
    my $self = shift; my $localiser;
 
@@ -39,19 +46,24 @@ my $_build__factory = sub {
 };
 
 # Public attributes
-has 'controllers' => is => 'lazy', isa => ArrayRef[Object], builder => sub {
-   my $compos     =  load_components 'Controller', application => $_[ 0 ];
-   return            [ map { $compos->{ $_ } } sort keys %{ $compos } ] };
+has 'controllers' => is => 'lazy', isa => ArrayRef[Object],
+   builder => $_build_controllers;
 
-has 'models'      => is => 'lazy', isa => HashRef[Object], builder => sub {
-   load_components   'Model', application => $_[ 0 ], views => $_[ 0 ]->views };
+has 'models' => is => 'lazy', isa => HashRef[Object], builder => sub {
+   load_components 'Model', application => $_[ 0 ], views => $_[ 0 ]->views };
 
-has 'views'       => is => 'lazy', isa => HashRef[Object],
-   builder        => sub { load_components 'View', application => $_[ 0 ] };
+has 'views' => is => 'lazy', isa => HashRef[Object],
+   builder  => sub { load_components 'View', application => $_[ 0 ] };
 
 # Private attributes
-has '_factory'    => is => 'lazy', isa => RequestFactory,
-   builder        => $_build__factory, handles => [ 'new_from_simple_request' ];
+has '_factory' => is => 'lazy', isa => RequestFactory,
+   builder => $_build__factory, handles => [ 'new_from_simple_request' ];
+
+has '_action_suffix' => is => 'lazy', isa => NonEmptySimpleStr,
+   builder => sub { deref $_[ 0 ]->config, 'action_suffix', '_action' };
+
+has '_tunnel_method' => is => 'lazy', isa => NonEmptySimpleStr,
+   builder => sub { deref $_[ 0 ]->config, 'tunnel_method', 'from_request' };
 
 # Private functions
 my $_header = sub {
@@ -136,7 +148,8 @@ my $_render = sub {
    $res and return $res;
 
    try   {
-      $method eq 'from_request' and $method = $req->tunnel_method.'_action';
+      $method eq $self->_tunnel_method
+         and $method = $req->tunnel_method.$self->_action_suffix;
 
       my $stash = $models->{ $moniker }->execute( $method, $req );
 
@@ -290,7 +303,7 @@ Peter Flanigan, C<< <pjfl@cpan.org> >>
 
 =head1 License and Copyright
 
-Copyright (c) 2015 Peter Flanigan. All rights reserved
+Copyright (c) 2016 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself. See L<perlartistic>

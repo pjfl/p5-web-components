@@ -41,12 +41,13 @@ my $_setup_component = sub {
 };
 
 # Public functions
-sub deref ($$) {
-   my ($x, $k) = @_;
+sub deref ($$;$) {
+   my ($x, $k, $default) = @_; my $r = $default;
 
-   blessed    $x and $x->can( $k ) and return $x->$k();
-   is_hashref $x and return $x->{ $k };
-   return;
+   if    (blessed $x and $x->can( $k )) { $r = $x->$k() // $default }
+   elsif (is_hashref $x)                { $r = $x->{ $k } // $default }
+
+   return $r;
 }
 
 sub exception (;@) {
@@ -134,10 +135,11 @@ Defines no attributes
 
 =head2 C<deref>
 
-   $value = deref $object_or_hash_ref, $key
+   $value = deref $object_or_hash_ref, $key, $optional_default;
 
 Returns the value associated with the supplied key. Accepts either an object
-or hash reference as the first argument
+or hash reference as the first argument. Returns the default if the result
+is otherwise undefined
 
 =head2 C<exception>
 
@@ -221,7 +223,7 @@ Peter Flanigan, C<< <pjfl@cpan.org> >>
 
 =head1 License and Copyright
 
-Copyright (c) 2015 Peter Flanigan. All rights reserved
+Copyright (c) 2016 Peter Flanigan. All rights reserved
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself. See L<perlartistic>
