@@ -127,7 +127,7 @@ my $_render_exception = sub {
 
       $res = $self->$_render_view( $moniker, 'exception_handler', $req, $stash);
    }
-   catch { $res = $self->$_internal_server_error( $_ ) };
+   catch { $res = $self->$_internal_server_error( "${e}\n${_}" ) };
 
    return $res;
 };
@@ -167,7 +167,7 @@ my $_filter = sub () {
 };
 
 # Construction
-sub dispatch_request {
+sub dispatch_request { # uncoverable subroutine
    # Not applied if it already exists in the consuming class
 }
 

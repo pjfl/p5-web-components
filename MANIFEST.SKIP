@@ -59,6 +59,7 @@
 TAGS
 Thumbs.db
 \bipc_srlock
+t/script.log
 
 # Avoid archives of this distribution
 \bWeb-Components-v?[\d\.\_]+

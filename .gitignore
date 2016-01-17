@@ -26,5 +26,6 @@ lib/Web/Components/Role/Email.pm
 lib/Web/Components/Role/Forms.pm
 lib/Web/Components/Role/
 t/ipc_srlock*
+t/script.log
 *.tar.gz
 Web-Components-*
