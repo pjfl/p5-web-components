@@ -69,9 +69,11 @@ sub load_components ($;@) {
 
    my $app      = $opts->{application};
    # If the app object is defined it must have a config attribute
+   # uncoverable condition false
    my $config   = $opts->{config} // $app->config;
    my $appclass = deref $config, 'appclass';
    # The config object/hash ref is required. It must have an appclass attribute
+   # uncoverable branch true
    $appclass or throw( Unspecified, [ 'config appclass' ] ); my $search_path;
 
    if (first_char $base eq '+') { $search_path = $base = substr $base, 1 }
@@ -93,7 +95,7 @@ sub load_components ($;@) {
    ($cfgcomps and $cfgcomps = $cfgcomps->{ $base }) or return $compos;
 
    for my $moniker (keys %{ $cfgcomps }) {
-      my $class = $base.(ucfirst $moniker);
+      my $class = "${base}::".(ucfirst $moniker);
       my @roles = @{ $_qualify->( $appclass, $cfgcomps->{ $moniker } ) };
       my $cwr   = Moo::Role->create_class_with_roles( $search_path, @roles );
 
@@ -178,6 +180,8 @@ C<components> attributes
 The C<components> attribute (one of the collection references held by
 L<Web::Components::Loader>) is passed to the component constructor method and
 is used by a component to discover it's dependencies
+
+An adaptor pattern is possible using the C<config_comps> attribute
 
 =head2 C<throw>
 

@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Added coverage badge
           - Improved coverage
           - Tunnel method parameters now configurable
           - Toolchain update

@@ -16,6 +16,7 @@ on 'build' => sub {
 };
 
 on 'test' => sub {
+  requires "Class::Null" => "0";
   requires "Class::Usul" => "v0.65.0";
   requires "File::Spec" => "0";
   requires "Module::Build" => "0.4004";

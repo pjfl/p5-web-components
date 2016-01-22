@@ -28,6 +28,7 @@ my $prereqs  = {
     'strictures' => '2'
   },
   'test_requires' => {
+    'Class::Null' => '0',
     'Class::Usul' => 'v0.65.0',
     'File::Spec' => '0',
     'Module::Build' => '0.4004',

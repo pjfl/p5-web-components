@@ -52,6 +52,28 @@ use_ok 'Web::Components';
    $INC{ 'TestApp/Model/Dummy.pm' } = __FILE__;
 }
 
+{  package TestApp::Role::Bar;
+
+   use Moo::Role;
+
+   with 'Web::Components::Role';
+
+   $INC{ 'TestApp/Role/Bar.pm' } = __FILE__;
+}
+
+{  package TestApp::Config;
+
+   use Moo;
+
+   extends 'Class::Usul::Config';
+
+   has 'config_comps' => is => 'ro', default => sub { {} };
+
+   has 'components'   => is => 'ro', default => sub { {} };
+
+   $INC{ 'TestApp/Config.pm' } = __FILE__;
+}
+
 {  package TestApp::Server;
 
    use Class::Usul;
@@ -60,9 +82,17 @@ use_ok 'Web::Components';
 
    has 'foo' => is => 'ro';
 
-   has '_usul' => is => 'lazy', builder => sub {
-      Class::Usul->new( config => { appclass => 'TestApp', tempdir => 't' } ) },
-      handles  => [ 'config', 'debug', 'l10n', 'lock', 'log' ];
+   has '_usul' => is => 'lazy',
+      handles  => [ 'config', 'debug', 'l10n', 'lock', 'log' ],
+      builder  => sub {
+         Class::Usul->new
+            (  config          => {
+                  appclass     => 'TestApp',
+                  config_comps => {
+                     Model     => { 'foo' => [ 'Role::Bar' ] } },
+                  components   => { 'Model::Foo' => { moniker => 'bar' } },
+                  tempdir      => 't', },
+               config_class    => 'TestApp::Config', ) };
 
    with 'Web::Components::Loader';
 
@@ -89,7 +119,8 @@ is $server->models->{dummy}->encoding, 'UTF-8', 'Sets encoding';
 is $server->to_psgi_app->( $env )->[ 2 ]->[ 0 ], 42, 'Routes to method';
 is $server->_action_suffix, '_action','Action suffix';
 
-use Web::Components::Util qw( deref exception is_arrayref throw );
+use Web::Components::Util qw( deref exception is_arrayref
+                              load_components throw );
 
 eval { throw 'Error' };
 
@@ -102,6 +133,19 @@ is deref( {}, 'test', 'dummy' ), 'dummy', 'Deref a hash without key';
 is deref( {}, 'test', '' ), '', 'Deref a hash without key false default';
 is deref( $server, 'foo', 'bar' ), 'bar', 'Deref object with default';
 is deref( $server, 'foo', '' ), '', 'Deref object with false default';
+
+use Class::Null;
+
+my $comps = load_components '+TestApp::Model',
+   { components => {},
+     config     => { appclass => 'TestApp' },
+     log        => Class::Null->new };
+
+is $comps->{dummy}->moniker, 'dummy', 'Loads components from minimal config';
+
+eval { load_components '' };
+
+like exception(), qr{ \Qcomponent base\E }mx, 'Throw without base';
 
 done_testing;
 
