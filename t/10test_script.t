@@ -13,7 +13,8 @@ use_ok 'Web::Components';
    has '+moniker' => default => 'dummy';
 
    sub dispatch_request {
-      sub (GET  + / + ?*) { [ 'dummy', 'get_index', @_ ] };
+      sub (GET  + /      + ?*) { [ 'dummy', 'get_index', @_ ] },
+      sub (GET  + /other + ?*) { [ 'dummy/get_other',    @_ ] };
    }
 
    $INC{ 'TestApp/Controller/Dummy.pm' } = __FILE__;
@@ -47,6 +48,10 @@ use_ok 'Web::Components';
 
    sub get_index {
       return [ 200, [ 'Content-Type', 'text/plain' ], [ '42' ] ];
+   }
+
+   sub get_other {
+      return [ 200, [ 'Content-Type', 'text/plain' ], [ '43' ] ];
    }
 
    $INC{ 'TestApp/Model/Dummy.pm' } = __FILE__;
@@ -114,10 +119,13 @@ my $env = {
 
 my $server = TestApp::Server->new;
 
-is $server->dispatch_request, 1, 'Default dispatch';
+is $server->dispatch_request, 2, 'Default dispatch';
 is $server->models->{dummy}->encoding, 'UTF-8', 'Sets encoding';
 is $server->to_psgi_app->( $env )->[ 2 ]->[ 0 ], 42, 'Routes to method';
 is $server->_action_suffix, '_action','Action suffix';
+
+$env->{PATH_INFO} = '/other';
+is $server->to_psgi_app->( $env )->[ 2 ]->[ 0 ], 43, 'Other route to method';
 
 use Web::Components::Util qw( deref exception is_arrayref
                               load_components throw );

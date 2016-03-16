@@ -1,5 +1,8 @@
 Revision history for Web::Components
 
+          - Added new signature to response filter
+            Can now pass the action path as the first arg instead of
+            moniker and method
           - Added coverage badge
           - Improved coverage
           - Tunnel method parameters now configurable

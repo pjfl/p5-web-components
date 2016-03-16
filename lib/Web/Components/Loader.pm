@@ -77,6 +77,32 @@ my $_internal_server_error = sub {
    return [ HTTP_INTERNAL_SERVER_ERROR, $_header->(), [ $e ] ];
 };
 
+my $_parse_sig = sub {
+   my ($self, $args) = @_;
+
+   exists $self->models->{ $args->[ 0 ] } and return @{ $args };
+
+   my ($moniker, $method) = split m{ / }mx, $args->[ 0 ], 2;
+
+   exists $self->models->{ $moniker } and shift @{ $args }
+      and return $moniker, $method, @{ $args };
+
+   return;
+};
+
+my $_recognise_signature = sub {
+   my ($self, $args) = @_;
+
+   is_arrayref $args and $args->[ 0 ]
+      and exists $self->models->{ $args->[ 0 ] } and return 1;
+
+   my ($moniker, $method) = split m{ / }mx, $args->[ 0 ], 2;
+
+   $moniker and exists $self->models->{ $moniker } and return 1;
+
+   return 0;
+};
+
 my $_redirect = sub {
    my ($self, $req, $stash) = @_; my $code = $stash->{code} // HTTP_FOUND;
 
@@ -133,12 +159,11 @@ my $_render_exception = sub {
 };
 
 my $_render = sub {
-   my ($self, $args) = @_; my $models = $self->models;
+   my ($self, @args) = @_;
 
-   (is_arrayref $args and $args->[ 0 ] and exists $models->{ $args->[ 0 ] })
-      or return $args;
+   $self->$_recognise_signature( $args[ 0 ] ) or return @args;
 
-   my ($moniker, $method, undef, @request) = @{ $args };
+   my ($moniker, $method, undef, @request) = $self->$_parse_sig( $args[ 0 ] );
 
    my $opts = { domain => $moniker }; my ($req, $res);
 
@@ -151,7 +176,7 @@ my $_render = sub {
       $method eq $self->_tunnel_method
          and $method = $req->tunnel_method.$self->_action_suffix;
 
-      my $stash = $models->{ $moniker }->execute( $method, $req );
+      my $stash = $self->models->{ $moniker }->execute( $method, $req );
 
       $res = $self->$_render_view( $moniker, $method, $req, $stash );
    }
