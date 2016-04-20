@@ -104,19 +104,22 @@ my $_recognise_signature = sub {
 };
 
 my $_redirect = sub {
-   my ($self, $req, $stash) = @_; my $code = $stash->{code} // HTTP_FOUND;
+   my ($self, $req, $stash) = @_;
 
-   my $redirect = $stash->{redirect}; my $message = $redirect->{message};
+   my $code     = $stash->{code} // HTTP_FOUND;
+   my $redirect = $stash->{redirect};
+   my $message  = $redirect->{message};
+   my $location = $redirect->{location};
 
    if ($message and $req->can( 'session' )) {
       $req->can( 'loc_default' )
          and $self->log->info( $req->loc_default( @{ $message } ) );
 
       my $mid; $mid = $req->session->add_status_message( $message )
-         and $redirect->{location}->query_form( 'mid', $mid );
+         and $location->query_form( $location->query_form, 'mid' => $mid );
    }
 
-   return [ $code, [ 'Location', $redirect->{location} ], [] ];
+   return [ $code, [ 'Location', $location ], [] ];
 };
 
 my $_render_view = sub {
