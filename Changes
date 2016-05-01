@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+0.7.1     2016-05-01 15:01:11
           - Redirect preserves query_form when adding message id
 
 0.6.1     2016-03-16 00:06:00
