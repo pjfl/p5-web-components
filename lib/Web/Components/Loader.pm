@@ -147,7 +147,7 @@ my $_render_exception = sub {
    ($e->can( 'rv' ) and $e->rv > HTTP_BAD_REQUEST)
       or $e = exception $e, { rv => HTTP_BAD_REQUEST };
 
-   my $attr = deref $self->config, 'loader_attr', {};
+   my $attr = deref $self->config, 'loader_attr', { should_log_errors => 1 };
 
    if ($attr->{should_log_errors}) {
       my $username = $req->can( 'username' ) ? $req->username : 'unknown';
