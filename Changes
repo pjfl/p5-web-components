@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+0.8.1     2016-11-07 22:54:27
           - Use should_log_errors loader_attr to log exceptions as errors
           - Adds config loader_attr hashref
 
