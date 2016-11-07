@@ -1,5 +1,8 @@
 Revision history for Web::Components
 
+          - Use should_log_errors loader_attr to log exceptions as errors
+          - Adds config loader_attr hashref
+
 0.7.1     2016-05-01 15:01:11
           - Redirect preserves query_form when adding message id
 

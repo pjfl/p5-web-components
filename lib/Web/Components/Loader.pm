@@ -147,9 +147,12 @@ my $_render_exception = sub {
    ($e->can( 'rv' ) and $e->rv > HTTP_BAD_REQUEST)
       or $e = exception $e, { rv => HTTP_BAD_REQUEST };
 
-   my $username = $req->can( 'username' ) ? $req->username : 'unknown';
+   my $attr = deref $self->config, 'loader_attr', {};
 
-   my $msg = "${e}"; chomp $msg; $self->log->error( "${msg} (${username})" );
+   if ($attr->{should_log_errors}) {
+      my $username = $req->can( 'username' ) ? $req->username : 'unknown';
+      my $msg = "${e}"; chomp $msg; $self->log->error( "${msg} (${username})" );
+   }
 
    try   {
       my $stash = $self->models->{ $moniker }->exception_handler( $req, $e );
