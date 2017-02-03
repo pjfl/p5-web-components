@@ -6,7 +6,7 @@ use namespace::autoclean;
 use HTTP::Status          qw( HTTP_BAD_REQUEST HTTP_FOUND
                               HTTP_INTERNAL_SERVER_ERROR );
 use Try::Tiny;
-use Unexpected::Types     qw( ArrayRef HashRef NonEmptySimpleStr
+use Unexpected::Types     qw( ArrayRef CodeRef HashRef NonEmptySimpleStr
                               Object RequestFactory );
 use Web::Components::Util qw( deref exception is_arrayref
                               load_components throw );
@@ -16,12 +16,6 @@ use Web::Simple::Role;
 requires qw( config log );
 
 # Attribute constructors
-my $_build_controllers = sub {
-   my $compos = load_components 'Controller', application => $_[ 0 ];
-
-   return [ map { $compos->{ $_ } } sort keys %{ $compos } ];
-};
-
 my $_build_factory_args = sub {
    my $self = shift; my $localiser;
 
@@ -45,22 +39,31 @@ my $_build__factory = sub {
       ( buildargs => $_build_factory_args->( $self ), config => $self->config );
 };
 
+my $_build__routes = sub {
+   my $controllers = $_[ 0 ]->controllers; my @keys = keys %{ $controllers };
+
+   return [ map { $controllers->{ $_ }->dispatch_request } sort @keys ];
+};
+
 # Public attributes
-has 'controllers' => is => 'lazy', isa => ArrayRef[Object],
-   builder => $_build_controllers;
+has 'controllers' => is => 'lazy', isa => HashRef[Object], builder => sub {
+   load_components 'Controller', application => $_[ 0 ] };
 
 has 'models' => is => 'lazy', isa => HashRef[Object], builder => sub {
    load_components 'Model', application => $_[ 0 ], views => $_[ 0 ]->views };
 
-has 'views' => is => 'lazy', isa => HashRef[Object],
-   builder  => sub { load_components 'View', application => $_[ 0 ] };
+has 'views' => is => 'lazy', isa => HashRef[Object], builder => sub {
+   load_components 'View', application => $_[ 0 ] };
 
 # Private attributes
+has '_action_suffix' => is => 'lazy', isa => NonEmptySimpleStr,
+   builder => sub { deref $_[ 0 ]->config, 'action_suffix', '_action' };
+
 has '_factory' => is => 'lazy', isa => RequestFactory,
    builder => $_build__factory, handles => [ 'new_from_simple_request' ];
 
-has '_action_suffix' => is => 'lazy', isa => NonEmptySimpleStr,
-   builder => sub { deref $_[ 0 ]->config, 'action_suffix', '_action' };
+has '_routes' => is => 'lazy', isa => ArrayRef[CodeRef],
+   builder => $_build__routes;
 
 has '_tunnel_method' => is => 'lazy', isa => NonEmptySimpleStr,
    builder => sub { deref $_[ 0 ]->config, 'tunnel_method', 'from_request' };
@@ -203,7 +206,7 @@ sub dispatch_request { # uncoverable subroutine
 }
 
 around 'dispatch_request' => sub {
-   return $_filter, map { $_->dispatch_request } @{ $_[ 1 ]->controllers };
+   return $_filter, @{ $_[ 1 ]->_routes };
 };
 
 1;
