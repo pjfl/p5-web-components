@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Toolchain update
           - Refactored controller routes in loader
 
 0.8.1     2016-11-07 22:54:27
