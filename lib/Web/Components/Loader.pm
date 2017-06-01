@@ -19,14 +19,11 @@ requires qw( config log );
 my $_build_factory_args = sub {
    my $self = shift;
 
-   my $localiser; $self->can( 'l10n' )
-      and $localiser = sub { $self->l10n->localize( @_ ) };
    my $prefix = deref $self->config, 'name';
 
    return sub {
       my ($self, $attr) = @_;
 
-      $localiser and $attr->{localiser} = $localiser;
       $prefix and $attr->{domain_prefix} = $prefix;
 
       return $attr;
