@@ -1,5 +1,7 @@
 Revision history for Web::Components
 
+          - Made loaders use of session object more robust
+
 0.10.1    2017-06-01 23:02:25
           - Makes factory_args a public attribute
 

@@ -63,7 +63,7 @@ has '_action_suffix' => is => 'lazy', isa => NonEmptySimpleStr,
 has '_factory' => is => 'lazy', isa => RequestFactory,
    builder => $_build__factory, handles => [ 'new_from_simple_request' ];
 
-has '_routes' => is => 'lazy', isa => ArrayRef[CodeRef],
+has '_routes' => is => 'lazy', isa => ArrayRef,
    builder => $_build__routes;
 
 has '_tunnel_method' => is => 'lazy', isa => NonEmptySimpleStr,
@@ -112,15 +112,21 @@ my $_redirect = sub {
 
    my $code     = $stash->{code} // HTTP_FOUND;
    my $redirect = $stash->{redirect};
-   my $message  = $redirect->{message};
    my $location = $redirect->{location};
 
-   if ($message and $req->can( 'session' )) {
-      $req->can( 'loc_default' )
-         and $self->log->info( $req->loc_default( @{ $message } ) );
+   if (my $message = $redirect->{message}) {
+      $self->log->info($req->loc_default(@{$message}))
+         if $req->can('loc_default');
 
-      my $mid; $mid = $req->session->add_status_message( $message )
-         and $location->query_form( $location->query_form, 'mid' => $mid );
+      if ($req->can('session')) {
+         my $session = $req->session;
+
+         if ($session->can('add_status_message')) {
+            if (my $mid = $session->add_status_message($message)) {
+               $location->query_form($location->query_form, 'mid' => $mid);
+            }
+         }
+      }
    }
 
    return [ $code, [ 'Location', $location ], [] ];
@@ -148,8 +154,8 @@ my $_render_view = sub {
 my $_render_exception = sub {
    my ($self, $moniker, $req, $e) = @_; my $res;
 
-   ($e->can( 'rv' ) and $e->rv > HTTP_BAD_REQUEST)
-      or $e = exception $e, { rv => HTTP_BAD_REQUEST };
+   $e = exception $e, { rv => HTTP_BAD_REQUEST }
+      unless $e && $e->can('rv') && $e->rv > HTTP_BAD_REQUEST;
 
    my $attr = deref $self->config, 'loader_attr', { should_log_errors => 1 };
 
