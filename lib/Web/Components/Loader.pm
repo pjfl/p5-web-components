@@ -15,99 +15,118 @@ use Web::Simple::Role;
 
 requires qw( config log );
 
-# Attribute constructors
-my $_build_factory_args = sub {
-   my $self = shift;
+# Public attributes
+has 'factory_args' => is => 'lazy', isa => CodeRef,
+   builder => '_build_factory_args';
 
+has 'controllers' => is => 'lazy', isa => HashRef[Object], builder => sub {
+   load_components 'Controller', application => $_[0]
+};
+
+has 'models' => is => 'lazy', isa => HashRef[Object], builder => sub {
+   load_components 'Model', application => $_[0], views => $_[0]->views
+};
+
+has 'views' => is => 'lazy', isa => HashRef[Object], builder => sub {
+   load_components 'View', application => $_[0]
+};
+
+# Private attributes
+has '_action_suffix' => is => 'lazy', isa => NonEmptySimpleStr,
+   builder => sub { deref $_[0]->config, 'action_suffix', '_action' };
+
+has '_factory' => is => 'lazy', isa => RequestFactory,
+   builder => '_build__factory', handles => [ 'new_from_simple_request' ];
+
+has '_routes' => is => 'lazy', isa => ArrayRef, builder => '_build__routes';
+
+has '_tunnel_method' => is => 'lazy', isa => NonEmptySimpleStr,
+   builder => sub { deref $_[0]->config, 'tunnel_method', 'from_request' };
+
+# Attribute constructors
+sub _build_factory_args {
+   my $self   = shift;
    my $prefix = deref $self->config, 'name';
 
    return sub {
       my ($self, $attr) = @_;
 
-      $prefix and $attr->{domain_prefix} = $prefix;
+      $attr->{domain_prefix} = $prefix if $prefix;
 
       return $attr;
    };
-};
+}
 
-my $_build__factory = sub {
+sub _build__factory {
    my $self = shift;
 
-   return Web::ComposableRequest->new
-      ( buildargs => $self->factory_args, config => $self->config );
-};
+   return Web::ComposableRequest->new(
+      buildargs => $self->factory_args,
+      config    => $self->config,
+   );
+}
 
-my $_build__routes = sub {
-   my $controllers = $_[ 0 ]->controllers; my @keys = keys %{ $controllers };
+sub _build__routes {
+   my $self        = shift;
+   my $controllers = $self->controllers;
+   my @keys        = keys %{$controllers};
 
-   return [ map { $controllers->{ $_ }->dispatch_request } sort @keys ];
-};
-
-# Public attributes
-has 'factory_args' => is => 'lazy', isa => CodeRef,
-   builder => $_build_factory_args;
-
-has 'controllers' => is => 'lazy', isa => HashRef[Object], builder => sub {
-   load_components 'Controller', application => $_[ 0 ] };
-
-has 'models' => is => 'lazy', isa => HashRef[Object], builder => sub {
-   load_components 'Model', application => $_[ 0 ], views => $_[ 0 ]->views };
-
-has 'views' => is => 'lazy', isa => HashRef[Object], builder => sub {
-   load_components 'View', application => $_[ 0 ] };
-
-# Private attributes
-has '_action_suffix' => is => 'lazy', isa => NonEmptySimpleStr,
-   builder => sub { deref $_[ 0 ]->config, 'action_suffix', '_action' };
-
-has '_factory' => is => 'lazy', isa => RequestFactory,
-   builder => $_build__factory, handles => [ 'new_from_simple_request' ];
-
-has '_routes' => is => 'lazy', isa => ArrayRef,
-   builder => $_build__routes;
-
-has '_tunnel_method' => is => 'lazy', isa => NonEmptySimpleStr,
-   builder => sub { deref $_[ 0 ]->config, 'tunnel_method', 'from_request' };
+   return [ map { $controllers->{$_}->dispatch_request } sort @keys ];
+}
 
 # Private functions
-my $_header = sub {
-   return [ 'Content-Type' => 'text/plain', @{ $_[ 0 ] // [] } ];
+sub _header () {
+   return [ 'Content-Type' => 'text/plain', @{ $_[0] // [] } ];
 };
 
 # Private methods
-my $_internal_server_error = sub {
-   my ($self, $e) = @_; $self->log->error( $e );
+sub _get_context {
+   my ($self, $moniker, $req) = @_;
 
-   return [ HTTP_INTERNAL_SERVER_ERROR, $_header->(), [ $e ] ];
-};
+   my $model = $self->models->{$moniker};
 
-my $_parse_sig = sub {
+   return $model->get_context($req) if $model->can('get_context');
+
+   return Web::Components::Loader::Context->new( request => $req );
+}
+
+sub _internal_server_error {
+   my ($self, $e) = @_;
+
+   $self->log->error($e);
+
+   return [ HTTP_INTERNAL_SERVER_ERROR, _header, [$e] ];
+}
+
+sub _parse_sig {
    my ($self, $args) = @_;
 
-   exists $self->models->{ $args->[ 0 ] } and return @{ $args };
+   return @{$args} if exists $self->models->{$args->[0]};
 
-   my ($moniker, $method) = split m{ / }mx, $args->[ 0 ], 2;
+   my ($moniker, $method) = split m{ / }mx, $args->[0], 2;
 
-   exists $self->models->{ $moniker } and shift @{ $args }
-      and return $moniker, $method, @{ $args };
+   if (exists $self->models->{$moniker}) {
+      shift @{$args};
+      return $moniker, $method, @{$args};
+   }
 
    return;
-};
+}
 
-my $_recognise_signature = sub {
+sub _recognise_signature {
    my ($self, $args) = @_;
 
-   is_arrayref $args and $args->[ 0 ]
-      and exists $self->models->{ $args->[ 0 ] } and return 1;
+   return 1 if is_arrayref $args and $args->[0]
+      and exists $self->models->{$args->[0]};
 
-   my ($moniker, $method) = split m{ / }mx, $args->[ 0 ], 2;
+   my ($moniker, $method) = split m{ / }mx, $args->[0], 2;
 
-   $moniker and exists $self->models->{ $moniker } and return 1;
+   return 1 if $moniker and exists $self->models->{$moniker};
 
    return 0;
-};
+}
 
-my $_redirect = sub {
+sub _redirect {
    my ($self, $req, $stash) = @_;
 
    my $code     = $stash->{code} // HTTP_FOUND;
@@ -130,29 +149,30 @@ my $_redirect = sub {
    }
 
    return [ $code, [ 'Location', $location ], [] ];
-};
+}
 
-my $_render_view = sub {
-   my ($self, $moniker, $method, $req, $stash) = @_;
+sub _render_view {
+   my ($self, $moniker, $context, $method) = @_;
 
-   is_arrayref $stash and return $stash; # Plack response short circuits view
+   my $req   = $context->request;
+   my $stash = $context->stash;
 
-   exists $stash->{redirect} and return $self->$_redirect( $req, $stash );
+   return $self->_redirect($req, $stash) if exists $stash->{redirect};
 
-   $stash->{view}
-      or throw 'Model [_1] method [_2] stashed no view', [ $moniker, $method ];
+   throw 'Model [_1] method [_2] stashed no view', [ $moniker, $method ]
+      unless $stash->{view};
 
-   my $view = $self->views->{ $stash->{view} }
+   my $view = $self->views->{$stash->{view}}
       or throw 'Model [_1] method [_2] unknown view [_3]',
                [ $moniker, $method, $stash->{view} ];
-   my $res  = $view->serialize( $req, $stash )
+   my $res  = $view->serialize($context)
       or throw 'View [_1] returned false', [ $stash->{view} ];
 
-   return $res
-};
+   return $res;
+}
 
-my $_render_exception = sub {
-   my ($self, $moniker, $req, $e) = @_; my $res;
+sub _render_exception {
+   my ($self, $moniker, $context, $e) = @_;
 
    $e = exception $e, { rv => HTTP_BAD_REQUEST }
       unless $e && $e->can('rv') && $e->rv > HTTP_BAD_REQUEST;
@@ -160,61 +180,94 @@ my $_render_exception = sub {
    my $attr = deref $self->config, 'loader_attr', { should_log_errors => 1 };
 
    if ($attr->{should_log_errors}) {
-      my $username = $req->can( 'username' ) ? $req->username : 'unknown';
-      my $msg = "${e}"; chomp $msg; $self->log->error( "${msg} (${username})" );
+      my $req = $context->request;
+      my $username = $req->can('username') ? $req->username : 'unknown';
+      my $msg = "${e}"; chomp $msg;
+
+      $self->log->error("${msg} (${username})");
    }
+
+   my $res;
 
    try   {
-      my $stash = $self->models->{ $moniker }->exception_handler( $req, $e );
-
-      $res = $self->$_render_view( $moniker, 'exception_handler', $req, $stash);
+      $self->models->{$moniker}->exception_handler($context, $e);
+      $res = $self->_render_view($moniker, $context, 'exception_handler');
    }
-   catch { $res = $self->$_internal_server_error( "${e}\n${_}" ) };
+   catch { $res = $self->_internal_server_error("${e}\n${_}") };
 
    return $res;
-};
+}
 
-my $_render = sub {
+sub _render {
    my ($self, @args) = @_;
 
-   $self->$_recognise_signature( $args[ 0 ] ) or return @args;
+   $self->_recognise_signature($args[0]) or return @args;
 
-   my ($moniker, $method, undef, @request) = $self->$_parse_sig( $args[ 0 ] );
+   my ($moniker, $method, undef, @request) = $self->_parse_sig($args[0]);
 
-   my $opts = { domain => $moniker }; my ($req, $res);
+   my $opts = { domain => $moniker };
+   my ($req, $res);
 
-   try   { $req = $self->new_from_simple_request( $opts, @request ) }
-   catch { $res = $self->$_internal_server_error( $_ ) };
+   try   { $req = $self->new_from_simple_request($opts, @request) }
+   catch { $res = $self->_internal_server_error($_) };
 
-   $res and return $res;
+   return $res if $res;
+
+   my $context;
+
+   try   { $context = $self->_get_context($moniker, $req) }
+   catch { $res     = $self->_internal_server_error($_) };
+
+   return $res if $res;
 
    try   {
-      $method eq $self->_tunnel_method
-         and $method = $req->tunnel_method.$self->_action_suffix;
+      $method = $req->tunnel_method.$self->_action_suffix
+         if $method eq $self->_tunnel_method;
 
-      my $stash = $self->models->{ $moniker }->execute( $method, $req );
+      $res = $self->models->{$moniker}->execute($context, $method);
 
-      $res = $self->$_render_view( $moniker, $method, $req, $stash );
+      $res = $self->_render_view($moniker, $context, $method)
+         unless $res && is_arrayref $res; # Plack response short circuits view
    }
-   catch { $res = $self->$_render_exception( $moniker, $req, $_ ) };
+   catch { $res = $self->_render_exception($moniker, $context, $_) };
 
-   $req->can( 'session' ) and $req->session->update;
+   $req->session->update if $req->can('session');
 
    return $res;
-};
+}
 
-my $_filter = sub () {
-   my $self = shift; return response_filter { $self->$_render( @_ ) };
-};
+sub _filter () {
+   my $self = shift; return response_filter { $self->_render(@_) };
+}
 
 # Construction
 sub dispatch_request { # uncoverable subroutine
    # Not applied if it already exists in the consuming class
 }
 
-around 'dispatch_request' => sub {
-   return $_filter, @{ $_[ 1 ]->_routes };
-};
+around 'dispatch_request' => sub { \&_filter, @{$_[1]->_routes} };
+
+package
+   Web::Components::Loader::Context;
+
+use List::Util qw( pairs );
+use Moo;
+
+has 'request' => is => 'ro', required => 1;
+
+has '_stash' => is => 'ro', default => sub { {} };
+
+sub stash {
+   my ($self, @args) = @_;
+
+   return $self->_stash unless $args[0];
+
+   for my $pair (pairs @args) {
+      $self->_stash->{$pair->key} = $pair->value;
+   }
+
+   return $self->_stash;
+}
 
 1;
 
