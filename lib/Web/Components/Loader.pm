@@ -174,7 +174,7 @@ sub _render_view {
 sub _render_exception {
    my ($self, $moniker, $context, $e) = @_;
 
-   $e = exception $e, { rv => HTTP_BAD_REQUEST }
+   $e = exception $e, { level => 2, rv => HTTP_BAD_REQUEST }
       unless $e && $e->can('rv') && $e->rv > HTTP_BAD_REQUEST;
 
    my $attr = deref $self->config, 'loader_attr', { should_log_errors => 1 };
