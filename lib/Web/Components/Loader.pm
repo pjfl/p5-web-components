@@ -85,7 +85,8 @@ sub _get_context {
 
    my $model = $self->models->{$moniker};
 
-   return $model->get_context($req) if $model->can('get_context');
+   return $model->get_context($req, $self->models)
+      if $model->can('get_context');
 
    return Web::Components::Loader::Context->new( request => $req );
 }
