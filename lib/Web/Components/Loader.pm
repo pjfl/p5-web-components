@@ -24,7 +24,12 @@ has 'controllers' => is => 'lazy', isa => HashRef[Object], builder => sub {
 };
 
 has 'models' => is => 'lazy', isa => HashRef[Object], builder => sub {
-   load_components 'Model', application => $_[0], views => $_[0]->views
+   my $self = shift;
+
+   load_components 'Model',
+      application => $self,
+      controllers => $self->controllers,
+      views       => $self->views
 };
 
 has 'views' => is => 'lazy', isa => HashRef[Object], builder => sub {

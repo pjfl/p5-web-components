@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds ReverseMap role. Can do uri_for_action
           - Models hash now passed to context constructor
           - Render exception sets level 2
 
