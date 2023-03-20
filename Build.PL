@@ -17,6 +17,7 @@ my $prereqs  = {
   'requires' => {
     'Exporter::Tiny' => '0.042',
     'HTTP::Message' => '6.06',
+    'List::Util' => '1.61',
     'Module::Pluggable' => '5.1',
     'Moo' => '2.000001',
     'Try::Tiny' => '0.22',

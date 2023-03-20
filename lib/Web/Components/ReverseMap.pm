@@ -1,19 +1,16 @@
 package Web::Components::ReverseMap;
 
-use mro;
-
 use List::Util        qw( pairs );
 use Scalar::Util      qw( blessed );
 use Unexpected::Types qw( HashRef );
 use Moo::Role;
 
-has 'action_path_map' => is => 'ro', isa => HashRef, default => sub { {} };
+requires qw( log );
 
-sub BUILD {}
-
-after 'BUILD' => sub {
+has 'action_path_map' => is => 'lazy', isa => HashRef, default => sub {
    my $self  = shift;
    my $class = blessed $self;
+   my $map   = {};
 
    for my $pair (pairs $self->dispatch_request) {
       my @parts  = split m{ / }mx, $pair->value->()->[0];
@@ -25,13 +22,12 @@ after 'BUILD' => sub {
       $uri =~ s{ [ ]+ \z }{}mx;
       $uri = [ split m{ \s+? \| \s+? /? }mx, $uri ] if $uri =~ m{ \| }mx;
 
-      $self->action_path_map->{$action} = $uri;
+      $map->{$action} = $uri;
    }
 
-   $self->log->warn("No routes found in ${class}")
-      unless scalar keys %{$self->action_path_map};
+   $self->log->warn("No routes found in ${class}") unless scalar keys %{$map};
 
-   return;
+   return $map;
 };
 
 use namespace::autoclean;

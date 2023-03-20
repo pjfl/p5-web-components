@@ -24,7 +24,7 @@ Web::Components - MVC pattern for Web::Simple
 
 # Description
 
-MVC pattern for Web::Simple. See [Web::Components::Loader](https://metacpan.org/pod/Web::Components::Loader)
+MVC pattern for Web::Simple. See [Web::Components::Loader](https://metacpan.org/pod/Web%3A%3AComponents%3A%3ALoader)
 
 # Configuration and Environment
 
@@ -40,14 +40,14 @@ None
 
 # Dependencies
 
-- [Exporter::Tiny](https://metacpan.org/pod/Exporter::Tiny)
-- [HTTP::Message](https://metacpan.org/pod/HTTP::Message)
-- [Module::Pluggable](https://metacpan.org/pod/Module::Pluggable)
+- [Exporter::Tiny](https://metacpan.org/pod/Exporter%3A%3ATiny)
+- [HTTP::Message](https://metacpan.org/pod/HTTP%3A%3AMessage)
+- [Module::Pluggable](https://metacpan.org/pod/Module%3A%3APluggable)
 - [Moo](https://metacpan.org/pod/Moo)
-- [Try::Tiny](https://metacpan.org/pod/Try::Tiny)
+- [Try::Tiny](https://metacpan.org/pod/Try%3A%3ATiny)
 - [Unexpected](https://metacpan.org/pod/Unexpected)
-- [Web::ComposableRequest](https://metacpan.org/pod/Web::ComposableRequest)
-- [Web::Simple](https://metacpan.org/pod/Web::Simple)
+- [Web::ComposableRequest](https://metacpan.org/pod/Web%3A%3AComposableRequest)
+- [Web::Simple](https://metacpan.org/pod/Web%3A%3ASimple)
 
 # Incompatibilities
 

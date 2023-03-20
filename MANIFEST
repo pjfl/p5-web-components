@@ -3,6 +3,7 @@ Changes
 MANIFEST
 lib/Web/Components.pm
 lib/Web/Components/Loader.pm
+lib/Web/Components/ReverseMap.pm
 lib/Web/Components/Role.pm
 lib/Web/Components/Util.pm
 t/02pod.t
