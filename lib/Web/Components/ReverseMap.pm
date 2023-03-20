@@ -2,69 +2,34 @@ package Web::Components::ReverseMap;
 
 use mro;
 
-use English           qw( -no_match_vars );
-use File::Spec        qw( );
+use List::Util        qw( pairs );
 use Scalar::Util      qw( blessed );
 use Unexpected::Types qw( HashRef );
 use Moo::Role;
 
 has 'action_path_map' => is => 'ro', isa => HashRef, default => sub { {} };
 
-sub _read_all_from ($) {
-   my $path = shift;
-
-   open my $fh, '<', $path or die "Path ${path} cannot open: ${OS_ERROR}";
-
-   local $RS = undef; my $content = <$fh>; close $fh;
-
-   return $content;
-}
-
-sub _reverse_map ($) {
-   my $line = shift;
-
-   my ($route, $action) = $line =~ m{ \' ([^\']+) \' (?:.+) \' ([^\']+) \' }mx;
-   my ($uri) = $route =~ m{ [\+] \s* / ([^\+]+) }mx;
-   my @parts = split m{ / }mx, $action;
-
-   $action = $parts[0] . '/' . $parts[-1] if scalar @parts > 2;
-
-   if ($uri) {
-      $uri =~ s{ [ ]+ \z }{}mx;
-      $uri = [ split m{ \s+? \| \s+? /? }mx, $uri ] if $uri =~ m{ \| }mx;
-   }
-
-   return $uri ? [ $action, $uri ] : undef;
-}
-
 sub BUILD {}
 
 after 'BUILD' => sub {
-   my $self    = shift;
-   my ($class) = grep { m{ ::Controller:: }mx }
-                     @{ mro::get_linear_isa(blessed $self) };
-   my $sep     = File::Spec->catfile(q(), q());
-   (my $file   = "$class.pm") =~ s{::}{$sep}g;
-   my $path;
+   my $self  = shift;
+   my $class = blessed $self;
 
-   for my $dir (@INC) {
-      my $candidate = "${dir}${sep}${file}";
-      if (-f $candidate) { $path = $candidate; last }
+   for my $pair (pairs $self->dispatch_request) {
+      my @parts  = split m{ / }mx, $pair->value->()->[0];
+      my $action = $parts[0] . '/' . $parts[-1];
+      my ($uri)  = $pair->key =~ m{ [\+] \s* / ([^\+]+) }mx;
+
+      next unless $uri;
+
+      $uri =~ s{ [ ]+ \z }{}mx;
+      $uri = [ split m{ \s+? \| \s+? /? }mx, $uri ] if $uri =~ m{ \| }mx;
+
+      $self->action_path_map->{$action} = $uri;
    }
 
-   unless ($path) {
-      $self->log->error("Cannot find source for ${class}");
-      return;
-   }
-
-   my @routes = grep { $_ } map { _reverse_map $_ } grep { m{ \s sub \s }mx }
-                split m{ \n }mx, _read_all_from $path;
-
-   $self->log->warn("No routes found in ${class}") unless scalar @routes;
-
-   for my $route (@routes) {
-      $self->action_path_map->{$route->[0]} = $route->[1];
-   }
+   $self->log->warn("No routes found in ${class}")
+      unless scalar keys %{$self->action_path_map};
 
    return;
 };

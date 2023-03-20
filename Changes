@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - ReverseMap calls dispatch_request and the subs to parse the map
           - Better regexs in ReverseMap
           - Adds ReverseMap role. Can do uri_for_action
           - Models hash now passed to context constructor
