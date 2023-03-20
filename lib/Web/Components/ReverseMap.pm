@@ -24,9 +24,15 @@ sub _reverse_map ($) {
    my $line = shift;
 
    my ($route, $action) = $line =~ m{ \' ([^\']+) \' (?:.+) \' ([^\']+) \' }mx;
-   my ($uri) = $route =~ m{ [\+] \s* / ([^ \+]+) }mx;
+   my ($uri) = $route =~ m{ [\+] \s* / ([^\+]+) }mx;
+   my @parts = split m{ / }mx, $action;
 
-   $uri = [ split m{ \s+? \| \s+? /? }mx, $uri ] if $uri && $uri =~ m{ \| }mx;
+   $action = $parts[0] . '/' . $parts[-1] if scalar @parts > 2;
+
+   if ($uri) {
+      $uri =~ s{ [ ]+ \z }{}mx;
+      $uri = [ split m{ \s+? \| \s+? /? }mx, $uri ] if $uri =~ m{ \| }mx;
+   }
 
    return $uri ? [ $action, $uri ] : undef;
 }
