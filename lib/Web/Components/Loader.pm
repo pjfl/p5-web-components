@@ -1,7 +1,6 @@
 package Web::Components::Loader;
 
 use strictures;
-use namespace::autoclean;
 
 use HTTP::Status          qw( HTTP_BAD_REQUEST HTTP_FOUND
                               HTTP_INTERNAL_SERVER_ERROR );
@@ -140,8 +139,11 @@ sub _redirect {
    my $location = $redirect->{location};
 
    if (my $message = $redirect->{message}) {
-      $self->log->info($req->loc_default(@{$message}))
-         if $req->can('loc_default');
+      my $attr = deref $self->config, 'loader_attr', {should_log_messages => 1};
+
+      if ($attr->{should_log_messages} && $req->can('loc_default')) {
+         $self->log->info($req->loc_default(@{$message}));
+      }
 
       if ($req->can('session')) {
          my $session = $req->session;
@@ -274,6 +276,8 @@ sub stash {
 
    return $self->_stash;
 }
+
+use namespace::autoclean;
 
 1;
 

@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds should_log_messages to config
           - ReverseMap builds a lazy attribute
           - ReverseMap calls dispatch_request and the subs to parse the map
           - Better regexs in ReverseMap
