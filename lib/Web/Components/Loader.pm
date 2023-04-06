@@ -85,11 +85,11 @@ sub _header () {
 
 # Private methods
 sub _get_context {
-   my ($self, $moniker, $req) = @_;
+   my ($self, $req, $moniker, $method) = @_;
 
    my $model = $self->models->{$moniker};
 
-   return $model->get_context($req, $self->models)
+   return $model->get_context($req, $self->models, "${moniker}/${method}")
       if $model->can('get_context');
 
    return Web::Components::Loader::Context->new( request => $req );
@@ -132,8 +132,10 @@ sub _recognise_signature {
 }
 
 sub _redirect {
-   my ($self, $req, $stash) = @_;
+   my ($self, $context) = @_;
 
+   my $req      = $context->request;
+   my $stash    = $context->stash;
    my $code     = $stash->{code} // HTTP_FOUND;
    my $redirect = $stash->{redirect};
    my $location = $redirect->{location};
@@ -142,7 +144,7 @@ sub _redirect {
       my $attr = deref $self->config, 'loader_attr', {should_log_messages => 1};
 
       if ($attr->{should_log_messages} && $req->can('loc_default')) {
-         $self->log->info($req->loc_default(@{$message}));
+         $self->log->info($req->loc_default(@{$message}), $context);
       }
 
       if ($req->can('session')) {
@@ -162,10 +164,9 @@ sub _redirect {
 sub _render_view {
    my ($self, $moniker, $context, $method) = @_;
 
-   my $req   = $context->request;
    my $stash = $context->stash;
 
-   return $self->_redirect($req, $stash) if exists $stash->{redirect};
+   return $self->_redirect($context) if exists $stash->{redirect};
 
    throw 'Model [_1] method [_2] stashed no view', [ $moniker, $method ]
       unless $stash->{view};
@@ -188,11 +189,9 @@ sub _render_exception {
    my $attr = deref $self->config, 'loader_attr', { should_log_errors => 1 };
 
    if ($attr->{should_log_errors}) {
-      my $req = $context->request;
-      my $username = $req->can('username') ? $req->username : 'unknown';
       my $msg = "${e}"; chomp $msg;
 
-      $self->log->error("${msg} (${username})");
+      $self->log->error($msg, $context);
    }
 
    my $res;
@@ -223,7 +222,7 @@ sub _render {
 
    my $context;
 
-   try   { $context = $self->_get_context($moniker, $req) }
+   try   { $context = $self->_get_context($req, $moniker, $method) }
    catch { $res     = $self->_internal_server_error($_) };
 
    return $res if $res;
