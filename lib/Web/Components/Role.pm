@@ -21,13 +21,16 @@ has 'log'         => is => 'ro',   isa => Object, required => TRUE;
 has 'moniker'     => is => 'ro',   isa => NonNumericSimpleStr, required => TRUE;
 
 around 'BUILDARGS' => sub {
-   my ($orig, $self, @args) = @_; my $attr = $orig->( $self, @args ); my $app;
+   my ($orig, $self, @args) = @_;
 
-   (exists $attr->{application} and $app = $attr->{application})
-      or return $attr;
+   my $attr = $orig->($self, @args);
 
-   $app->can( 'config' ) and $attr->{config} //= $app->config;
-   $app->can( 'log'    ) and $attr->{log   } //= $app->log;
+   return $attr unless exists $attr->{application};
+
+   my $app = $attr->{application};
+
+   $attr->{config} //= $app->config if $app->can('config');
+   $attr->{log} //= $app->log if $app->can('log');
 
    return $attr;
 };
