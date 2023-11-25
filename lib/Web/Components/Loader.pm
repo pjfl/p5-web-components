@@ -160,7 +160,9 @@ sub _redirect {
       }
    }
 
-   return [ $code, [ 'Location', $location ], [] ];
+   my $headers = [ %{$redirect->{http_headers} // {}}, 'Location', $location ];
+
+   return [ $code, $headers, [] ];
 }
 
 sub _render_view {

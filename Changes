@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Can set http headers in a redirect
           - Can set message log level
           - Adds context to log calls
           - Adds should_log_messages to config
