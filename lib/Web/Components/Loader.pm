@@ -7,6 +7,7 @@ use HTTP::Status          qw( HTTP_BAD_REQUEST HTTP_FOUND
 use Try::Tiny;
 use Unexpected::Types     qw( ArrayRef CodeRef HashRef NonEmptySimpleStr
                               Object RequestFactory );
+use Scalar::Util          qw( blessed );
 use Web::Components::Util qw( deref exception is_arrayref
                               load_components throw );
 use Web::ComposableRequest;
@@ -188,7 +189,7 @@ sub _render_exception {
    my ($self, $moniker, $context, $e) = @_;
 
    $e = exception $e, { level => 2, rv => HTTP_BAD_REQUEST }
-      unless $e && $e->can('rv') && $e->rv > HTTP_BAD_REQUEST;
+      unless $e && blessed $e && $e->can('rv') && $e->rv > HTTP_BAD_REQUEST;
 
    my $attr = deref $self->config, 'loader_attr', { should_log_errors => 1 };
 
@@ -201,8 +202,11 @@ sub _render_exception {
    my $res;
 
    try   {
-      $self->models->{$moniker}->exception_handler($context, $e);
-      $res = $self->_render_view($moniker, $context, 'exception_handler');
+      my $model  = $self->models->{$moniker};
+      my $method = $model->can('error') ? 'error' : 'exception_handler';
+
+      $model->$method($context, $e);
+      $res = $self->_render_view($moniker, $context, $method);
    }
    catch { $res = $self->_internal_server_error("${e}\n${_}") };
 
