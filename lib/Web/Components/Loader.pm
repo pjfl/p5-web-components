@@ -4,49 +4,61 @@ use strictures;
 
 use HTTP::Status          qw( HTTP_BAD_REQUEST HTTP_FOUND
                               HTTP_INTERNAL_SERVER_ERROR );
-use Try::Tiny;
 use Unexpected::Types     qw( ArrayRef CodeRef HashRef NonEmptySimpleStr
                               Object RequestFactory );
 use Scalar::Util          qw( blessed );
 use Web::Components::Util qw( deref exception is_arrayref
                               load_components throw );
+use Try::Tiny;
 use Web::ComposableRequest;
 use Web::Simple::Role;
 
 requires qw( config log );
 
 # Public attributes
-has 'factory_args' => is => 'lazy', isa => CodeRef,
+has 'factory_args' =>
+   is      => 'lazy',
+   isa     => CodeRef,
    builder => '_build_factory_args';
 
-has 'controllers' => is => 'lazy', isa => HashRef[Object], builder => sub {
-   load_components 'Controller', application => $_[0]
-};
+has 'controllers' =>
+   is      => 'lazy',
+   isa     => HashRef[Object],
+   default => sub { load_components 'Controller', application => $_[0] };
 
-has 'models' => is => 'lazy', isa => HashRef[Object], builder => sub {
-   my $self = shift;
+has 'models' =>
+   is      => 'lazy',
+   isa     => HashRef[Object],
+   default => sub {
+      my $self   = shift;
+      my @others = (controllers => $self->controllers, views => $self->views);
 
-   load_components 'Model',
-      application => $self,
-      controllers => $self->controllers,
-      views       => $self->views
-};
+      return load_components 'Model', application => $self, @others
+   };
 
-has 'views' => is => 'lazy', isa => HashRef[Object], builder => sub {
-   load_components 'View', application => $_[0]
-};
+has 'views' =>
+   is      => 'lazy',
+   isa     => HashRef[Object],
+   default => sub { load_components 'View', application => $_[0] };
 
 # Private attributes
-has '_action_suffix' => is => 'lazy', isa => NonEmptySimpleStr,
-   builder => sub { deref $_[0]->config, 'action_suffix', '_action' };
+has '_action_suffix' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   default => sub { deref $_[0]->config, 'action_suffix', '_action' };
 
-has '_factory' => is => 'lazy', isa => RequestFactory,
-   builder => '_build__factory', handles => [ 'new_from_simple_request' ];
+has '_factory' =>
+   is      => 'lazy',
+   isa     => RequestFactory,
+   builder => '_build__factory',
+   handles => ['new_from_simple_request'];
 
 has '_routes' => is => 'lazy', isa => ArrayRef, builder => '_build__routes';
 
-has '_tunnel_method' => is => 'lazy', isa => NonEmptySimpleStr,
-   builder => sub { deref $_[0]->config, 'tunnel_method', 'from_request' };
+has '_tunnel_method' =>
+   is      => 'lazy',
+   isa     => NonEmptySimpleStr,
+   default => sub { deref $_[0]->config, 'tunnel_method', 'from_request' };
 
 # Attribute constructors
 sub _build_factory_args {
@@ -88,12 +100,19 @@ sub _header () {
 sub _get_context {
    my ($self, $req, $moniker, $method) = @_;
 
-   my $model = $self->models->{$moniker};
+   my $model  = $self->models->{$moniker};
+   my $action = "${moniker}/${method}";
+   my $args   = {
+      action      => $action,
+      controllers => $self->controllers,
+      models      => $self->models,
+      request     => $req,
+      views       => $self->views,
+   };
 
-   return $model->get_context($req, $self->models, "${moniker}/${method}")
-      if $model->can('get_context');
+   return $model->get_context($args) if $model->can('get_context');
 
-   return Web::Components::Loader::Context->new( request => $req );
+   return Web::Components::Loader::Context->new($args);
 }
 
 sub _internal_server_error {
@@ -188,7 +207,7 @@ sub _render_view {
 sub _render_exception {
    my ($self, $moniker, $context, $e) = @_;
 
-   $e = exception $e, { level => 2, rv => HTTP_BAD_REQUEST }
+   $e = exception $e, { level => 2, rv => HTTP_INTERNAL_SERVER_ERROR }
       unless $e && blessed $e && $e->can('rv') && $e->rv > HTTP_BAD_REQUEST;
 
    my $attr = deref $self->config, 'loader_attr', { should_log_errors => 1 };
@@ -268,9 +287,21 @@ package
 use List::Util qw( pairs );
 use Moo;
 
+has 'action'  => is => 'ro';
+
+has 'controllers'  => is => 'ro';
+
+has 'models'  => is => 'ro';
+
 has 'request' => is => 'ro', required => 1;
 
+has 'views'  => is => 'ro';
+
 has '_stash' => is => 'ro', default => sub { {} };
+
+sub get_body_parameters {
+   return {};
+}
 
 sub stash {
    my ($self, @args) = @_;
@@ -282,6 +313,10 @@ sub stash {
    }
 
    return $self->_stash;
+}
+
+sub verify_form_post {
+   return 'Not implemented';
 }
 
 use namespace::autoclean;

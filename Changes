@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds Model Navigation and ConfigLoader
           - Better error handling
           - Can set http headers in a redirect
           - Can set message log level
