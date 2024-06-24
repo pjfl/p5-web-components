@@ -3,15 +3,16 @@ package Web::Components::Util;
 use strictures;
 use parent 'Exporter::Tiny';
 
-use Module::Pluggable::Object;
-use Scalar::Util                      qw( blessed );
-use Web::ComposableRequest::Constants qw( EXCEPTION_CLASS TRUE );
-use Web::ComposableRequest::Util      qw( is_hashref );
+use Web::ComposableRequest::Constants qw( EXCEPTION_CLASS FALSE TRUE );
 use Unexpected::Functions             qw( Unspecified );
+use Scalar::Util                      qw( blessed );
+use Sys::Hostname                     qw( hostname );
+use Web::ComposableRequest::Util      qw( is_hashref );
+use Module::Pluggable::Object;
 use Moo::Role ();
 
 our @EXPORT_OK  = qw( clear_redirect deref exception first_char formpost
-                      is_arrayref load_components throw );
+                      fqdn is_arrayref load_components throw );
 
 =pod
 
@@ -100,6 +101,18 @@ a button wrapped in a form
 
 sub formpost () {
    return { method => 'post' };
+}
+
+=item C<fqdn>
+
+   $domain_name = fqdn $hostname;
+
+Call C<gethostbyname> on the supplied hostname which defaults to this host
+
+=cut
+
+sub fqdn (;$) {
+   my $x = shift // hostname; return (gethostbyname($x))[0];
 }
 
 =item C<is_arrayref>

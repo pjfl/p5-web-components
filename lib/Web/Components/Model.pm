@@ -24,25 +24,22 @@ has 'navigation_key' => is => 'ro', isa => Str, default => 'nav';
 sub error {
    my ($self, $context, $proto, $bindv, @args) = @_;
 
-   my $nav = $context->stash($self->navigation_key);
-   my $is_script_request = $nav && $nav->is_script_request ? TRUE : FALSE;
    my $exception;
 
    if (blessed $proto) { $exception = $proto }
    else {
-      push @args, 'rv', HTTP_OK if $is_script_request;
-
       $exception = exception $proto, $bindv // [], level => 2, @args;
    }
 
    $self->log->error($exception, $context) if $self->can('log');
 
-   my $code = $exception->rv // 0;
+   my $code = $exception->rv || HTTP_INTERNAL_SERVER_ERROR;
+   my $nav  = $context->stash($self->navigation_key);
 
-   $code = $code > HTTP_OK ? $code : HTTP_INTERNAL_SERVER_ERROR;
+   $code = HTTP_OK if $nav && $nav->is_script_request;
 
    $context->stash(
-      code      => $is_script_request ? HTTP_OK : $code,
+      code      => $code,
       exception => $exception,
       page      => { %{$self->config->page}, layout => 'page/exception' },
    );
@@ -57,12 +54,11 @@ sub error {
 sub execute { # Called by component loader for all model method calls
    my ($self, $context, $methods) = @_;
 
-   my $stash = $context->stash;
-
-   $stash->{method_chain} = $methods;
-
+   my $stash   = $context->stash;
    my $nav_key = $self->navigation_key;
    my $last_method;
+
+   $stash->{method_chain} = $methods;
 
    for my $method (split m{ / }mx, $methods) {
       my $coderef = $self->can($method)
