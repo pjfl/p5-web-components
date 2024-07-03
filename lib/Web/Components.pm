@@ -2,7 +2,7 @@ package Web::Components;
 
 use 5.010001;
 use strictures;
-use version; our $VERSION = qv( sprintf '0.11.%d', q$Rev: 15 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.11.%d', q$Rev: 16 $ =~ /\d+/gmx );
 
 1;
 

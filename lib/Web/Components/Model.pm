@@ -25,11 +25,11 @@ sub error {
    my ($self, $context, $proto, $bindv, @args) = @_;
 
    my $exception;
+   my $class = blessed $proto;
 
-   if (blessed $proto) { $exception = $proto }
-   else {
-      $exception = exception $proto, $bindv // [], level => 2, @args;
-   }
+   if ($class and $class->isa('Unexpected')) { $exception = $proto }
+   elsif ($class) { $exception = exception $proto, $bindv // [], @args }
+   else { $exception = exception $proto, $bindv // [], level => 2, @args }
 
    $self->log->error($exception, $context) if $self->can('log');
 
