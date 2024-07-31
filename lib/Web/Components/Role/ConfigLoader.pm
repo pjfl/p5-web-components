@@ -29,7 +29,7 @@ Defines the following attributes;
 
 =over 3
 
-=item config_file
+=item C<config_file>
 
 The configuration file is discovered by the loader once the 'home' attribute
 has been established
@@ -38,16 +38,18 @@ has been established
 
 has 'config_file' => is => 'ro', isa => File, predicate => 'has_config_file';
 
-=item config_home
+=item C<config_home>
 
 The directory containing the configuration file(s)
 
 =cut
 
-has 'config_home' => is => 'ro', isa => Directory,
+has 'config_home' =>
+   is        => 'ro',
+   isa       => Directory,
    predicate => 'has_config_home';
 
-=item home
+=item C<home>
 
 This is the directory that the loader has chosen to call 'home'
 
@@ -55,14 +57,17 @@ This is the directory that the loader has chosen to call 'home'
 
 has 'home' => is => 'ro', isa => Directory;
 
-=item local_config_file
+=item C<local_config_file>
 
 The name of the local configuration file which is optionally set in the
 main configuration file
 
 =cut
 
-has 'local_config_file' => is => 'ro', isa => File|Path, coerce => TRUE,
+has 'local_config_file' =>
+   is        => 'ro',
+   isa       => File|Path,
+   coerce    => TRUE,
    predicate => 'has_local_config_file';
 
 sub _config_file_list ($) {
@@ -140,7 +145,7 @@ Defines the following methods;
 
 =over 3
 
-=item BUILDARGS
+=item C<BUILDARGS>
 
 Modifies the method in the base class. Starting with C<appclass> it discovers
 C<home>, then it discovers C<config_home> and C<config_file>, then it loads the

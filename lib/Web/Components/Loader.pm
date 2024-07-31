@@ -15,16 +15,70 @@ use Web::Simple::Role;
 
 requires qw( config log );
 
-# Public attributes
+=pod
+
+=encoding utf-8
+
+=head1 Name
+
+Web::Components::Loader - Loads and instantiates MVC components
+
+=head1 Synopsis
+
+   package Component::Server;
+
+   use Plack::Builder;
+   use Web::Simple;
+
+   with 'Web::Components::Loader';
+
+=head1 Description
+
+Loads and instantiates MVC components. Searches the namespaces; C<Controller>,
+C<Model>, and C<View> in the consuming classes library root. Any components
+found are loaded and instantiated
+
+The component collection references are passed to the component constructors
+so that a component can discover any dependent components. The collection
+references are not fully populated when the component is instantiated so
+attributes that default to component references should be marked as lazy
+
+=head1 Configuration and Environment
+
+This role requires C<config> and C<log> methods in the consuming class
+
+Defines the following attributes;
+
+=over 3
+
+=item C<factory_args>
+
+A code reference used to instantiate the request factory
+
+=cut
+
 has 'factory_args' =>
    is      => 'lazy',
    isa     => CodeRef,
    builder => '_build_factory_args';
 
+=item C<controllers>
+
+An array reference of controller object reference sorted into C<moniker>
+order
+
+=cut
+
 has 'controllers' =>
    is      => 'lazy',
    isa     => HashRef[Object],
    default => sub { load_components 'Controller', application => $_[0] };
+
+=item C<models>
+
+A hash reference of model object references
+
+=cut
 
 has 'models' =>
    is      => 'lazy',
@@ -35,6 +89,12 @@ has 'models' =>
 
       return load_components 'Model', application => $self, @others
    };
+
+=item C<views>
+
+A hash reference of view object references
+
+=cut
 
 has 'views' =>
    is      => 'lazy',
@@ -59,6 +119,47 @@ has '_tunnel_method' =>
    is      => 'lazy',
    isa     => NonEmptySimpleStr,
    default => sub { deref $_[0]->config, 'tunnel_method', 'from_request' };
+
+=back
+
+=head1 Subroutines/Methods
+
+=over 3
+
+=item C<dispatch_request>
+
+Installs a response filter that processes and renders the responses from
+the controller methods
+
+Controller responses that do not match the expected signature are allowed to
+bubble up
+
+The expected controller return value signature is;
+
+   [ 'model_moniker', 'method_name', @web_simple_request_parameters ]
+
+The L<Web::Simple> request parameters are used to instantiate an instance of
+L<Web::ComposableRequest::Base>
+
+The specified method on the model select by the moniker is called passing the
+request object in. A hash references, the stash, is the expected response and
+this is passed along with the request object into the view which renders the
+response
+
+Array references, a L<Plack> response, are allowed to bubble up and bypass
+the call to the view
+
+If the stash contains a redirect attribute then a redirect response is
+generated. Any message intended to be viewed by the user is stored in the
+session and is retrieved by the next request
+
+=cut
+
+sub dispatch_request { # uncoverable subroutine
+   # Not applied if it already exists in the consuming class
+}
+
+around 'dispatch_request' => sub { \&_filter, @{$_[1]->_routes} };
 
 # Attribute constructors
 sub _build_factory_args {
@@ -274,13 +375,6 @@ sub _filter () {
    my $self = shift; return response_filter { $self->_render(@_) };
 }
 
-# Construction
-sub dispatch_request { # uncoverable subroutine
-   # Not applied if it already exists in the consuming class
-}
-
-around 'dispatch_request' => sub { \&_filter, @{$_[1]->_routes} };
-
 package
    Web::Components::Loader::Context;
 
@@ -325,91 +419,7 @@ use namespace::autoclean;
 
 __END__
 
-=pod
-
-=encoding utf-8
-
-=head1 Name
-
-Web::Components::Loader - Loads and instantiates MVC components
-
-=head1 Synopsis
-
-   package Component::Server;
-
-   use Class::Usul;
-   use Plack::Builder;
-   use Web::Simple;
-   use Moo;
-
-   has '_usul' => is => 'lazy', builder => sub {
-      Class::Usul->new( config => { appclass => __PACKAGE__  } ) },
-      handles  => [ 'config', 'debug', 'l10n', 'lock', 'log' ];
-
-   with q(Web::Components::Loader);
-
-=head1 Description
-
-Loads and instantiates MVC components. Searches the namespaces; C<Controller>,
-C<Model>, and C<View> in the consuming classes library root. Any components
-found are loaded and instantiated
-
-The component collection references are passed to the component constructors
-so that a component can discover any dependent components. The collection
-references are not fully populated when the component is instantiated so
-attributes that default to component references should be marked as lazy
-
-=head1 Configuration and Environment
-
-This role requires C<config> and C<log> methods in the consuming class
-
-Defines the following attributes;
-
-=over 3
-
-=item C<controllers>
-
-An array reference of controller object reference sorted into C<moniker>
-order
-
-=item C<models>
-
-A hash reference of model object references
-
-=item C<view>
-
-A hash reference of view object references
-
 =back
-
-=head1 Subroutines/Methods
-
-=head2 C<dispatch_request>
-
-Installs a response filter that processes and renders the responses from
-the controller methods
-
-Controller responses that do not match the expected signature are allowed to
-bubble up
-
-The expected controller return value signature is;
-
-   [ 'model_moniker', 'method_name', @web_simple_request_parameters ]
-
-The L<Web::Simple> request parameters are used to instantiate an instance of
-L<Web::ComposableRequest::Base>
-
-The specified method on the model select by the moniker is called passing the
-request object in. A hash references, the stash, is the expected response and
-this is passed along with the request object into the view which renders the
-response
-
-Array references, a L<Plack> response, are allowed to bubble up and bypass
-the call to the view
-
-If the stash contains a redirect attribute then a redirect response is
-generated. Any message intended to be viewed by the user is stored in the
-session and is retrieved by the next request
 
 =head1 Diagnostics
 

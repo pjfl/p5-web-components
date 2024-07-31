@@ -140,54 +140,64 @@ C<config> and C<log> must be specified. If C<application> is specified it
 must define C<config> and C<log> attributes
 
 The configuration object or hash reference must define the C<appclass> and
-C<components> attributes
+C<web_components> attributes
 
-The C<components> attribute (one of the collection references held by
+The C<web_components> attribute (one of the collection references held by
 L<Web::Components::Loader>) is passed to the component constructor method and
 is used by a component to discover it's dependencies
 
-An adaptor pattern is possible using the C<config_comps> attribute
+An adaptor pattern is possible using the C<web_components_adaptors> attribute
 
 =cut
 
 sub load_components ($;@) {
-   my $base = shift; my $opts = (is_hashref $_[ 0 ]) ? $_[ 0 ] : { @_ };
+   my $base = shift;
+   my $opts = (is_hashref $_[0]) ? $_[0] : {@_};
 
-   $base or throw( Unspecified, [ 'component base' ] );
+   throw(Unspecified, ['component base']) unless $base;
 
-   my $app      = $opts->{application};
+   my $app = $opts->{application};
    # If the app object is defined it must have a config attribute
    # uncoverable condition false
-   my $config   = $opts->{config} // $app->config;
+   my $config = $opts->{config} // $app->config;
    my $appclass = deref $config, 'appclass';
    # The config object/hash ref is required. It must have an appclass attribute
    # uncoverable branch true
-   $appclass or throw( Unspecified, [ 'config appclass' ] ); my $search_path;
+   throw(Unspecified, ['config appclass']) unless $appclass;
+
+   my $search_path;
 
    if (first_char $base eq '+') { $search_path = $base = substr $base, 1 }
    else { $search_path = "${appclass}::${base}" }
 
-   my $depth    = () = split m{ :: }mx, $search_path, -1; $depth += 1;
-   my $finder   = Module::Pluggable::Object->new
-      ( max_depth   => $depth,           min_depth => $depth,
-        search_path => [ $search_path ], require   => TRUE, );
-   my $compos   = $opts->{components} //= {}; # Dependency injection
-   my $comp_cfg = (deref $config, 'components') // {};
+   my $depth = () = split m{ :: }mx, $search_path, -1;
+
+   $depth += 1;
+
+   my $finder = Module::Pluggable::Object->new(
+      max_depth   => $depth,
+      min_depth   => $depth,
+      search_path => [$search_path],
+      require     => TRUE,
+   );
+   my $compos = $opts->{components} //= {}; # Dependency injection
+   my $comp_cfg = (deref $config, 'web_components') // {};
 
    for my $class ($finder->plugins) {
-      _setup_component( $compos, $comp_cfg, $opts, $appclass, $class );
+      _setup_component($compos, $comp_cfg, $opts, $appclass, $class);
    }
 
-   my $cfgcomps = deref $config, 'config_comps';
+   my $cfgcomps = deref $config, 'web_components_adaptors';
 
-   ($cfgcomps and $cfgcomps = $cfgcomps->{ $base }) or return $compos;
+   if ($cfgcomps) { $cfgcomps = $cfgcomps->{$base} }
+   else { return $compos }
 
-   for my $moniker (keys %{ $cfgcomps }) {
+   for my $moniker (keys %{$cfgcomps}) {
       my $class = "${base}::".(ucfirst $moniker);
-      my @roles = @{ _qualify( $appclass, $cfgcomps->{ $moniker } ) };
-      my $cwr   = Moo::Role->create_class_with_roles( $search_path, @roles );
+      my @roles = @{ _qualify($appclass, $cfgcomps->{$moniker}) };
+      my $cwr   = Moo::Role->create_class_with_roles($search_path, @roles);
 
-      _setup_component( $compos, $comp_cfg, $opts, $appclass, $class, $cwr );
+      _setup_component($compos, $comp_cfg, $opts, $appclass, $class, $cwr);
    }
 
    return $compos;

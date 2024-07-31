@@ -1,11 +1,39 @@
 package Web::Components::ReverseMap;
 
+use Unexpected::Types qw( HashRef );
 use List::Util        qw( pairs );
 use Scalar::Util      qw( blessed );
-use Unexpected::Types qw( HashRef );
 use Moo::Role;
 
 requires qw( log );
+
+=encoding utf-8
+
+=head1 Name
+
+Web::Components::ReverseMap - Creates a reverse routing map
+
+=head1 Synopsis
+
+   use Moo;
+
+   with 'Web::Components::ReverseMap';
+
+=head1 Description
+
+Creates a reverse routing map
+
+=head1 Configuration and Environment
+
+Defines the following attributes;
+
+=over 3
+
+=item C<action_path_map>
+
+A reverse map of routes regexed out of the controller source
+
+=cut
 
 has 'action_path_map' => is => 'lazy', isa => HashRef, default => sub {
    my $self  = shift;
@@ -30,49 +58,21 @@ has 'action_path_map' => is => 'lazy', isa => HashRef, default => sub {
    return $map;
 };
 
+=back
+
+=head1 Subroutines/Methods
+
+Defines the no methods
+
+=over 3
+
+=cut
+
 use namespace::autoclean;
 
 1;
 
 __END__
-
-=pod
-
-=encoding utf-8
-
-=head1 Name
-
-Web::Components::ReverseMap - Creates a reverse routing map
-
-=head1 Synopsis
-
-   with 'Web::Components::ReverseMap';
-
-=head1 Description
-
-Creates a reverse routing map
-
-=head1 Configuration and Environment
-
-Defines the following attributes;
-
-=over 3
-
-=item action_path_map
-
-A reverse map of routes regexed out of the controller source
-
-=back
-
-=head1 Subroutines/Methods
-
-Defines the following methods;
-
-=over 3
-
-=item BUILD
-
-Modifies build creating the reverse map after the controller instantiates
 
 =back
 

@@ -9,18 +9,67 @@ use Web::Components::Util qw( exception throw );
 use Scalar::Util          qw( blessed );
 use Moo;
 
-# Public attributes
+=pod
+
+=encoding utf-8
+
+=head1 Name
+
+Web::Components::Model - Base class for Web Component models
+
+=head1 Synopsis
+
+   use Moo;
+
+   extends 'Web::Components::Model';
+
+=head1 Description
+
+Base class for Web Component models
+
+=head1 Configuration and Environment
+
+Defines the following attributes;
+
+=over 3
+
+=item C<context_class>
+
+A required loadable class. The classname of the object created by
+C<get_context>
+
+=cut
+
 has 'context_class' =>
    is       => 'lazy',
    isa      => LoadableClass,
    coerce   => TRUE,
    required => TRUE;
 
+=item C<navigation_key>
+
+An immutable string which defaults to C<nav>. Key used to stash the
+L<Web::Components::Navigation|navigation object>
+
+=cut
+
 has 'navigation_key' => is => 'ro', isa => Str, default => 'nav';
 
-# Public methods
-# Stash exception handler output to print an exception page
-# Also called by component loader if model dies
+=back
+
+=head1 Subroutines/Methods
+
+Defines the following methods;
+
+=over 3
+
+=item C<error>
+
+Stash exception handler output to print an exception page.  Also called by
+component loader if model dies
+
+=cut
+
 sub error {
    my ($self, $context, $proto, $bindv, @args) = @_;
 
@@ -51,7 +100,13 @@ sub error {
    return;
 }
 
-sub execute { # Called by component loader for all model method calls
+=item C<execute>
+
+Called by component loader for all model method calls
+
+=cut
+
+sub execute {
    my ($self, $context, $methods) = @_;
 
    my $stash   = $context->stash;
@@ -81,13 +136,25 @@ sub execute { # Called by component loader for all model method calls
    return;
 }
 
-sub get_context { # Creates and returns a new context object from the request
+=item C<get_context>
+
+Creates and returns a new context object from the request
+
+=cut
+
+sub get_context {
    my ($self, $args) = @_;
 
    return $self->context_class->new({ %{$args}, config => $self->config });
 }
 
-sub verify_form_post { # Stash an exception if the CSRF token is bad
+=item C<verify_form_post>
+
+Stash an exception if the CSRF token is bad
+
+=cut
+
+sub verify_form_post {
    my ($self, $context) = @_;
 
    my $reason = $context->verify_form_post;
@@ -117,50 +184,6 @@ use namespace::autoclean;
 1;
 
 __END__
-
-=pod
-
-=encoding utf-8
-
-=head1 Name
-
-Web::Components::Model - Base class for Web Component models
-
-=head1 Synopsis
-
-   use Moo;
-
-   extends 'Web::Components::Model';
-
-=head1 Description
-
-Base class for Web Component models
-
-=head1 Configuration and Environment
-
-Defines the following attributes;
-
-=over 3
-
-=item context_class
-
-=item navigation_key
-
-=back
-
-=head1 Subroutines/Methods
-
-Defines the following methods;
-
-=over 3
-
-=item error
-
-=item execute
-
-=item get_context
-
-=item verify_form_post
 
 =back
 

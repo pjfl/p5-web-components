@@ -13,7 +13,35 @@ use JSON::MaybeXS;
 use Try::Tiny;
 use Moo;
 
+=encoding utf-8
+
+=head1 Name
+
+Web::Components::Navigation - Context sensitive menu builder
+
+=head1 Synopsis
+
+   use Web::Components::Navigation;
+
+=head1 Description
+
+Context sensitive menu builder
+
+=head1 Configuration and Environment
+
+Defines the following attributes;
+
+=over 3
+
+=item C<confirm_message>
+
+=cut
+
 has 'confirm_message' => is => 'ro', isa => Str, default => 'Are you sure ?';
+
+=item C<container_class>
+
+=cut
 
 has 'container_class' => is => 'lazy', isa => Str, default => sub {
    my $self = shift;
@@ -21,13 +49,33 @@ has 'container_class' => is => 'lazy', isa => Str, default => sub {
    return $self->container_name . SPC . $self->container_layout;
 };
 
+=item C<container_layout>
+
+=cut
+
 has 'container_layout' => is => 'rw', isa => Str, default => 'centred';
+
+=item C<container_name>
+
+=cut
 
 has 'container_name' => is => 'ro', isa => Str, default => 'standard';
 
+=item C<container_tag>
+
+=cut
+
 has 'container_tag' => is => 'ro', isa => Str, default => 'div';
 
+=item C<content_name>
+
+=cut
+
 has 'content_name' => is => 'ro', isa => Str, default => 'panel';
+
+=item C<context>
+
+=cut
 
 has 'context' =>
    is       => 'ro',
@@ -35,9 +83,21 @@ has 'context' =>
    required => TRUE,
    weak_ref => TRUE;
 
+=item C<control_icon>
+
+=cut
+
 has 'control_icon' => is => 'ro', isa => Str, default => 'user-settings';
 
+=item C<global>
+
+=cut
+
 has 'global' => is => 'ro', isa => ArrayRef, default => sub { [] };
+
+=item C<icons>
+
+=cut
 
 has 'icons' =>
    is      => 'lazy',
@@ -45,6 +105,10 @@ has 'icons' =>
    default => sub {
       return shift->context->request->uri_for('img/icons.svg')->as_string;
    };
+
+=item C<link_display>
+
+=cut
 
 has 'link_display' => is => 'lazy', isa => Str, init_arg => undef,
    default => sub {
@@ -57,6 +121,10 @@ has 'link_display' => is => 'lazy', isa => Str, init_arg => undef,
 has '_link_display' => is => 'ro', isa => Str, init_arg => 'link_display',
    default => 'both';
 
+=item C<logo>
+
+=cut
+
 has 'logo' => is => 'lazy', isa => Str, init_arg => undef, default => sub {
    my $self = shift;
 
@@ -68,7 +136,15 @@ has 'logo' => is => 'lazy', isa => Str, init_arg => undef, default => sub {
 
 has '_logo' => is => 'ro', isa => Str, init_arg => 'logo', default => NUL;
 
+=item C<media_break>
+
+=cut
+
 has 'media_break' => is => 'ro', isa => PositiveInt, default => 680;
+
+=item C<menu_location>
+
+=cut
 
 has 'menu_location' => is => 'lazy', isa => Str, default => sub {
    my $self    = shift;
@@ -80,13 +156,33 @@ has 'menu_location' => is => 'lazy', isa => Str, default => sub {
 has '_menu_location' => is => 'ro', isa => Str, init_arg => 'menu_location',
    default => 'header';
 
+=item C<messages>
+
+=cut
+
 has 'messages' => is => 'ro', isa => HashRef, default => sub { {} };
+
+=item C<model>
+
+=cut
 
 has 'model' => is => 'ro', isa => Object, required => TRUE;
 
+=item C<title>
+
+=cut
+
 has 'title' => is => 'ro', isa => Str, default => 'Navigation';
 
+=item C<title_abbrev>
+
+=cut
+
 has 'title_abbrev' => is => 'ro', isa => Str, default => 'Nav';
+
+=item C<title_entry>
+
+=cut
 
 has 'title_entry' => is => 'lazy', isa => Str, default => sub {
    my $self  = shift;
@@ -173,6 +269,18 @@ has '_name' => is => 'rwp', isa => Str, default => NUL;
 
 has '_order' => is => 'ro', isa => ArrayRef, default => sub { [] };
 
+=back
+
+=head1 Subroutines/Methods
+
+Defines the following methods;
+
+=over 3
+
+=item C<BUILDARGS>
+
+=cut
+
 around 'BUILDARGS' => sub {
    my ($orig, $self, @args) = @_;
 
@@ -181,6 +289,10 @@ around 'BUILDARGS' => sub {
 
    return { %{$attr}, %{$config->navigation} };
 };
+
+=item C<crud>
+
+=cut
 
 sub crud {
    my ($self, $moniker, $existing_id, $create_id) = @_;
@@ -191,6 +303,10 @@ sub crud {
    $self->item("${moniker}/view", [$existing_id]);
    return $self;
 }
+
+=item C<finalise>
+
+=cut
 
 sub finalise {
    my $self    = shift;
@@ -215,6 +331,10 @@ sub finalise {
    return;
 }
 
+=item C<finalise_script_request>
+
+=cut
+
 sub finalise_script_request {
    my $self = shift;
 
@@ -223,12 +343,20 @@ sub finalise_script_request {
    return;
 }
 
+=item C<is_script_request>
+
+=cut
+
 sub is_script_request {
    my $self   = shift;
    my $header = $self->context->request->header('x-requested-with') // NUL;
 
    return lc $header eq 'xmlhttprequest' ? TRUE : FALSE;
 }
+
+=item C<item>
+
+=cut
 
 sub item {
    my ($self, @args) = @_;
@@ -262,14 +390,26 @@ sub item {
    return $self;
 }
 
+=item C<list>
+
+=cut
+
 sub list {
    my ($self, $name, $title) = @_;
 
    $self->_set__name($name);
-   $self->_lists->{$name} = [ $title // NUL, [] ];
-   push @{$self->_order}, $name;
+
+   unless (exists $self->_lists->{$name}) {
+      $self->_lists->{$name} = [ $title // NUL, [] ];
+      push @{$self->_order}, $name;
+   }
+
    return $self;
 }
+
+=item C<menu>
+
+=cut
 
 sub menu {
    my ($self, $name) = @_;
@@ -280,6 +420,10 @@ sub menu {
 
    return $self;
 }
+
+=item C<render>
+
+=cut
 
 sub render {
    my $self = shift;
@@ -344,38 +488,17 @@ use namespace::autoclean;
 
 __END__
 
-=pod
-
-=encoding utf-8
-
-=head1 Name
-
-Web::Components::Navigation - MVC pattern for Web::Simple
-
-=head1 Synopsis
-
-   use Web::Components::Navigation;
-   # Brief but working code examples
-
-=head1 Description
-
-=head1 Configuration and Environment
-
-Defines the following attributes;
-
-=over 3
-
 =back
 
-=head1 Subroutines/Methods
-
 =head1 Diagnostics
+
+None
 
 =head1 Dependencies
 
 =over 3
 
-=item L<Class::Usul>
+=item L<Moo>
 
 =back
 
