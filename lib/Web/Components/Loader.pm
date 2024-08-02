@@ -402,6 +402,8 @@ sub stash {
 
    return $self->_stash unless $args[0];
 
+   return $self->_stash->{$args[0]} unless $args[1];
+
    for my $pair (pairs @args) {
       $self->_stash->{$pair->key} = $pair->value;
    }

@@ -59,10 +59,12 @@ is otherwise undefined
 =cut
 
 sub deref ($$;$) {
-   my ($x, $k, $default) = @_; my $r = $default;
+   my ($x, $k, $default) = @_;
 
-   if    (blessed $x and $x->can( $k )) { $r = $x->$k() // $default }
-   elsif (is_hashref $x)                { $r = $x->{ $k } // $default }
+   my $r = $default;
+
+   if    (blessed $x and $x->can($k)) { $r = $x->$k() // $default }
+   elsif (is_hashref $x)              { $r = $x->{$k} // $default }
 
    return $r;
 }

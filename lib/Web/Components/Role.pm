@@ -60,7 +60,7 @@ attribute of the same name. Used to set input and output decoding / encoding
 has 'encoding' =>
    is      => 'lazy',
    isa     => NonEmptySimpleStr,
-   default => sub { deref $_[ 0 ]->config, 'encoding' };
+   default => sub { deref $_[0]->config, 'encoding', 'UTF-8' };
 
 =item C<log>
 

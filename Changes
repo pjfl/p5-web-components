@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Fix tests. Import exceptions from Web::ComposableRequest
           - Added some POD
           - Better exception detection
           - Adds fqdn to Util. Better rv in Model.error

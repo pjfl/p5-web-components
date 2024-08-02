@@ -3,8 +3,8 @@ package Web::Components::Model;
 use Web::ComposableRequest::Constants qw( EXCEPTION_CLASS FALSE NUL TRUE );
 
 use HTTP::Status          qw( HTTP_OK HTTP_INTERNAL_SERVER_ERROR );
-use Unexpected::Types     qw( LoadableClass Str );
-use Unexpected::Functions qw( BadToken NoMethod );
+use Unexpected::Types     qw( HashRef LoadableClass Str );
+use Unexpected::Functions qw( BadCSRFToken UnknownMethod );
 use Web::Components::Util qw( exception throw );
 use Scalar::Util          qw( blessed );
 use Moo;
@@ -41,10 +41,10 @@ C<get_context>
 =cut
 
 has 'context_class' =>
-   is       => 'lazy',
-   isa      => LoadableClass,
-   coerce   => TRUE,
-   required => TRUE;
+   is      => 'lazy',
+   isa     => LoadableClass,
+   coerce  => TRUE,
+   default => 'Web::Components::Loader::Context';
 
 =item C<navigation_key>
 
@@ -54,6 +54,26 @@ L<Web::Components::Navigation|navigation object>
 =cut
 
 has 'navigation_key' => is => 'ro', isa => Str, default => 'nav';
+
+has '_default_view' =>
+   is      => 'lazy',
+   isa     => Str,
+   default => sub {
+      my $self = shift;
+
+      return $self->config->can('default_view')
+           ? $self->config->default_view : 'HTML';
+   };
+
+has '_template_wrappers' =>
+   is      => 'lazy',
+   isa     => HashRef,
+   default => sub {
+      my $self = shift;
+
+      return $self->config->can('template_wrappers')
+           ? $self->config->template_wrappers : {};
+   };
 
 =back
 
@@ -90,7 +110,7 @@ sub error {
    $context->stash(
       code      => $code,
       exception => $exception,
-      page      => { %{$self->config->page}, layout => 'page/exception' },
+      page      => { %{$self->_template_wrappers}, layout => 'page/exception' },
    );
 
    $self->_finalise_stash($context);
@@ -109,19 +129,21 @@ Called by component loader for all model method calls
 sub execute {
    my ($self, $context, $methods) = @_;
 
-   my $stash   = $context->stash;
-   my $nav_key = $self->navigation_key;
+   my $stash    = $context->stash;
+   my $nav_key  = $self->navigation_key;
+   my $options  = { optional => TRUE, scrubber => FALSE };
+   my $uri_args = $context->request->uri_params->($options);
    my $last_method;
 
    $stash->{method_chain} = $methods;
 
    for my $method (split m{ / }mx, $methods) {
       my $coderef = $self->can($method)
-         or throw NoMethod, [blessed $self, $method];
+         or throw UnknownMethod, [blessed $self, $method];
 
       $method = NUL unless $self->is_authorised($context, $coderef);
 
-      $self->$method($context, @{$context->request->args}) if $method;
+      $self->$method($context, @{$uri_args}) if $method;
 
       return $stash->{response} if $stash->{response};
 
@@ -161,7 +183,7 @@ sub verify_form_post {
 
    return TRUE unless $reason;
 
-   $self->error($context, BadToken, [$reason], level => 3);
+   $self->error($context, BadCSRFToken, [$reason], level => 3);
    return FALSE;
 }
 
@@ -173,9 +195,9 @@ sub _finalise_stash { # Add necessary defaults for the view to render
 
    $stash->{code} //= HTTP_OK unless exists $stash->{redirect};
    $stash->{finalised} = TRUE;
-   $stash->{page} //= { %{$self->config->page} };
+   $stash->{page} //= { %{$self->_template_wrappers} };
    $stash->{page}->{layout} //= $self->moniker . "/${method}";
-   $stash->{view} //= $self->config->default_view;
+   $stash->{view} //= $self->_default_view;
    return;
 }
 
