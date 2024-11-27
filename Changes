@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Fixed prereqs
           - Updated MANIFEST
 
 0.12.1    2024-11-27 20:55:34
