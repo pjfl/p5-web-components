@@ -13,12 +13,8 @@ Web::Components - MVC pattern for Web::Simple
 
     package Component::Server;
 
-    use Class::Usul;
-    use Moo;
-
-    has '_usul' => is => 'lazy', builder => sub {
-       Class::Usul->new( config => { appclass => __PACKAGE__  } ) },
-       handles  => [ 'config', 'debug', 'l10n', 'lock', 'log' ];
+    use Plack::Builder;
+    use Web::Simple;
 
     with 'Web::Components::Loader';
 
