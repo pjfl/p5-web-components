@@ -1,5 +1,7 @@
 Revision history for Web::Components
 
+0.12.1    2024-11-27 20:55:34
+          - Bump version for release
           - Fix tests. Import exceptions from Web::ComposableRequest
           - Added some POD
           - Better exception detection
