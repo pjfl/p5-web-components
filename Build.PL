@@ -16,7 +16,7 @@ my $prereqs  = {
   },
   'requires' => {
     'Exporter::Tiny' => '1.006000',
-    'File::DataClass' => 'v0.73.6',
+    'File::DataClass' => 'v0.73.1',
     'HTML::Tiny' => '1.08',
     'HTTP::Message' => '6.44',
     'JSON::MaybeXS' => '1.004004',
