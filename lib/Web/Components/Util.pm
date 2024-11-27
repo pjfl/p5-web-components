@@ -12,7 +12,7 @@ use Module::Pluggable::Object;
 use Moo::Role ();
 
 our @EXPORT_OK  = qw( clear_redirect deref exception first_char formpost
-                      fqdn is_arrayref load_components throw );
+                      fqdn is_arrayref load_components ns_environment throw );
 
 =pod
 
@@ -73,8 +73,8 @@ sub deref ($$;$) {
 
    $e = exception $error;
 
-Expose the C<catch> method in the exception
-class L<Class::Usul::Exception>. Returns a new error object
+Expose the C<catch> method in the exception class C<EXCEPTION_CLASS> defined in
+constants. Returns a new exception object
 
 =cut
 
@@ -203,6 +203,33 @@ sub load_components ($;@) {
    }
 
    return $compos;
+}
+
+sub _app_prefix ($) {
+   (my $v = lc ($_[0] // q())) =~ s{ :: }{_}gmx;
+
+   return $v;
+}
+
+sub _env_prefix ($) {
+   return uc _app_prefix $_[0];
+}
+
+=item C<ns_environment>
+
+   $value = ns_environment $class, $key, [$value];
+
+An accessor/mutator for the environment variables prefixed by the supplied
+class name. Providing a value is optional, always returns the current value
+
+=cut
+
+sub ns_environment ($$;$) {
+   my ($class, $k, $v) = @_;
+
+   $k = (_env_prefix $class) . '_' . (uc $k);
+
+   return defined $v ? $ENV{$k} = $v : $ENV{$k};
 }
 
 =item C<throw>

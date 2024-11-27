@@ -2,7 +2,7 @@ package Web::Components::Role::ConfigLoader;
 
 use Web::ComposableRequest::Constants qw( FALSE TRUE );
 use File::DataClass::Types qw( Directory File Path );
-use Class::Usul::Cmd::Util qw( ns_environment );
+use Web::Components::Util  qw( ns_environment );
 use File::DataClass::IO    qw( io );
 use File::DataClass::Schema;
 use Moo::Role;
@@ -211,8 +211,6 @@ None
 =head1 Dependencies
 
 =over 3
-
-=item L<Class::Usul::Cmd>
 
 =item L<File::DataClass>
 
