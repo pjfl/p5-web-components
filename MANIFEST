@@ -2,13 +2,16 @@ Build.PL
 Changes
 MANIFEST
 lib/Web/Components.pm
+lib/Web/Components/ConfigLoader.pm
 lib/Web/Components/Loader.pm
 lib/Web/Components/Model.pm
 lib/Web/Components/Navigation.pm
 lib/Web/Components/ReverseMap.pm
 lib/Web/Components/Role.pm
-lib/Web/Components/Role/ConfigLoader.pm
 lib/Web/Components/Util.pm
+share/js/wcom-10-util.js
+share/js/wcom-11-modal.js
+share/js/wcom-15-navigation.js
 t/02pod.t
 t/03podcoverage.t
 t/05kwalitee.t
