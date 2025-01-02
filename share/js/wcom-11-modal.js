@@ -17,32 +17,33 @@ WCom.Modal = (function() {
       }
    })();
    class Backdrop {
-      constructor(options) {
-         this.popupBackground = null;
-         this.popupContainer = null;
-         if (options) this.zIndex = opts.zIndex || null;
-      }
-      add(el) {
+      constructor(options = {}) {
+         const noMask = options.noMask || false;
+         const zIndex = options.zIndex || null;
          this.popupContainer = this.h.div({
-            className: 'modal-container out'
-         }, el);
+            id: 'modal-container', className: 'modal-container out'
+         });
          this.popupBackground = this.h.div({
             className: 'modal-outer-wrapper',
-            style: this.zIndex ? `z-index: ${this.zIndex}` : ''
+            id: 'modal-outer-wrapper',
+            style: zIndex ? `z-index: ${zIndex}` : ''
          }, this.popupContainer);
+         if (noMask) this.popupBackground.classList.remove('mask');
+         else this.popupBackground.classList.add('mask');
+      }
+      add(el) {
+         this.popupContainer.appendChild(el);
          document.body.appendChild(this.popupBackground);
-         setTimeout(() => {
-            this.popupContainer.classList.add('in');
-            this.popupContainer.classList.remove('out');
-         }, 50);
+         this.popupContainer.classList.add('in');
+         this.popupContainer.classList.remove('out');
       }
       remove(el) {
          if (!el) return;
-         const popupParent = this.popupBackground.parentNode;
-         if (popupParent) popupParent.removeChild(this.popupBackground);
          const elParent = el.parentNode;
          elParent.classList.add('out');
          elParent.classList.remove('in');
+         const popupParent = this.popupBackground.parentNode;
+         if (popupParent) popupParent.removeChild(this.popupBackground);
       }
    }
    Object.assign(Backdrop.prototype, WCom.Util.Markup);
@@ -196,6 +197,7 @@ WCom.Modal = (function() {
             hoverCallback: options.hoverCallback,
             hoverClass: options.hoverClass,
             moveCallback: options.moveCallback,
+            positionAbsolute: options.positionAbsolute || false,
             viewportHeight: this.h.getDimensions(window).height
          };
          const { drag, scrollWrapper } = this;
@@ -224,7 +226,7 @@ WCom.Modal = (function() {
          document.removeEventListener('mousemove', this.dragHandler);
          this.clearScrollInterval();
          const { drag } = this;
-         if (drag.dragNode) {
+         if (drag.dragNode && !drag.positionAbsolute) {
             drag.dragNode.style.left = null;
             drag.dragNode.style.position = null;
             drag.dragNode.style.top = null;
@@ -275,6 +277,7 @@ WCom.Modal = (function() {
    Object.assign(Drag.prototype, WCom.Util.Markup);
    class Modal {
       constructor(title, content, buttons, setup) {
+         this.backdropAttr = setup.backdrop || {};
          this.buttonClass = setup.buttonClass;
          this.buttons = buttons;
          this.classList = setup.classList;
@@ -282,8 +285,10 @@ WCom.Modal = (function() {
          this.content = content;
          this.dragScrollWrapper = setup.dragScrollWrapper || '.standard';
          this.icons = setup.icons;
+         this.id = setup.id || 'modal';
          this.ident = this.guid();
          this.open = true;
+         this.positionAbsolute = setup.positionAbsolute || false;
          this.resizeElement = setup.resizeElement;
          this.title = title;
          modalList.add(this.ident);
@@ -309,9 +314,13 @@ WCom.Modal = (function() {
          if (btn) this.buttonHandler(btn);
          else if (keyCode === keyCodes['escape']) this.close();
       }
+      position() {
+         return this.el.getBoundingClientRect();
+      }
       render() {
          const classes = this.classList || '';
-         this.el = this.h.div({ className: 'modal ' + classes });
+         const modalAttr = { className: 'modal ' + classes, id: this.id };
+         this.el = this.h.div(modalAttr);
          this.modalHeader = this.h.div({
             className: 'modal-header', onmousedown: this._clickHandler(this.el)
          }, [
@@ -320,14 +329,18 @@ WCom.Modal = (function() {
          ]);
          this.modalHeader.setAttribute('draggable', 'draggable');
          this.el.appendChild(this.modalHeader);
-         this.content = this.h.div(
-            { className: 'modal-content-wrapper' },
-            this.h.div({ className: 'modal-content' }, this.content)
-         );
-         this.el.appendChild(this.content);
+         const contentWrapper = this.h.div({
+            className: 'modal-content-wrapper'
+         }, this.h.div({ className: 'modal-content' }, this.content));
+         this.el.appendChild(contentWrapper);
          if (this.buttons.length) this._renderButtons(this.el);
-         this.backdrop = new Backdrop();
+         this.backdrop = new Backdrop(this.backdropAttr);
          this.backdrop.add(this.el);
+         if (this.positionAbsolute && this.positionAbsolute.x) {
+            this.el.style.position = 'absolute';
+            this.el.style.left = this.positionAbsolute.x + 'px';
+            this.el.style.top = this.positionAbsolute.y + 'px';
+         }
       }
       _createCloseIcon() {
          const attr = {
@@ -356,7 +369,8 @@ WCom.Modal = (function() {
                dragNodeOffset: {
                   x: event.clientX - left,
                   y: (event.clientY + scrollTop) - top
-               }
+               },
+               positionAbsolute: this.positionAbsolute
             });
          }.bind(this);
       }
@@ -413,9 +427,9 @@ WCom.Modal = (function() {
             id: 'selector-frame',
             style: 'visibility:hidden;'
          });
-         const container = this.h.div(
-            { className: 'modal-frame-container' }, [loader, this.frame]
-         );
+         const container = this.h.div({
+            className: 'modal-frame-container'
+         }, [loader, this.frame]);
          const options = {
             formClass: this.formClass,
             onSubmit: this.onSubmit,
@@ -446,7 +460,11 @@ WCom.Modal = (function() {
       }
       _createSpinner(modifierClass = '') {
          const icon = this.h.icon({
-            name: 'spinner', className: 'loading-icon', icons: this.icons
+            name: 'spinner',
+            className: 'loading-icon',
+            icons: this.icons,
+            height: '40px',
+            width: '40px'
          });
          return this.h.span({
             className: `loading ${modifierClass}`
@@ -656,8 +674,10 @@ WCom.Modal = (function() {
          callback = () => {},
          cancelCallback,
          classList = false,
+         id,
          labels = ['Cancel', 'OK'],
          noButtons = false,
+         positionAbsolute,
          title,
          validateForm
       } = args;
@@ -686,9 +706,15 @@ WCom.Modal = (function() {
          }];
       }
       const options = {
-         buttonClass, classList, icons: util.icons, noInner: true
+         buttonClass,
+         classList,
+         icons: util.icons,
+         id,
+         noInner: true,
+         positionAbsolute
       };
       if (args.closeCallback) options.closeCallback = args.closeCallback;
+      if (args.backdrop) options.backdrop = args.backdrop;
       modal = new Modal(title, container, buttons, options);
       modal.render();
       return modal;
