@@ -99,7 +99,7 @@ WCom.Util = (function() {
          if (location) {
             const reload_header = headers.get('x-force-reload');
             const reload = reload_header == 'true' ? true : false;
-            return { location: location, reload: reload, status: 302 };
+            return { location, reload, status: 302 };
          }
          if (want == 'object') return {
             object: await response.json(), status: response.status
@@ -107,7 +107,7 @@ WCom.Util = (function() {
          if (want == 'text') return {
             status: response.status, text: await response.text()
          };
-         return { response: response };
+         return { response };
       }
       async sucks(url, options = {}) {
          const want = options.response || 'object'; delete options.response;
@@ -123,12 +123,12 @@ WCom.Util = (function() {
          }
          const headers = response.headers;
          const location = headers.get('location');
-         if (location) return { location: location, status: 302 };
+         if (location) return { location, status: 302 };
          if (want == 'blob') {
             const key = 'content-disposition';
             const filename = headers.get(key).split('filename=')[1];
             const blob = await response.blob();
-            return { blob: blob, filename: filename, status: response.status };
+            return { blob, filename, status: response.status };
          }
          if (want == 'object') return {
             object: await response.json(), status: response.status
@@ -137,7 +137,7 @@ WCom.Util = (function() {
             status: response.status,
             text: await new Response(await response.blob()).text()
          };
-         return { response: response };
+         return { response };
       }
    }
    class HtmlTiny {
@@ -309,7 +309,8 @@ WCom.Util = (function() {
          };
       }
    }
-   const registeredCallbacks = [];
+   const registeredOnloadCallbacks = [];
+   const registeredOnunloadCallbacks = [];
    return {
       Bitch: {
          bitch: new Bitch(),
@@ -323,11 +324,25 @@ WCom.Util = (function() {
                if (document.readyState == 'complete') callback();
             });
          },
-         register: function(callback) {
-            registeredCallbacks.push(callback);
+         onloadCallbacks: function() {
+            return registeredOnloadCallbacks;
          },
-         callbacks: function() {
-            return registeredCallbacks;
+         onunloadCallbacks: function() {
+            return registeredOnunloadCallbacks;
+         },
+         registerOnload: function(callback) {
+            registeredOnloadCallbacks.push(callback);
+            return registeredOnloadCallbacks.length;
+         },
+         registerOnunload: function(callback) {
+            registeredOnunloadCallbacks.push(callback);
+            return registeredOnunloadCallbacks.length;
+         },
+         unregisterOnload: function(index) {
+            registeredOnloadCallbacks.splice(index - 1, 1);
+         },
+         unregisterOnunload: function(index) {
+            registeredOnunloadCallbacks.splice(index - 1, 1);
          }
       },
       Markup: { // A role

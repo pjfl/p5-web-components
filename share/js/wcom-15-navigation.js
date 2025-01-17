@@ -1,8 +1,8 @@
 // -*- coding: utf-8; -*-
 // Package WCom.Navigation
 WCom.Navigation = (function() {
-   const navId        = 'navigation';
-   const dsName       = 'navigationConfig';
+   const navId  = 'navigation';
+   const dsName = 'navigationConfig';
    class Navigation {
       constructor(container, config) {
          this.container        = container;
@@ -43,7 +43,7 @@ WCom.Navigation = (function() {
             const href = link.href + '';
             if (href.length && url == href.substring(0, url.length)
                 && !link.getAttribute('clicklistener')) {
-               link.addEventListener('click', this.loadLocation(href, options));
+               link.addEventListener('click', this.clickHandler(href, options));
                link.setAttribute('clicklistener', true);
             }
          }
@@ -60,6 +60,17 @@ WCom.Navigation = (function() {
       addSelected(item) {
          item.classList.add('selected');
          return true;
+      }
+      clickHandler(href, options) {
+         return function(event) {
+            event.preventDefault();
+            if (options.onUnload) options.onUnload();
+            else {
+               for (const cb of WCom.Util.Event.onunloadCallbacks()) cb();
+            }
+            if (options.renderLocation) options.renderLocation(href);
+            else this.renderLocation(href);
+         }.bind(this);
       }
       confirmHandler(name) {
          return function(event) {
@@ -84,13 +95,6 @@ WCom.Navigation = (function() {
       }
       isCurrentHref(href) {
          return history.state && history.state.href == href ? true : false;
-      }
-      loadLocation(href, options) {
-         return function(event) {
-            event.preventDefault();
-            if (options.renderLocation) options.renderLocation(href);
-            else this.renderLocation(href);
-         }.bind(this);
       }
       async loadMenuData(url) {
          const state = { href: url + '' };
@@ -187,7 +191,7 @@ WCom.Navigation = (function() {
          if (typeof text != 'object') {
             const label = this.renderLabel(icon, text);
             if (href) {
-               const attr = { href: href, onclick: this.loadLocation(href, {})};
+               const attr = { href: href, onclick: this.clickHandler(href, {})};
                const link = this.h.a(attr, label);
                link.setAttribute('clicklistener', true);
                return this.h.li({ className: menuName, title: title }, link);
@@ -312,7 +316,7 @@ WCom.Navigation = (function() {
          }.bind(this);
       }
       async scan(panel, options = {}) {
-         for (const scanCallback of WCom.Util.Event.callbacks())
+         for (const scanCallback of WCom.Util.Event.onloadCallbacks())
             scanCallback(panel, options);
          this.addEventListeners(panel, options);
       }
@@ -327,9 +331,12 @@ WCom.Navigation = (function() {
          const action = form.action;
          return function(event) {
             event.preventDefault();
+            if (options.onUnload) options.onUnload();
+            else {
+               for (const cb of WCom.Util.Event.onunloadCallbacks()) cb();
+            }
             form.setAttribute('submitter', event.submitter.value);
             this.process(action, form);
-            if (options.onSubmit) options.onSubmit();
          }.bind(this);
       }
    }

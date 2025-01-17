@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Changed event register method name in JS utils
           - Improved modal library
           - Updated copyright year
           - Completed POD for component base classes

@@ -1,6 +1,8 @@
 // -*- coding: utf-8; -*-
 // Package WCom.Modal
 WCom.Modal = (function() {
+   const eventUtil = WCom.Util.Event;
+   const navManager = WCom.Navigation.manager;
    const keyCodes = { enter: 13, escape: 27 };
    const modalList = (() => {
       let modals = [];
@@ -276,21 +278,22 @@ WCom.Modal = (function() {
    }
    Object.assign(Drag.prototype, WCom.Util.Markup);
    class Modal {
-      constructor(title, content, buttons, setup) {
-         this.backdropAttr = setup.backdrop || {};
-         this.buttonClass = setup.buttonClass;
+      constructor(title, content, buttons, options) {
+         this.backdropAttr = options.backdrop || {};
+         this.buttonClass = options.buttonClass;
          this.buttons = buttons;
-         this.classList = setup.classList;
-         this.closeCallback = setup.closeCallback;
+         this.classList = options.classList;
+         this.closeCallback = options.closeCallback;
          this.content = content;
-         this.dragScrollWrapper = setup.dragScrollWrapper || '.standard';
-         this.icons = setup.icons;
-         this.id = setup.id || 'modal';
+         this.dragScrollWrapper = options.dragScrollWrapper || '.standard';
+         this.icons = options.icons;
+         this.id = options.id || 'modal';
          this.ident = this.guid();
          this.open = true;
-         this.positionAbsolute = setup.positionAbsolute || false;
-         this.resizeElement = setup.resizeElement;
+         this.positionAbsolute = options.positionAbsolute || false;
+         this.resizeElement = options.resizeElement;
          this.title = title;
+         this.unloadIndex = options.unloadIndex;
          modalList.add(this.ident);
          this.keyHandler = this.keyHandler.bind(this);
          window.addEventListener('keydown', this.keyHandler);
@@ -306,6 +309,7 @@ WCom.Modal = (function() {
          this.backdrop.remove(this.el);
          this.backdrop = null;
          if (this.closeCallback) this.closeCallback();
+         if (this.unloadIndex) eventUtil.unregisterOnunload(this.unloadIndex);
       }
       keyHandler(event) {
          const { keyCode } = event;
@@ -404,20 +408,31 @@ WCom.Modal = (function() {
    Object.assign(Modal.prototype, WCom.Util.Markup);
    Object.assign(Modal.prototype, WCom.Util.String);
    class ModalUtil {
-      constructor(args, onSubmit) {
+      constructor(args) {
          const {
+            callback = () => {},
+            cancelCallback,
             formClass = 'classic',
             icons = '/icons.svg',
             initValue,
+            labels = ['Cancel', 'OK'],
+            noButtons = false,
+            onload = function(c, o) { navManager.scan(c, o) },
             url,
+            validateForm,
             valueStore = {}
          } = args;
-         this.icons = icons;
-         this.url = url;
+         this.callback = callback;
+         this.cancelCallback = cancelCallback;
          this.formClass = formClass;
+         this.icons = icons;
          this.initValue = initValue;
+         this.labels = labels;
+         this.noButtons = noButtons;
+         this.onload = onload;
+         this.url = url;
+         this.validateForm = validateForm;
          this.valueStore = valueStore;
-         this.onSubmit = onSubmit;
       }
       createModalContainer() {
          const spinner = this._createSpinner();
@@ -432,13 +447,12 @@ WCom.Modal = (function() {
          }, [loader, this.frame]);
          const options = {
             formClass: this.formClass,
-            onSubmit: this.onSubmit,
             renderLocation: function(href) {
                this._loadFrameContent(href);
             }.bind(this)
          };
          this.selector = new Selector(this.frame);
-         this.onload = function() {
+         const onload = function() {
             loader.style.display = 'none';
             const selector = this.selector;
             if (this.initValue)
@@ -449,11 +463,34 @@ WCom.Modal = (function() {
                   this.initValue = this.valueStore.value;
                }.bind(this));
             };
-            WCom.Navigation.manager.scan(this.frame, options);
+            if (this.onload) this.onload(this.frame, options);
             this.frame.style.visibility = 'visible';
          }.bind(this);
-         this._loadFrameContent(this.url);
+         this._loadFrameContent(this.url, onload);
          return container;
+      }
+      getButtons() {
+         if (this.noButtons) return [];
+         return [{
+            label: this.labels[0],
+            onclick: function(modalObj) {
+               try {
+                  this.callback(false, modalObj, this.getModalValue(false));
+               }
+               catch(e) {}
+               if (this.cancelCallback) return this.cancelCallback();
+               return true;
+            }.bind(this)
+         }, {
+            label: this.labels[1],
+            onclick: function(modalObj) {
+               const modalValue = this.getModalValue(true);
+               if (this.validateForm
+                   && !this.validateForm(modalObj, modalValue))
+                  return false;
+               return this.callback(true, modalObj, modalValue);
+            }.bind(this)
+         }];
       }
       getModalValue(success) {
          return this.selector.getModalValue(success);
@@ -470,7 +507,7 @@ WCom.Modal = (function() {
             className: `loading ${modifierClass}`
          }, this.h.span({ className: 'loading-spinner' }, icon));
       }
-      async _loadFrameContent(url) {
+      async _loadFrameContent(url, onload) {
          const opt = { headers: { prefer: 'render=partial' }, response: 'text'};
          const { location, text } = await this.bitch.sucks(url, opt);
          if (text && text.length > 0) {
@@ -482,7 +519,7 @@ WCom.Modal = (function() {
          else {
             console.warn('Neither content nor redirect in response to get');
          }
-         if (this.onload) this.onload();
+         if (onload) onload();
       }
    }
    Object.assign(ModalUtil.prototype, WCom.Util.Bitch);
@@ -669,53 +706,25 @@ WCom.Modal = (function() {
       }
    }
    const create = function(args) {
-      const {
-         buttonClass,
-         callback = () => {},
-         cancelCallback,
-         classList = false,
-         id,
-         labels = ['Cancel', 'OK'],
-         noButtons = false,
-         positionAbsolute,
-         title,
-         validateForm
-      } = args;
       let modal;
-      const onSubmit = function(event) { modal.close() };
-      const util = new ModalUtil(args, onSubmit);
+      const close = function(event) { if (modal) modal.close() };
+      const unloadIndex = eventUtil.registerOnunload(close);
+      const util = new ModalUtil(args);
       const container = util.createModalContainer();
-      let buttons = [];
-      if (!noButtons) {
-         buttons = [{
-            label: labels[0],
-            onclick(modalObj) {
-               try { callback(false, modalObj, util.getModalValue(false))}
-               catch(e) {}
-               if (cancelCallback) return cancelCallback();
-               return true;
-            }
-         }, {
-            label: labels[1],
-            onclick(modalObj) {
-               const modalValue = util.getModalValue(true);
-               if (validateForm && !validateForm(modalObj, modalValue))
-                  return false;
-               return callback(true, modalObj, modalValue);
-            }
-         }];
-      }
+      const buttons = util.getButtons();
       const options = {
-         buttonClass,
-         classList,
+         backdrop: args.backdrop,
+         buttonClass: args.buttonClass,
+         classList: args.classList = false,
+         closeCallback: args.closeCallback,
+         dragScrollWrapper: args.dragScrollWrapper,
          icons: util.icons,
-         id,
-         noInner: true,
-         positionAbsolute
+         id: args.id,
+         positionAbsolute: args.positionAbsolute,
+         resizeElement: args.resizeElement,
+         unloadIndex
       };
-      if (args.closeCallback) options.closeCallback = args.closeCallback;
-      if (args.backdrop) options.backdrop = args.backdrop;
-      modal = new Modal(title, container, buttons, options);
+      modal = new Modal(args.title, container, buttons, options);
       modal.render();
       return modal;
    };
