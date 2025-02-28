@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Splits out Menus class from Navigation class in JS
           - Changed event register method name in JS utils
           - Improved modal library
           - Updated copyright year

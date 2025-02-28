@@ -175,6 +175,7 @@ WCom.Util = (function() {
       }
       typeOf(x)               { return _typeof(x) }
       a(attr, content)        { return this._tag('a', attr, content) }
+      canvas(attr, content)   { return this._tag('canvas', attr, content) }
       caption(attr, content)  { return this._tag('caption', attr, content) }
       div(attr, content)      { return this._tag('div', attr, content) }
       fieldset(attr, content) { return this._tag('fieldset', attr, content) }

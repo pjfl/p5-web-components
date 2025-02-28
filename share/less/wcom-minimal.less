@@ -80,13 +80,13 @@ html.light {
     color-scheme: light;
 }
 body {
-    background-image: #grads[body-bg]; margin: 0; padding: 0 0.5rem;
-    @media (max-width: #sizes[media-break]) {
-        padding: 0;
-    }
+    background-image: #grads[body-bg]; margin: 0; padding: 0;
 }
 header {
-    position: sticky; top: 0; z-index: 3;
+    margin: 0 0.5rem; position: sticky; top: 0; z-index: 3;
+    @media (max-width: #sizes[media-break]) {
+        margin: 0;
+    }
 }
 .frame {
     bottom: 0; overflow: auto; position: fixed; right: 0.5rem;
@@ -124,7 +124,7 @@ header {
     }
 }
 .standard {
-    display: inline-block; padding-top: 0.5rem; text-align: left;
+    display: inline-block; text-align: left;
     h1, h2, h3, h4, h5 {
         font-family: #fonts[system]; margin: 1rem 1rem; text-wrap: balance;
     }
@@ -136,6 +136,7 @@ header {
     }
     .panel {
         align-items: flex-start; display: flex; justify-content: center;
+        margin-top: 0.5rem;
     }
 }
 .centred {
@@ -203,19 +204,22 @@ header {
     }
     .nav-control {
         display: inline-block; font-size: larger;
-        a, .nav-control-label {
-            display: inline-block;
-        }
         a {
-            padding: 0.5rem;
+            display: inline-block; padding: 0.5rem;
         }
         img {
             height: 24px; width: 24px; vertical-align: top;
         }
+        .nav-control-label {
+            display: inline-block;
+            svg {
+                vertical-align: middle;
+            }
+        }
         .nav-panel {
-            background: #colours[panel-bg]; max-height: 0; overflow: hidden;
-            position: absolute; right: -1rem; text-align: left; top: 2.5rem;
-            transition: all ease-in-out 500ms;
+            background: #colours[panel-bg]; max-height: 0;
+            overflow: hidden; position: absolute; right: -1rem;
+            text-align: left; top: 2.5rem; transition: all ease-in-out 500ms;
         }
         .nav-panel:hover {
             overflow: visible;
@@ -356,7 +360,8 @@ header {
 }
 .sidebar {
     background: unset; border-top-left-radius: 0; display: inline-block;
-    padding: 0; position: fixed; top: #sizes[nav-header-height]; z-index: 3;
+    margin-left: 0.5rem; padding: 0; position: fixed;
+    top: #sizes[nav-header-height]; z-index: 3;
     .nav-list.global {
         align-items: flex-start; display: flex; flex-direction: column;
         min-height: 2rem; padding-top: 0.5rem;
@@ -402,7 +407,7 @@ header {
         }
     }
     @media (max-width: #sizes[media-break]) {
-        top: #sizes[nav-header-height];
+        margin: 0; top: #sizes[nav-header-height];
     }
 }
 .sidebar::after {
