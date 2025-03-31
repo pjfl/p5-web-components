@@ -67,7 +67,9 @@ WCom.Util = (function() {
             const form = options.form; delete options.form;
             const data = new FormData(form);
             data.set('_submit', form.getAttribute('submitter'));
-            const type = options.enctype || 'application/x-www-form-urlencoded';
+            const type = options.enctype
+                  || form.getAttribute('enctype')
+                  || 'application/x-www-form-urlencoded';
             delete options.enctype;
             if (type == 'multipart/form-data') {
                const files = options.files; delete options.files;
@@ -228,8 +230,8 @@ WCom.Util = (function() {
       }
       icon(attr) {
          const {
-            attrs = {}, className, height = 20, icons, name,
-            presentational = true, width = 20
+            attrs = {}, className, height = 20, icons, name, onclick,
+            presentational = true, title, width = 20
          } = attr;
          if (Array.isArray(className)) className = `${className.join(' ')}`;
          const newAttrs = {
@@ -240,7 +242,10 @@ WCom.Util = (function() {
 <svg ${Object.keys(newAttrs).filter(attr => newAttrs[attr]).map(attr => `${attr}="${newAttrs[attr]}"`).join(' ')}>
    <use href="${icons}#icon-${name}"></use>
 </svg>`;
-         return this._frag(svg.trim());
+         const wrapperAttr = { className: 'icon-wrapper' };
+         if (onclick) wrapperAttr.onclick = onclick;
+         if (title) wrapperAttr.title = title;
+         return this.span(wrapperAttr, this._frag(svg.trim()));
       }
       radio(attr) {
          attr['type'] = 'radio';

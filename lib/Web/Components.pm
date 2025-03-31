@@ -2,7 +2,7 @@ package Web::Components;
 
 use 5.010001;
 use strictures;
-use version; our $VERSION = qv( sprintf '0.12.%d', q$Rev: 11 $ =~ /\d+/gmx );
+use version; our $VERSION = qv( sprintf '0.12.%d', q$Rev: 12 $ =~ /\d+/gmx );
 
 1;
 
@@ -35,7 +35,9 @@ Web::Components - MVC pattern for Web::Simple
 
 =head1 Description
 
-MVC pattern for Web::Simple. See L<Web::Components::Loader>
+MVC pattern using L<Web::Simple>. See L<Web::Components::Loader> for
+documentation. This was written to replace L<Catalyst> but L<Moo> all the
+things
 
 =head1 Configuration and Environment
 

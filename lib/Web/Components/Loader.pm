@@ -349,7 +349,7 @@ sub _render_exception {
 sub _render {
    my ($self, @args) = @_;
 
-   $self->_recognise_signature($args[0]) or return @args;
+   return @args unless $self->_recognise_signature($args[0]);
 
    my ($moniker, $method, undef, @request) = $self->_parse_sig($args[0]);
 

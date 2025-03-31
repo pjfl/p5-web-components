@@ -62,7 +62,7 @@ WCom.Navigation = (function() {
          }.bind(this);
       }
       async process(action, form) {
-         const options = { headers: { prefer: 'render=partial' }, form: form };
+         const options = { headers: { Prefer: 'render=partial' }, form: form };
          const { location, reload, text }
                = await this.bitch.blows(action, options);
          if (location) {

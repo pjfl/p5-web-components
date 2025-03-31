@@ -286,6 +286,7 @@ WCom.Modal = (function() {
          this.closeCallback = options.closeCallback;
          this.content = content;
          this.dragScrollWrapper = options.dragScrollWrapper || '.standard';
+         this.dropCallback = options.dropCallback;
          this.icons = options.icons;
          this.id = options.id || 'modal';
          this.ident = this.guid();
@@ -369,11 +370,12 @@ WCom.Modal = (function() {
             const drag = new Drag({ scrollWrapper: this.dragScrollWrapper });
             drag.start(event, {
                dragNode: el,
-               dropTargets: [],
                dragNodeOffset: {
                   x: event.clientX - left,
                   y: (event.clientY + scrollTop) - top
                },
+               dropCallback: this.dropCallback,
+               dropTargets: [],
                positionAbsolute: this.positionAbsolute
             });
          }.bind(this);
@@ -718,6 +720,7 @@ WCom.Modal = (function() {
          classList: args.classList = false,
          closeCallback: args.closeCallback,
          dragScrollWrapper: args.dragScrollWrapper,
+         dropCallback: args.dropCallback,
          icons: util.icons,
          id: args.id,
          positionAbsolute: args.positionAbsolute,
@@ -751,12 +754,19 @@ WCom.Modal = (function() {
       createSelector: function(args) {
          const { icons, onchange, target, title = 'Select Item', url } = args;
          const callback = function(ok, modal, result) {
-            if (!ok) return;
+            if (!ok || !target) return;
             const el = document.getElementById(target);
-            const newValue = result.value.replace(/!/g, '/');
-            if (onchange && el.value != newValue)
-               eval(onchange.replace(/%value/g, result.value));
-            el.value = newValue;
+            if (!el) return;
+            if (result.value) {
+               const newValue = result.value.replace(/!/g, '/');
+               if (onchange && el.value != newValue)
+                  eval(onchange.replace(/%value/g, result.value));
+               el.value = newValue;
+            }
+            else if (result.files && result.files[0]) {
+               if (onchange) eval(onchange.replace(/%value/g, 'result.files'));
+               el.value = result.files;
+            }
             if (el.focus) el.focus();
          }.bind(this);
          return create({ callback, icons, title, url });

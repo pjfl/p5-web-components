@@ -19,7 +19,9 @@ Web::Components - MVC pattern for Web::Simple
 
 # Description
 
-MVC pattern for Web::Simple. See [Web::Components::Loader](https://metacpan.org/pod/Web%3A%3AComponents%3A%3ALoader)
+MVC pattern using [Web::Simple](https://metacpan.org/pod/Web%3A%3ASimple). See [Web::Components::Loader](https://metacpan.org/pod/Web%3A%3AComponents%3A%3ALoader) for
+documentation. This was written to replace [Catalyst](https://metacpan.org/pod/Catalyst) but [Moo](https://metacpan.org/pod/Moo) all the
+things
 
 # Configuration and Environment
 
