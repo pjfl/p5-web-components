@@ -225,7 +225,8 @@ WCom.Navigation = (function() {
          return icon;
       }
       isCurrentHref(href) {
-         return history.state && history.state.href == href ? true : false;
+         return history.state && history.state.href.split('?')[0]
+            == href.split('?')[0] ? true : false;
       }
       async loadMenuData(url) {
          const state = { href: url + '' };

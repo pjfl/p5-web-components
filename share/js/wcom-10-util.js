@@ -33,6 +33,9 @@ WCom.Util = (function() {
    const _htmlProps = [
       'disabled', 'readonly', 'required'
    ];
+   const _styleProps = [
+      'height', 'width'
+   ];
    const _typeof = function(x) {
       if (!x) return;
       const type = typeof x;
@@ -157,7 +160,8 @@ WCom.Util = (function() {
                else if (_htmlProps.includes(prop)) {
                   el.setAttribute(prop, prop);
                }
-               else { el[prop] = attr[prop]; }
+               else if (_styleProps.includes(prop)) el.style[prop] = attr[prop];
+               else el[prop] = attr[prop];
             }
          }
          else if (type == 'array')   { content = attr; }
