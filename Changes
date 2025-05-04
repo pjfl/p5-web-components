@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds build_routes function to Util
           - Model error now sets view to the default
           - Navigation now has content_class attribute
           - Splits out Menus class from Navigation class in JS
