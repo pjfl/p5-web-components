@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+0.13.1    2025-05-19 16:44:20
           - Adds build_routes function to Util
           - Model error now sets view to the default
           - Navigation now has content_class attribute
