@@ -1,5 +1,7 @@
 Revision history for Web::Components
 
+          - Modal container links can now load pages
+
 0.13.1    2025-05-19 16:44:20
           - Adds build_routes function to Util
           - Model error now sets view to the default

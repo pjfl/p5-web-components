@@ -201,7 +201,8 @@ WCom.Navigation = (function() {
             else {
                for (const cb of WCom.Util.Event.onunloadCallbacks()) cb();
             }
-            if (options.renderLocation) options.renderLocation(href);
+            options.target = event.target;
+            if (options.renderLocation) options.renderLocation(href, options);
             else this.navigation.renderLocation(href);
          }.bind(this);
       }

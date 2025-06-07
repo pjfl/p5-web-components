@@ -449,8 +449,13 @@ WCom.Modal = (function() {
          }, [loader, this.frame]);
          const options = {
             formClass: this.formClass,
-            renderLocation: function(href) {
-               this._loadFrameContent(href);
+            renderLocation: function(href, options) {
+               const target = options.target;
+               const tagName = target.tagName;
+               const node = tagName == 'SPAN' ? target.parentNode : target;
+               if (node.classList.contains('pageload'))
+                  navManager.renderLocation(href);
+               else this._loadFrameContent(href);
             }.bind(this)
          };
          this.selector = new Selector(this.frame);
