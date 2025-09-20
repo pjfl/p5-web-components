@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Uses config prefix instead of name attribute
           - Modal container links can now load pages
 
 0.13.1    2025-05-19 16:44:20

@@ -175,7 +175,7 @@ around 'dispatch_request' => sub { \&_filter, @{$_[1]->_routes} };
 # Attribute constructors
 sub _build_factory_args {
    my $self   = shift;
-   my $prefix = deref $self->config, 'name';
+   my $prefix = deref $self->config, 'prefix';
 
    return sub {
       my ($self, $attr) = @_;

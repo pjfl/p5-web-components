@@ -670,7 +670,9 @@ sub _add_global {
 
       if ($self->model->is_authorised($self->context, $action)) {
          if ($method and $method eq 'menu') {
-            $self->context->models->{$moniker}->menu($self->context);
+            my $model = $self->context->models->{$moniker};
+
+            $model->menu($self->context) if $model;
             $self->_set__name('_global');
          }
 

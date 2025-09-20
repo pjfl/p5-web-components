@@ -55,7 +55,9 @@ sub build_routes (@) {
    my @routes = ();
 
    for my $pair (pairs @pairs) {
-      push @routes, $pair->key, sub {[$pair->value, @_]};
+      my $value = $pair->value;
+
+      push @routes, $pair->key, sub {[$value, @_]};
    }
 
    return @routes;
