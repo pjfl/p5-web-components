@@ -43,6 +43,16 @@ Defines the following attributes;
 
 =over 3
 
+=item C<authorised_method>
+
+Defaults to the string C<is_authorised>. A method on the C<model> object which
+is called with C<context> and the action path to an endpoint. Returns true if
+access is authorised, false otherwise
+
+=cut
+
+has 'authorised_method' => is => 'ro', isa => Str, default => 'is_authorised';
+
 =item C<confirm_message>
 
 Immutable string. The default "Are you sure ?" message
@@ -580,8 +590,7 @@ sub item {
    }
    else { $label = $self->_get_nav_label($args[0]) }
 
-   if ($self->model->is_authorised($self->context, $args[0])) {
-      my $list = $self->_lists->{$self->_name}->[1];
+   if ($self->_is_authorised($args[0])) {
       my ($text, $icon);
 
       if (is_hashref $label) {
@@ -593,6 +602,8 @@ sub item {
 
       $icon = $self->context->request->uri_for($icon)
          if $icon && $icon =~ m{ / }mx;
+
+      my $list = $self->_lists->{$self->_name}->[1];
 
       push @{$list}, [$text => $self->_uri(@args), $icon];
    }
@@ -668,7 +679,7 @@ sub _add_global {
    for my $action (@{$self->global}) {
       my ($moniker, $method) = split m{ / }mx, $action;
 
-      if ($self->model->is_authorised($self->context, $action)) {
+      if ($self->_is_authorised($action)) {
          if ($method and $method eq 'menu') {
             my $model = $self->context->models->{$moniker};
 
@@ -695,6 +706,14 @@ sub _get_nav_label {
    return $attr->{Nav}->[0] if $attr && defined $attr->{Nav};
 
    return NUL;
+}
+
+sub _is_authorised {
+   my ($self, $action) = @_;
+
+   my $method = $self->authorised_method;
+
+   return $self->model->$method($self->context, $action);
 }
 
 sub _uri {

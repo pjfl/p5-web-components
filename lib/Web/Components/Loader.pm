@@ -276,10 +276,12 @@ sub _redirect {
       my $default = {should_log_messages => 1};
       my $attr    = deref $self->config, $self->_config_attr, $default;
 
-      if ($attr->{should_log_messages} && $req->can('loc_default')) {
+      if ($attr->{should_log_messages}) {
          my $level = $redirect->{level} ? $redirect->{level} : 'info';
 
-         $self->log->$level($req->loc_default(@{$message}), $context);
+         if ($req->can('loc_default')) {
+            $self->log->$level($req->loc_default(@{$message}), $context);
+         }
       }
 
       if ($req->can('session')) {

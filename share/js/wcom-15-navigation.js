@@ -160,7 +160,10 @@ WCom.Navigation = (function() {
                frame.classList.add('link-display-' + original);
                this.linkDisplay = original;
             }
-            if (linkDisplay != this.linkDisplay) this.menu.render();
+            if (linkDisplay != this.linkDisplay) {
+               this.menu.linkDisplay = this.linkDisplay;
+               this.menu.render();
+            }
          }.bind(this);
       }
       async scan(panel, options = {}) {

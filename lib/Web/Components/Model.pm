@@ -112,8 +112,8 @@ sub error {
 
    $self->log->error($exception, $context) if $self->can('log');
 
-   my $code = $exception->rv || HTTP_INTERNAL_SERVER_ERROR;
    my $nav  = $context->stash($self->navigation_key);
+   my $code = $exception->rv || HTTP_INTERNAL_SERVER_ERROR;
 
    $code = HTTP_OK if $nav && $nav->is_script_request;
 
