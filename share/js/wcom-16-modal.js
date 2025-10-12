@@ -469,7 +469,7 @@ WCom.Modal = (function() {
                   this.valueStore = selector.setValueStore(this.valueStore);
                   this.initValue = this.valueStore.value;
                }.bind(this));
-            };
+            }
             if (this.onload) this.onload(this.frame, options);
             this.frame.style.visibility = 'visible';
          }.bind(this);
@@ -522,6 +522,7 @@ WCom.Modal = (function() {
          }
          else if (location) {
             // TODO: Deal with
+            console.warn('Redirect in response to modal loadFrameContent');
          }
          else {
             console.warn('Neither content nor redirect in response to get');

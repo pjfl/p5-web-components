@@ -95,41 +95,16 @@ body:has(aside.link-display-text) {
     grid-template-columns: #sizes[link-display-text] 1fr;
 }
 aside {
-    background: unset; grid-area: sidebar; position: sticky; z-index: 3;
-}
-header, footer {
-    position: sticky; z-index: 4;
+    grid-area: sidebar; position: sticky; z-index: 2;
 }
 header {
-    grid-area: header; top: 0;
+    grid-area: header; position: sticky; z-index: 2;
 }
 footer {
-    grid-area: footer; bottom: 0;
+    grid-area: footer;
 }
 .frame {
-    grid-area: frame; overflow: auto; position: relative; z-index: 2;
-}
-.frame .exception, .modal .exception {
-    background: #colours[frame-exception-bg];
-    border: 1px solid #colours[line-border]; border-radius: 5px;
-    box-shadow: 3px 3px 3px #colours[panel-shadow];
-    margin: 0.5rem 0; max-width: 50rem; padding: 0.5rem;
-    h1, h2, h3 {
-        margin: 0.5rem 0; text-wrap: balance;
-        span.content {
-            font-family: #fonts[system];
-        }
-    }
-    svg.error {
-        height: 40px; width: 40px; vertical-align: middle;
-    }
-    .line {
-        display: flex;
-        label {
-            font-family: #fonts[system];
-            min-width: #sizes[exception-label-min-width];
-        }
-    }
+    grid-area: frame; overflow: auto; position: relative; z-index: 1;
 }
 .standard {
     display: flex; line-height: 1.5; padding: 0.5rem 0 0 0.5rem;
@@ -184,7 +159,7 @@ footer {
         margin-left: -0.5rem; width: 1rem;
     }
     .title-text {
-        position: relative; top: -0.8rem;
+        position: relative; top: -1rem;
     }
     li.global {
         isolation: isolate; margin-right: 2.5rem; position: relative;
@@ -389,7 +364,7 @@ footer {
             }
             a, .drop-menu {
                 display: inline-block; padding: 1rem 1rem;
-                position: relative; width: 100%;
+                position: relative; white-space: nowrap; width: 100%;
             }
             .nav-panel {
                 display: inline-block; left: unset; overflow-x: hidden;
@@ -452,7 +427,7 @@ footer {
     width: #sizes[link-display-text];
 }
 .messages-panel {
-    bottom: 1rem; position: absolute; right: 1rem;
+    bottom: 1rem; position: absolute; right: 1rem; z-index: 3;
     .message-item {
         background: #colours[message-bg];
         border: 2px solid #colours[message-border]; border-radius: 5px;
@@ -460,13 +435,38 @@ footer {
         color: #colours[message-text]; font-family: #fonts[cursive];
         opacity: 1; position: relative; margin-top: 1rem;
         max-width: #sizes[message-max-width]; padding: 0.5rem;
-        transition: opacity 1s; z-index: 3;
+        transition: opacity 1s;
     }
     .message-item.fade {
         opacity: 0;
     }
     .message-item.hide {
         display: none;
+    }
+}
+.frame .exception, .modal .exception {
+    background: #colours[frame-exception-bg];
+    border: 1px solid #colours[line-border]; border-radius: 5px;
+    box-shadow: 3px 3px 3px #colours[panel-shadow];
+    margin: 0.5rem 0; max-width: 50rem; padding: 0.5rem;
+    h1, h2, h3 {
+        margin: 0.5rem 0; text-wrap: balance;
+        span.content {
+            font-family: #fonts[system];
+        }
+    }
+    svg.error {
+        height: 40px; width: 40px; vertical-align: middle;
+    }
+    .line {
+        display: flex;
+        label {
+            font-family: #fonts[system];
+            min-width: #sizes[exception-label-min-width];
+        }
+        span {
+            word-wrap: anywhere;
+        }
     }
 }
 .modal .filemanager {
@@ -558,13 +558,16 @@ footer {
             }
         }
         .modal-content-wrapper, .modal-footer {
-            padding: 0 0.5rem;
+            padding: 0.5rem 0.5rem 0 0.5rem;
         }
         .modal-footer {
             display: flex; gap: 1rem; justify-content: space-between;
         }
         .modal-loader {
             display: flex; justify-content: center;
+            .icon-wrapper, .loading, .loading-spinner {
+                display: inline-block;
+            }
             .loading {
                 margin: 1rem;
             }
@@ -575,7 +578,7 @@ footer {
     background: #grads[body-bg]; z-index: 4;
 }
 .documentation {
-    font-family: #fonts[system]; padding-top: 0.5rem;
+    font-family: #fonts[system];
     h1 {
         font-size: 1rem;
     }
@@ -589,7 +592,7 @@ footer {
         font-size: 0.8rem; margin: 0 0 0.5rem 0;
     }
     pre {
-        margin: 0 0 0.5rem 2rem;
+        margin: 0 0 1rem 2rem;
     }
 }
 .file-preview {
