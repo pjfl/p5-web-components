@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Renamed frame to main in css
           - Cleaned up z axis use in css
           - Page layout now uses CSS grid
           - Uses config prefix instead of name attribute

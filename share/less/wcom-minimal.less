@@ -6,9 +6,9 @@
     button-text: black;
     close: firebrick;
     contrast: whitesmoke;
-    frame-exception-bg: lightpink;
     line-border: gray;
     link: seagreen;
+    main-exception-bg: lightpink;
     message-bg: linen;
     message-border: firebrick;
     message-text: black;
@@ -69,6 +69,9 @@
 *, *::before, *::after {
     box-sizing: border-box;
 }
+html {
+    overflow: hidden;
+}
 html:has(body.dark) {
     color-scheme: dark;
 }
@@ -77,14 +80,14 @@ html:has(body.light) {
 }
 body {
     background-image: #grads[body-bg]; display: grid;
+    grid-template-areas: "header header" "sidebar main" "footer footer";
     grid-template-columns: #sizes[link-display-both] 1fr;
     grid-template-rows: auto 1fr auto;
-    grid-template-areas: "header header" "sidebar frame" "footer footer";
     margin: 0; min-height: 100vh; min-height: 100dvh; padding: 0 0.5rem;
     @media (max-width: #sizes[lower-break]) {
-        grid-template-rows: auto auto 1fr auto;
         grid-template-areas:
-            "header header" "sidebar sidebar" "frame frame" "footer footer";
+            "header header" "sidebar sidebar" "main main" "footer footer";
+        grid-template-rows: auto auto 1fr auto;
         padding: 0;
     }
 }
@@ -94,17 +97,19 @@ body:has(aside.link-display-icon) {
 body:has(aside.link-display-text) {
     grid-template-columns: #sizes[link-display-text] 1fr;
 }
-aside {
-    grid-area: sidebar; position: sticky; z-index: 2;
-}
 header {
-    grid-area: header; position: sticky; z-index: 2;
+    grid-area: header; position: sticky; top: 0; z-index: 3;
+}
+aside {
+    grid-area: sidebar; position: sticky; top: #sizes[nav-header-height];
+    z-index: 2;
+}
+main {
+    grid-area: main; overflow: auto; position: relative;
+    scrollbar-color: #colours[selected] #colours[panel-bg]; z-index: 1;
 }
 footer {
     grid-area: footer;
-}
-.frame {
-    grid-area: frame; overflow: auto; position: relative; z-index: 1;
 }
 .standard {
     display: flex; line-height: 1.5; padding: 0.5rem 0 0 0.5rem;
@@ -119,7 +124,8 @@ footer {
         display: inline-block; vertical-align: top;
     }
     .panel {
-        align-items: flex-start; display: flex; justify-content: center;
+        align-items: flex-start; column-gap: 0.5rem; display: flex;
+        justify-content: center;
     }
 }
 .centred {
@@ -444,8 +450,8 @@ footer {
         display: none;
     }
 }
-.frame .exception, .modal .exception {
-    background: #colours[frame-exception-bg];
+.main .exception, .modal .exception {
+    background: #colours[main-exception-bg];
     border: 1px solid #colours[line-border]; border-radius: 5px;
     box-shadow: 3px 3px 3px #colours[panel-shadow];
     margin: 0.5rem 0; max-width: 50rem; padding: 0.5rem;

@@ -142,22 +142,22 @@ WCom.Navigation = (function() {
             const linkDisplay = this.linkDisplay;
             const navigation = document.getElementById('navigation');
             const sidebar = document.getElementById('sidebar');
-            const frame = document.getElementById('frame');
+            const main = document.getElementById('main');
             const className = 'link-display-' + this.linkDisplay;
             navigation.classList.remove(className);
             sidebar.classList.remove(className);
-            frame.classList.remove(className);
+            main.classList.remove(className);
             if (window.innerWidth <= this.mediaBreak) {
                navigation.classList.add('link-display-icon');
                sidebar.classList.add('link-display-icon');
-               frame.classList.add('link-display-icon');
+               main.classList.add('link-display-icon');
                this.linkDisplay = 'icon';
             }
             else {
                const original = this.properties['link-display'];
                navigation.classList.add('link-display-' + original);
                sidebar.classList.add('link-display-' + original);
-               frame.classList.add('link-display-' + original);
+               main.classList.add('link-display-' + original);
                this.linkDisplay = original;
             }
             if (linkDisplay != this.linkDisplay) {
