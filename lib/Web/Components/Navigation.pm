@@ -212,6 +212,17 @@ has '_link_display' =>
    init_arg => 'link_display',
    default  => 'both';
 
+=item C<link_display_class>
+
+HTML classname used to size the width of the global menus
+
+=cut
+
+has 'link_display_class' =>
+   is      => 'lazy',
+   isa     => Str,
+   default => sub { 'nav-link-' . shift->link_display };
+
 =item C<logo>
 
 A optional lazy string representation of a partial URI with a null
@@ -374,12 +385,11 @@ has '_data' =>
    isa     => HashRef,
    default => sub {
       my $self     = shift;
-      my $location = 'navigation-'  . $self->menu_location;
-      my $display  = 'link-display-' . $self->link_display;
+      my $location = 'navigation-' . $self->menu_location;
 
       return {
          'id'    => 'navigation',
-         'class' => "navigation ${location} ${display}",
+         'class' => "navigation ${location} " . $self->link_display_class,
          'data-navigation-config' => $self->_json->encode({
             'menus'      => $self->_menus,
             'messages'   => $self->_messages,

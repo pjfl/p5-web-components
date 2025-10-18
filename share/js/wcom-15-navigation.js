@@ -143,21 +143,21 @@ WCom.Navigation = (function() {
             const navigation = document.getElementById('navigation');
             const sidebar = document.getElementById('sidebar');
             const main = document.getElementById('main');
-            const className = 'link-display-' + this.linkDisplay;
+            const className = 'nav-link-' + this.linkDisplay;
             navigation.classList.remove(className);
             sidebar.classList.remove(className);
             main.classList.remove(className);
             if (window.innerWidth <= this.mediaBreak) {
-               navigation.classList.add('link-display-icon');
-               sidebar.classList.add('link-display-icon');
-               main.classList.add('link-display-icon');
+               navigation.classList.add('nav-link-icon');
+               sidebar.classList.add('nav-link-icon');
+               main.classList.add('nav-link-icon');
                this.linkDisplay = 'icon';
             }
             else {
                const original = this.properties['link-display'];
-               navigation.classList.add('link-display-' + original);
-               sidebar.classList.add('link-display-' + original);
-               main.classList.add('link-display-' + original);
+               navigation.classList.add('nav-link-' + original);
+               sidebar.classList.add('nav-link-' + original);
+               main.classList.add('nav-link-' + original);
                this.linkDisplay = original;
             }
             if (linkDisplay != this.linkDisplay) {

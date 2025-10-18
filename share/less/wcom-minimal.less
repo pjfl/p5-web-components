@@ -1,3 +1,16 @@
+@lower-break: 480px;
+@upper-break: 680px;
+@exception-label-min-width: 10rem;
+@exception-max-width: 50rem;
+@footer-height: 1rem;
+@message-max-width: 16rem;
+@nav-context-width: 8rem;
+@nav-control-width: 10rem;
+@nav-header-height: 3rem;
+@nav-link-both: 7rem;
+@nav-link-icon: 4rem;
+@nav-link-text: 6rem;
+@nav-panel-max-height: 32rem;
 #colours() {
     button-bg: bisque;
     button-border: gainsboro;
@@ -53,18 +66,10 @@
     );
 }
 #sizes() {
-    lower-break: 480px;
-    upper-break: 680px;
-    exception-label-min-width: 10rem;
-    footer-height: 1rem;
-    message-max-width: 16rem;
-    nav-context-width: 8rem;
-    nav-control-width: 10rem;
-    nav-header-height: 3rem;
-    nav-panel-max-height: 32rem;
-    link-display-both: 7rem;
-    link-display-icon: 4rem;
-    link-display-text: 6rem;
+    footer-height: @footer-height + 1rem;
+    sidebar-width-both: @nav-link-both + 0.5rem;
+    sidebar-width-icon: @nav-link-icon + 0.5rem;
+    sidebar-width-text: @nav-link-text + 0.5rem;
 }
 *, *::before, *::after {
     box-sizing: border-box;
@@ -80,39 +85,38 @@ html:has(body.light) {
 }
 body {
     background-image: #grads[body-bg]; display: grid;
-    grid-template-areas: "header header" "sidebar main" "footer footer";
-    grid-template-columns: #sizes[link-display-both] 1fr;
-    grid-template-rows: auto 1fr auto;
-    margin: 0; min-height: 100vh; min-height: 100dvh; padding: 0 0.5rem;
-    @media (max-width: #sizes[lower-break]) {
+    grid-template-areas: "header header" "sidebar main" "sidebar footer";
+    grid-template-columns: #sizes[sidebar-width-both] 1fr;
+    grid-template-rows: auto 1fr #sizes[footer-height];
+    margin: 0; min-height: 100vh; min-height: 100dvh; padding: 0;
+    @media (max-width: @lower-break) {
         grid-template-areas:
             "header header" "sidebar sidebar" "main main" "footer footer";
-        grid-template-rows: auto auto 1fr auto;
-        padding: 0;
+        grid-template-rows: auto auto 1fr #sizes[footer-height];
     }
 }
-body:has(aside.link-display-icon) {
-    grid-template-columns: #sizes[link-display-icon] 1fr;
+body:has(aside.nav-link-icon) {
+    grid-template-columns: #sizes[sidebar-width-icon] 1fr;
 }
-body:has(aside.link-display-text) {
-    grid-template-columns: #sizes[link-display-text] 1fr;
+body:has(aside.nav-link-text) {
+    grid-template-columns: #sizes[sidebar-width-text] 1fr;
 }
 header {
-    grid-area: header; position: sticky; top: 0; z-index: 3;
+    grid-area: header; padding: 0 0.5rem; position: sticky; top: 0; z-index: 3;
 }
 aside {
-    grid-area: sidebar; position: sticky; top: #sizes[nav-header-height];
-    z-index: 2;
+    grid-area: sidebar; padding-left: 0.5rem; position: sticky;
+    top: @nav-header-height; z-index: 2;
 }
 main {
     grid-area: main; overflow: auto; position: relative;
     scrollbar-color: #colours[selected] #colours[panel-bg]; z-index: 1;
 }
 footer {
-    grid-area: footer;
+    grid-area: footer; bottom: 0; padding: 0.5rem; position: sticky;
 }
 .standard {
-    display: flex; line-height: 1.5; padding: 0.5rem 0 0 0.5rem;
+    display: flex; line-height: 1.5; padding: 0.5rem;
     position: absolute; width: 100%;
     h1, h2, h3, h4, h5 {
         font-family: #fonts[system]; margin: 1rem; text-wrap: balance;
@@ -136,13 +140,12 @@ footer {
 }
 .sidebar, .navigation {
     .nav-title {
-        border-top: 0.5rem solid #colours[nav-bg];
-        display: inline-block; font-family: #fonts[system];
-        font-size: larger; height: #sizes[nav-header-height];
+        border-top: 0.5rem solid #colours[nav-bg]; font-family: #fonts[system];
+        font-size: larger; height: @nav-header-height;
         img {
-            height: 24px; width: 24px; margin-right: 0.25rem;
-            margin-top: 0.3rem; vertical-align: top;
-            @media (max-width: #sizes[lower-break]) {
+            height: 24px; width: 24px; margin: 0.3rem 0.25rem 0 0;
+            vertical-align: top;
+            @media (max-width: @lower-break) {
                 margin-left: 0.75rem;
             }
         }
@@ -151,7 +154,7 @@ footer {
         border-bottom: 40px solid transparent;
         border-right: 28px solid #colours[nav-bg];
         content: ''; display: inline-block; height: 0; width: 0;
-        @media (max-width: #sizes[lower-break]) {
+        @media (max-width: @lower-break) {
             border-bottom: 0; border-right: 0;
             border-top-right-radius: 10px;
             box-shadow: 0.5rem 0 #colours[nav-bg];
@@ -178,15 +181,15 @@ footer {
         .nav-panel {
             background: #colours[panel-bg]; left: -1.1rem; max-height: 0;
             overflow-y: hidden; position: absolute; text-align: left;
-            top: 2.5rem; transition: all ease-in-out 500ms;
-            width: #sizes[nav-context-width];
+            transition: all ease-in-out 500ms;
+            width: @nav-context-width;
         }
         .nav-panel:active, .nav-panel:hover {
-            overflow-y: visible; max-height: #sizes[nav-panel-max-height];
+            overflow-y: visible; max-height: @nav-panel-max-height;
         }
     }
     li.global:hover .nav-panel {
-        max-height: #sizes[nav-panel-max-height];
+        max-height: @nav-panel-max-height;
     }
     li.global.selected > span::before, li.global.selected > a::before {
         background: #colours[link]; border-radius: 2px; content: '';
@@ -210,14 +213,14 @@ footer {
         .nav-panel {
             background: #colours[panel-bg]; max-height: 0;
             overflow: hidden; position: absolute; right: 0;
-            text-align: left; top: 2.5rem; transition: all ease-in-out 500ms;
+            text-align: left; transition: all ease-in-out 500ms;
         }
         .nav-panel:hover {
             overflow: visible;
         }
     }
     .nav-control:hover .nav-panel {
-        max-height: #sizes[nav-panel-max-height];
+        max-height: @nav-panel-max-height;
     }
     .nav-list {
         display: inline-block; list-style: none; margin: 0; padding: 0;
@@ -276,13 +279,13 @@ footer {
     .nav-list.context {
         width: 100%;
         li.context:has(> a:hover, > form:hover) > .slide-out {
-            overflow-x: hidden; width: #sizes[nav-context-width];
+            overflow-x: hidden; width: @nav-context-width;
         }
     }
     .nav-list.control {
-        width: #sizes[nav-control-width];
+        width: @nav-control-width;
         li.control:has(> a:hover, > form:hover) > .slide-out {
-            overflow-x: hidden; width: #sizes[nav-context-width];
+            overflow-x: hidden; width: @nav-context-width;
         }
     }
     .nav-menu {
@@ -298,15 +301,15 @@ footer {
         }
     }
     .slide-out:active, .slide-out:hover {
-        overflow-x: visible; width: #sizes[nav-context-width];
+        overflow-x: visible; width: @nav-context-width;
     }
 }
 .navigation {
     align-items: center; display: flex; justify-content: left;
     .nav-menu {
-        border-bottom-right-radius: 10px; display: inline-block; flex-grow: 10;
-        height: #sizes[nav-header-height]; padding-right: 1rem;
-        padding-top: 0.5rem; position: relative; text-align: right;
+        border-bottom-right-radius: 10px; flex-grow: 10;
+        height: @nav-header-height; padding: 0.5rem 0.5rem 0 0;
+        position: relative; text-align: right;
         .nav-control {
             position: relative;
         }
@@ -320,7 +323,7 @@ footer {
         transform: rotate(30deg); width: 20px;
     }
     .nav-menu::before, .title-text {
-        @media (max-width: #sizes[upper-break]) {
+        @media (max-width: @upper-break) {
             display: none;
         }
     }
@@ -328,26 +331,26 @@ footer {
 .navigation::before {
     background: #colours[nav-bg];
     border-top: 0.5rem; border-top-left-radius: 20px;
-    content: ''; display: inline-block; height: #sizes[nav-header-height];
-    @media (max-width: #sizes[lower-break]) {
+    content: ''; display: inline-block; height: @nav-header-height;
+    @media (max-width: @lower-break) {
         display: none;
     }
 }
-.navigation.link-display-both::before {
-    width: #sizes[link-display-both];
+.navigation.nav-link-both::before {
+    width: @nav-link-both;
 }
-.navigation.link-display-icon::before {
-    width: #sizes[link-display-icon];
+.navigation.nav-link-icon::before {
+    width: @nav-link-icon;
 }
-.navigation.link-display-text::before {
-    width: #sizes[link-display-text];
+.navigation.nav-link-text::before {
+    width: @nav-link-text;
 }
 .navigation.navigation-header {
     li.global {
         a {
             padding: 0.5rem;
         }
-        @media (max-width: #sizes[lower-break]) {
+        @media (max-width: @lower-break) {
             margin-right: 0.5rem;
         }
     }
@@ -359,13 +362,13 @@ footer {
     .nav-list.global {
         align-items: flex-start; display: flex; flex-direction: column;
         min-height: 2rem; padding-top: 0.5rem;
-        @media (max-width: #sizes[lower-break]) {
+        @media (max-width: @lower-break) {
             align-items: flex-start; flex-direction: row;
             padding-top: 0;
         }
         li.global {
             display: block; margin: 0; padding: 1rem 0; width: 100%;
-            @media (max-width: #sizes[lower-break]) {
+            @media (max-width: @lower-break) {
                 padding: 0;
             }
             a, .drop-menu {
@@ -378,8 +381,8 @@ footer {
             }
         }
         li.global:hover .nav-panel {
-            overflow-x: visible; max-height: #sizes[nav-panel-max-height];
-            width: #sizes[nav-context-width];
+            overflow-x: visible; max-height: @nav-panel-max-height;
+            width: @nav-context-width;
         }
         li.global:first-child {
             padding-top: 0;
@@ -393,7 +396,7 @@ footer {
         }
         .slide-out {
             display: inline-block; left: -2px; position: absolute;
-            transform: translate(#sizes[nav-context-width], 0);
+            transform: translate(@nav-context-width, 0);
         }
     }
     .nav-list.context {
@@ -410,37 +413,37 @@ footer {
 }
 .sidebar::after {
     background: #grads[sidebar-bg]; content: ''; display: block; height: 5rem;
-    @media (max-width: #sizes[lower-break]) {
+    @media (max-width: @lower-break) {
         display: none;
     }
 }
-.sidebar.link-display-both .nav-menu {
-    width: #sizes[link-display-both];
+.sidebar.nav-link-both .nav-menu {
+    width: @nav-link-both;
 }
-.sidebar.link-display-icon .nav-menu {
-    width: #sizes[link-display-icon];
+.sidebar.nav-link-icon .nav-menu {
+    width: @nav-link-icon;
 }
-.sidebar.link-display-text .nav-menu {
-    width: #sizes[link-display-text];
+.sidebar.nav-link-text .nav-menu {
+    width: @nav-link-text;
 }
-.sidebar.link-display-both::after {
-    width: #sizes[link-display-both];
+.sidebar.nav-link-both::after {
+    width: @nav-link-both;
 }
-.sidebar.link-display-icon::after {
-    width: #sizes[link-display-icon];
+.sidebar.nav-link-icon::after {
+    width: @nav-link-icon;
 }
-.sidebar.link-display-text::after {
-    width: #sizes[link-display-text];
+.sidebar.nav-link-text::after {
+    width: @nav-link-text;
 }
 .messages-panel {
-    bottom: 1rem; position: absolute; right: 1rem; z-index: 3;
+    bottom: 2rem; position: absolute; right: 1rem; z-index: 3;
     .message-item {
         background: #colours[message-bg];
         border: 2px solid #colours[message-border]; border-radius: 5px;
         box-shadow: 3px 3px 3px #colours[panel-shadow];
         color: #colours[message-text]; font-family: #fonts[cursive];
         opacity: 1; position: relative; margin-top: 1rem;
-        max-width: #sizes[message-max-width]; padding: 0.5rem;
+        max-width: @message-max-width; padding: 0.5rem;
         transition: opacity 1s;
     }
     .message-item.fade {
@@ -454,7 +457,7 @@ footer {
     background: #colours[main-exception-bg];
     border: 1px solid #colours[line-border]; border-radius: 5px;
     box-shadow: 3px 3px 3px #colours[panel-shadow];
-    margin: 0.5rem 0; max-width: 50rem; padding: 0.5rem;
+    margin: 0.5rem 0; max-width: @exception-max-width; padding: 0.5rem;
     h1, h2, h3 {
         margin: 0.5rem 0; text-wrap: balance;
         span.content {
@@ -468,7 +471,7 @@ footer {
         display: flex;
         label {
             font-family: #fonts[system];
-            min-width: #sizes[exception-label-min-width];
+            min-width: @exception-label-min-width;
         }
         span {
             word-wrap: anywhere;
@@ -599,6 +602,9 @@ footer {
     }
     pre {
         margin: 0 0 1rem 2rem;
+        code.code {
+            font-family: #fonts[code];
+        }
     }
 }
 .file-preview {

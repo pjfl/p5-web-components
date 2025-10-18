@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Replaced maps with variables in CSS
           - Renamed frame to main in css
           - Cleaned up z axis use in css
           - Page layout now uses CSS grid
