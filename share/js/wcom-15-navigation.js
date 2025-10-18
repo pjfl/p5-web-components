@@ -62,7 +62,7 @@ WCom.Navigation = (function() {
          }.bind(this);
       }
       async process(action, form) {
-         const options = { headers: { Prefer: 'render=partial' }, form: form };
+         const options = { headers: { Prefer: 'render=partial' }, form };
          const { location, reload, text }
                = await this.bitch.blows(action, options);
          if (location) {
@@ -200,13 +200,15 @@ WCom.Navigation = (function() {
       clickHandler(href, options) {
          return function(event) {
             event.preventDefault();
-            if (options.onUnload) options.onUnload();
-            else {
-               for (const cb of WCom.Util.Event.onunloadCallbacks()) cb();
-            }
             options.target = event.target;
             if (options.renderLocation) options.renderLocation(href, options);
-            else this.navigation.renderLocation(href);
+            else {
+               if (options.onUnload) options.onUnload();
+               else {
+                  for (const cb of WCom.Util.Event.onunloadCallbacks()) cb();
+               }
+               this.navigation.renderLocation(href);
+            }
          }.bind(this);
       }
       confirmHandler(name) {
@@ -374,6 +376,9 @@ WCom.Navigation = (function() {
          setTimeout(function() {
             item.classList.add('fade');
          }, 1000 * this.displayTime);
+         setTimeout(function() {
+            item.classList.add('hide');
+         }, 1000 * (this.displayTime + 3));
       }
       async render(href) {
          const url = new URL(href);

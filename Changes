@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Fixed frame loading in modal JS
           - Replaced maps with variables in CSS
           - Renamed frame to main in css
           - Cleaned up z axis use in css

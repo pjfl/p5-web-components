@@ -444,10 +444,11 @@ WCom.Modal = (function() {
             id: 'selector-frame',
             style: 'visibility:hidden;'
          });
+         this.selector = new Selector(this.frame);
          const container = this.h.div({
             className: 'modal-frame-container'
          }, [loader, this.frame]);
-         const options = {
+         this.renderOptions = {
             formClass: this.formClass,
             renderLocation: function(href, options) {
                const target = options.target;
@@ -458,7 +459,6 @@ WCom.Modal = (function() {
                else this._loadFrameContent(href);
             }.bind(this)
          };
-         this.selector = new Selector(this.frame);
          const onload = function() {
             loader.style.display = 'none';
             const selector = this.selector;
@@ -470,7 +470,6 @@ WCom.Modal = (function() {
                   this.initValue = this.valueStore.value;
                }.bind(this));
             }
-            if (this.onload) this.onload(this.frame, options);
             this.frame.style.visibility = 'visible';
          }.bind(this);
          this._loadFrameContent(this.url, onload);
@@ -517,9 +516,7 @@ WCom.Modal = (function() {
       async _loadFrameContent(url, onload) {
          const opt = { headers: { prefer: 'render=partial' }, response: 'text'};
          const { location, text } = await this.bitch.sucks(url, opt);
-         if (text && text.length > 0) {
-            this.frame.innerHTML = text;
-         }
+         if (text && text.length > 0) this.frame.innerHTML = text;
          else if (location) {
             // TODO: Deal with
             console.warn('Redirect in response to modal loadFrameContent');
@@ -528,6 +525,7 @@ WCom.Modal = (function() {
             console.warn('Neither content nor redirect in response to get');
          }
          if (onload) onload();
+         if (this.onload) this.onload(this.frame, this.renderOptions);
       }
    }
    Object.assign(ModalUtil.prototype, WCom.Util.Bitch);

@@ -2,6 +2,7 @@
 @upper-break: 680px;
 @exception-label-min-width: 10rem;
 @exception-max-width: 50rem;
+@filemanager-min-width: 10rem;
 @footer-height: 1rem;
 @message-max-width: 16rem;
 @nav-context-width: 8rem;
@@ -116,8 +117,8 @@ footer {
     grid-area: footer; bottom: 0; padding: 0.5rem; position: sticky;
 }
 .standard {
-    display: flex; line-height: 1.5; padding: 0.5rem;
-    position: absolute; width: 100%;
+    display: flex; line-height: 1.5; padding: 0.5rem; position: absolute;
+    width: 100%;
     h1, h2, h3, h4, h5 {
         font-family: #fonts[system]; margin: 1rem; text-wrap: balance;
     }
@@ -417,22 +418,13 @@ footer {
         display: none;
     }
 }
-.sidebar.nav-link-both .nav-menu {
+.sidebar.nav-link-both::after, .sidebar.nav-link-both .nav-menu {
     width: @nav-link-both;
 }
-.sidebar.nav-link-icon .nav-menu {
+.sidebar.nav-link-icon::after, .sidebar.nav-link-icon .nav-menu {
     width: @nav-link-icon;
 }
-.sidebar.nav-link-text .nav-menu {
-    width: @nav-link-text;
-}
-.sidebar.nav-link-both::after {
-    width: @nav-link-both;
-}
-.sidebar.nav-link-icon::after {
-    width: @nav-link-icon;
-}
-.sidebar.nav-link-text::after {
+.sidebar.nav-link-text::after, .sidebar.nav-link-text .nav-menu {
     width: @nav-link-text;
 }
 .messages-panel {
@@ -479,7 +471,7 @@ footer {
     }
 }
 .modal .filemanager {
-    margin: 0; min-width: 10rem;
+    margin: 0; min-width: @filemanager-min-width;
 }
 .modal-outer-wrapper {
     bottom: 0; left: 0; position: absolute; right: 0; top: 0;
