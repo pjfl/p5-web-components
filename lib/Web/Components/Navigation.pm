@@ -410,7 +410,6 @@ has '_data' =>
                'title'            => $self->title,
                'title-abbrev'     => $self->title_abbrev,
                'verify-token'     => $self->context->verification_token,
-               'version'          => MCat->VERSION,
             },
          }),
       };

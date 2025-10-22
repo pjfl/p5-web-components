@@ -2,14 +2,13 @@
 @upper-break: 680px;
 @exception-label-min-width: 10rem;
 @exception-max-width: 50rem;
-@filemanager-min-width: 10rem;
 @footer-height: 1rem;
 @message-max-width: 16rem;
 @nav-context-width: 8rem;
 @nav-control-width: 10rem;
 @nav-header-height: 3rem;
 @nav-link-both: 7rem;
-@nav-link-icon: 4rem;
+@nav-link-icon: 3.5rem;
 @nav-link-text: 6rem;
 @nav-panel-max-height: 32rem;
 #colours() {
@@ -362,13 +361,13 @@ footer {
 .sidebar {
     .nav-list.global {
         align-items: flex-start; display: flex; flex-direction: column;
-        min-height: 2rem; padding-top: 0.5rem;
+        min-height: 2rem;
         @media (max-width: @lower-break) {
             align-items: flex-start; flex-direction: row;
             padding-top: 0;
         }
         li.global {
-            display: block; margin: 0; padding: 1rem 0; width: 100%;
+            display: block; margin: 0; padding: 0.5rem 0; width: 100%;
             @media (max-width: @lower-break) {
                 padding: 0;
             }
@@ -469,9 +468,6 @@ footer {
             word-wrap: anywhere;
         }
     }
-}
-.modal .filemanager {
-    margin: 0; min-width: @filemanager-min-width;
 }
 .modal-outer-wrapper {
     bottom: 0; left: 0; position: absolute; right: 0; top: 0;

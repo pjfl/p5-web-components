@@ -23,7 +23,6 @@ WCom.Navigation = (function() {
          this.title            = this.properties['title'];
          this.titleAbbrev      = this.properties['title-abbrev'];
          this.token            = this.properties['verify-token'];
-         this.version          = this.properties['version'];
          this.contentContainer = document.getElementById(this.containerName);
          this.contentPanel     = document.getElementById(this.contentName);
          this.menu             = new Menus(this, config['menus']);
