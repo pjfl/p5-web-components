@@ -199,15 +199,10 @@ WCom.Navigation = (function() {
       clickHandler(href, options) {
          return function(event) {
             event.preventDefault();
-            options.target = event.target;
-            if (options.renderLocation) options.renderLocation(href, options);
-            else {
-               if (options.onUnload) options.onUnload();
-               else {
-                  for (const cb of WCom.Util.Event.onunloadCallbacks()) cb();
-               }
-               this.navigation.renderLocation(href);
-            }
+            if (options.renderLocation && options.renderLocation(href, event))
+               return;
+            for (const cb of WCom.Util.Event.onunloadCallbacks()) cb();
+            this.navigation.renderLocation(href);
          }.bind(this);
       }
       confirmHandler(name) {

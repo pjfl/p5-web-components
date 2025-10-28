@@ -415,7 +415,7 @@ WCom.Modal = (function() {
             callback = () => {},
             cancelCallback,
             formClass = 'classic',
-            icons = '/icons.svg',
+            icons,
             initValue,
             labels = ['Cancel', 'OK'],
             noButtons = false,
@@ -448,17 +448,6 @@ WCom.Modal = (function() {
          const container = this.h.div({
             className: 'modal-frame-container'
          }, [loader, this.frame]);
-         this.renderOptions = {
-            formClass: this.formClass,
-            renderLocation: function(href, options) {
-               const target = options.target;
-               const tagName = target.tagName;
-               const node = tagName == 'SPAN' ? target.parentNode : target;
-               if (node.classList.contains('pageload'))
-                  navManager.renderLocation(href);
-               else this._loadFrameContent(href);
-            }.bind(this)
-         };
          const onload = function() {
             loader.style.display = 'none';
             const selector = this.selector;
@@ -472,6 +461,17 @@ WCom.Modal = (function() {
             }
             this.frame.style.visibility = 'visible';
          }.bind(this);
+         this.scanOptions = {
+            formClass: this.formClass,
+            renderLocation: function(href, event) {
+               const target = event.target;
+               const tagName = target.tagName;
+               const node = tagName == 'SPAN' ? target.parentNode : target;
+               if (node.classList.contains('pageload')) return false;
+               this._loadFrameContent(href);
+               return true;
+            }.bind(this)
+         };
          this._loadFrameContent(this.url, onload);
          return container;
       }
@@ -525,7 +525,7 @@ WCom.Modal = (function() {
             console.warn('Neither content nor redirect in response to get');
          }
          if (onload) onload();
-         if (this.onload) this.onload(this.frame, this.renderOptions);
+         if (this.onload) this.onload(this.frame, this.scanOptions);
       }
    }
    Object.assign(ModalUtil.prototype, WCom.Util.Bitch);

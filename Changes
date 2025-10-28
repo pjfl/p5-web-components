@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Fixes unwanted calls to unload from modal forms
           - Fixed footer to bottom of main in CSS
           - Removed version from Navigation
           - Fixed frame loading in modal JS
