@@ -211,10 +211,7 @@ WCom.Modal = (function() {
             };
          }
          if (drag.dragNode) drag.dragNode.style.position = 'absolute';
-         document.addEventListener('mousemove', this.dragHandler.bind(this));
-         document.addEventListener('mouseup', this.dropHandler.bind(this));
-         document.addEventListener('wheel', this.wheelHandler.bind(this));
-         scrollWrapper.addEventListener('scroll', this.scrollHandler.bind(this));
+         this._addHandlers(scrollWrapper);
          this.updateDropNodePositions();
          this.dragHandler(event);
       }
@@ -222,10 +219,7 @@ WCom.Modal = (function() {
          return this.drag;
       }
       stopDrag() {
-         this.scrollWrapper.removeEventListener('scroll', this.scrollHandler);
-         document.removeEventListener('wheel', this.wheelHandler);
-         document.removeEventListener('mouseup', this.dropHandler);
-         document.removeEventListener('mousemove', this.dragHandler);
+         this._removeHandlers();
          this.clearScrollInterval();
          const { drag } = this;
          if (drag.dragNode && !drag.positionAbsolute) {
@@ -275,6 +269,27 @@ WCom.Modal = (function() {
       wheelHandler(event) {
          this.scrollWrapper.scrollBy(0, Math.floor(event.deltaY / 7));
       }
+      _addHandlers(wrapper) {
+         if (wrapper.getAttribute('scrolllistener')) return;
+         wrapper.setAttribute('scrolllistener', 'scrolllistener');
+         this.boundScrollHandler = this.scrollHandler.bind(this);
+         wrapper.addEventListener('scroll', this.boundScrollHandler);
+         this.boundDragHandler = this.dragHandler.bind(this);
+         document.addEventListener('mousemove', this.boundDragHandler);
+         this.boundDropHandler = this.dropHandler.bind(this);
+         document.addEventListener('mouseup', this.boundDropHandler);
+         this.boundWheelHandler = this.wheelHandler.bind(this);
+         document.addEventListener('wheel', this.boundWheelHandler);
+      }
+      _removeHandlers() {
+         const wrapper = this.scrollWrapper;
+         if (!wrapper.getAttribute('scrolllistener')) return;
+         document.removeEventListener('wheel', this.boundWheelHandler);
+         document.removeEventListener('mouseup', this.boundDropHandler);
+         document.removeEventListener('mousemove', this.boundDragHandler);
+         wrapper.removeEventListener('scroll', this.boundScrollHandler);
+         wrapper.removeAttribute('scrolllistener');
+      }
    }
    Object.assign(Drag.prototype, WCom.Util.Markup);
    class Modal {
@@ -285,7 +300,7 @@ WCom.Modal = (function() {
          this.classList = options.classList;
          this.closeCallback = options.closeCallback;
          this.content = content;
-         this.dragScrollWrapper = options.dragScrollWrapper || '.standard';
+         this.dragScrollWrapper = options.dragScrollWrapper || '.main';
          this.dropCallback = options.dropCallback;
          this.icons = options.icons;
          this.id = options.id || 'modal';

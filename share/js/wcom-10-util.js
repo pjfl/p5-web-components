@@ -31,7 +31,7 @@ WCom.Util = (function() {
       'onmouseenter', 'onmouseleave', 'onmousemove', 'onmouseover', 'onsubmit'
    ];
    const _htmlProps = [
-      'disabled', 'readonly', 'required'
+      'disabled', 'readonly', 'max', 'maxlength', 'min', 'minlength', 'required'
    ];
    const _styleProps = [
       'height', 'width'
@@ -158,10 +158,14 @@ WCom.Util = (function() {
                   el.addEventListener(prop.replace(/^on/, ''), attr[prop]);
                }
                else if (_htmlProps.includes(prop)) {
-                  el.setAttribute(prop, prop);
+                  el.setAttribute(prop, attr[prop]);
                }
-               else if (_styleProps.includes(prop)) el.style[prop] = attr[prop];
-               else el[prop] = attr[prop];
+               else if (_styleProps.includes(prop)) {
+                  el.style[prop] = attr[prop];
+               }
+               else {
+                  el[prop] = attr[prop];
+               }
             }
          }
          else if (type == 'array')   { content = attr; }
