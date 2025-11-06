@@ -1,5 +1,8 @@
-// Package WCom.Util
 if (!window.WCom) window.WCom = {};
+/** Web Components Utilities
+    @global
+    @alias WCom/Util
+ */
 WCom.Util = (function() {
    const _esc = encodeURIComponent;
    const _createQueryString = function(obj, traditional = true) {
@@ -7,8 +10,9 @@ WCom.Util = (function() {
       return Object.entries(obj)
          .filter(([key, val]) => val)
          .reduce((acc, [k, v]) => {
-            if (traditional && Array.isArray(v))
+            if (traditional && Array.isArray(v)) {
                return acc.concat(v.map(i => `${_esc(k)}=${_esc(i)}`));
+            }
             return acc.concat(`${_esc(k)}=${_esc(v)}`);
          }, []).join('&');
    };
@@ -48,6 +52,10 @@ WCom.Util = (function() {
    const _ucfirst = function(s) {
       return s && s[0].toUpperCase() + s.slice(1) || '';
    };
+   /** @class
+       @classdesc The fetch API can be improved upon. A plain object can
+          be passed for headers, forms are posted with either encoding type.
+          JSON can be posted different response types returned */
    class Bitch {
       _newHeaders() {
          const headers = new Headers();
@@ -63,6 +71,24 @@ WCom.Util = (function() {
                options.headers.set(k, v);
          }
       }
+      /** Fetches the response to a POST request
+          @function
+          @param {URI} url - Where to post the request
+          @param {object} options - Control parameters for the fetch call
+          @property {string} options.enctype The encoding type
+          @property {array} options.files The first element is the file
+              to be posted
+          @property {object} options.form The form to be posted
+          @property {object} options.headers An opaque Headers
+              object is constructed from this plain object
+          @property {object} options.json Set the body to this and the content
+              type to 'application/json'
+          @property {string} options.method Defaults to POST
+          @property {string} options.response Either 'text' (default),
+              'object', or 'response'
+          @returns {object} Attributes may include; 'location' and 'status' as
+              well as the response type requested
+      */
       async blows(url, options = {}) {
          let want = options.response || 'text'; delete options.response;
          this._setHeaders(options);
@@ -101,7 +127,7 @@ WCom.Util = (function() {
          }
          const headers = response.headers;
          const location = headers.get('location');
-         if (location) {
+         if (location && want != 'response') {
             const reload_header = headers.get('x-force-reload');
             const reload = reload_header == 'true' ? true : false;
             return { location, reload, status: 302 };
@@ -114,6 +140,18 @@ WCom.Util = (function() {
          };
          return { response };
       }
+      /** Fetches the response to a GET request
+          @function
+          @param {URI} url Where to get the response from
+          @param {object} options Control parameters for the fetch call
+          @property {object} options.headers An opaque Headers object is
+             constructed from this plain object
+          @property {string} options.method Defaults to GET
+          @property {string} options.response Either 'blob', 'object' (default),
+             'text', or 'response'
+          @returns {object} Attributes may include; 'filename', 'location'
+              and 'status' as well as the response type requested
+      */
       async sucks(url, options = {}) {
          const want = options.response || 'object'; delete options.response;
          this._setHeaders(options);
@@ -145,6 +183,11 @@ WCom.Util = (function() {
          return { response };
       }
    }
+   /** @class
+       @classdesc The document createElement API is sub optimal. The methods
+          here mostly generate markup whilst setting attributes and appending
+          content. The class supports more HTML elements than are listed here
+    */
    class HtmlTiny {
       _frag(content) {
          return document.createRange().createContextualFragment(content);
@@ -183,20 +226,61 @@ WCom.Util = (function() {
          }
          return el;
       }
+      /** Returns element and array types in addition to the built in ones
+          @function
+          @param {variable} x The variable to test
+          @returns {string}
+      */
       typeOf(x)               { return _typeof(x) }
+      /** Return markup for an anchor element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       a(attr, content)        { return this._tag('a', attr, content) }
       canvas(attr, content)   { return this._tag('canvas', attr, content) }
       caption(attr, content)  { return this._tag('caption', attr, content) }
+      /** Return markup for a div element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       div(attr, content)      { return this._tag('div', attr, content) }
       fieldset(attr, content) { return this._tag('fieldset', attr, content) }
       figure(attr, content)   { return this._tag('figure', attr, content) }
+      /** Return markup for a form element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       form(attr, content)     { return this._tag('form', attr, content) }
+      /** Return markup for an h1 element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       h1(attr, content)       { return this._tag('h1', attr, content) }
       h2(attr, content)       { return this._tag('h2', attr, content) }
       h3(attr, content)       { return this._tag('h3', attr, content) }
       h4(attr, content)       { return this._tag('h4', attr, content) }
       h5(attr, content)       { return this._tag('h5', attr, content) }
+      /** Return markup for an image element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       img(attr)               { return this._tag('img', attr) }
+      /** Return markup for an input element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       input(attr, content)    { return this._tag('input', attr, content) }
       label(attr, content)    { return this._tag('label', attr, content) }
       legend(attr, content)   { return this._tag('legend', attr, content) }
@@ -204,18 +288,36 @@ WCom.Util = (function() {
       nav(attr, content)      { return this._tag('nav', attr, content) }
       optgroup(attr, content) { return this._tag('optgroup', attr, content) }
       option(attr, content)   { return this._tag('option', attr, content) }
+      /** Return markup for a select element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       select(attr, content)   { return this._tag('select', attr, content) }
       span(attr, content)     { return this._tag('span', attr, content) }
       strong(attr, content)   { return this._tag('strong', attr, content) }
       table(attr, content)    { return this._tag('table', attr, content) }
       tbody(attr, content)    { return this._tag('tbody', attr, content) }
       td(attr, content)       { return this._tag('td', attr, content) }
+      /** Return markup for a textarea element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       textarea(attr, content) { return this._tag('textarea', attr, content) }
       th(attr, content)       { return this._tag('th', attr, content) }
       thead(attr, content)    { return this._tag('thead', attr, content) }
       tr(attr, content)       { return this._tag('tr', attr, content) }
       ul(attr, content)       { return this._tag('ul', attr, content) }
       upload(attr, content)   { return this._tag('upload', attr, content) }
+      /** Return markup for a button input element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       button(attr, content) {
          if (_typeof(attr) == 'object') attr['type'] ||= 'submit';
          else {
@@ -224,18 +326,42 @@ WCom.Util = (function() {
          }
          return this._tag('button', attr, content);
       }
+      /** Return markup for a checkbox input element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       checkbox(attr) {
          attr['type'] = 'checkbox';
          return this._tag('input', attr);
       }
+      /** Return markup for a file element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       file(attr) {
          attr['type'] = 'file';
          return this._tag('input', attr);
       }
+      /** Return markup for a hidden input element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       hidden(attr) {
          attr['type'] = 'hidden';
          return this._tag('input', attr);
       }
+      /** Return markup for a SVG element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       icon(attr) {
          const {
             attrs = {}, className, height = 20, icons, name, onclick,
@@ -255,10 +381,22 @@ WCom.Util = (function() {
          if (title) wrapperAttr.title = title;
          return this.span(wrapperAttr, this._frag(svg.trim()));
       }
+      /** Return markup for a radio button input element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       radio(attr) {
          attr['type'] = 'radio';
          return this._tag('input', attr);
       }
+      /** Return markup for a text input element
+          @function
+          @param {object} attr Attributes to set on the document element
+          @param {array} content An array of content appened to the element
+          @returns {string}
+      */
       text(attr) {
          attr['type'] = 'text';
          return this._tag('input', attr);

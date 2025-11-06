@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Panel CSS flows content. Experimenting with JSDoc
           - Improved modal event handling
           - Adjusted main container and footer CSS
           - Fixes unwanted calls to unload from modal forms
