@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Panel CSS using flex
           - Panel CSS using grid auto flow column
           - Panel CSS flows content. Experimenting with JSDoc
           - Improved modal event handling
