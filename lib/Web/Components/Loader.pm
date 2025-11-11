@@ -12,6 +12,7 @@ use Web::Components::Util qw( deref exception is_arrayref
 use Try::Tiny;
 use Web::ComposableRequest;
 use Web::Simple::Role;
+#use Test::Memory::Cycle;
 
 requires qw( config log );
 
@@ -382,6 +383,8 @@ sub _render {
    catch { $res = $self->_render_exception($moniker, $context, $_) };
 
    $req->session->update if $req->can('session');
+
+#   memory_cycle_ok( $context, 'Context has no memory cycles' );
 
    return $res;
 }
