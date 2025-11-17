@@ -60,6 +60,10 @@ TAGS
 Thumbs.db
 \bipc_srlock
 t/script.log
+node_modules/
+out/
+package-lock.json
+package.json
 
 # Avoid archives of this distribution
 \bWeb-Components-v?[\d\.\_]+

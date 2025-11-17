@@ -89,12 +89,12 @@ has 'container_layout' => is => 'rw', isa => Str, default => 'centred';
 
 =item C<container_name>
 
-An immutable string which defaults to C<standard>. Used as a class name in the
+An immutable string which defaults to C<layout>. Used as a class name in the
 HTML it is also shared with the JS code
 
 =cut
 
-has 'container_name' => is => 'ro', isa => Str, default => 'standard';
+has 'container_name' => is => 'ro', isa => Str, default => 'layout';
 
 =item C<container_tag>
 

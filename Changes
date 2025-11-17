@@ -1,5 +1,8 @@
 Revision history for Web::Components
 
+          - Adds proper header content disposition parsing
+          - Removes cumulativeOffset from Markup mixin
+          - Adds JSDoc
           - Added class block-container for content positioning
           - Panel CSS using flex
           - Panel CSS using grid auto flow column

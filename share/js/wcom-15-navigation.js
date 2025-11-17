@@ -1,9 +1,46 @@
 // -*- coding: utf-8; -*-
-// Package WCom.Navigation
+/** @namespace
+    @classdesc Takes navigation away from the browser. Displays context
+       sensitive menus. Displays server messages
+    @alias WCom/Navigation
+*/
 WCom.Navigation = (function() {
    const navId  = 'navigation';
    const dsName = 'navigationConfig';
+   /** @class
+       @classdesc Takes navigation away from the browser
+       @alias Navigation/Navigation
+   */
    class Navigation {
+      /** @constructs
+          @desc Append the title to the container and applies
+             {@link Navigation/Navigation#popstateHandler popstate}
+             and {@link Navigation/Navigation#resizeHandler resize} handlers to
+             the window
+          @param {element} container The application title and control menu
+             are rendered here
+          @param {object} config
+          @property {string} config.moniker Unique name of the server model
+          @property {object} config.menus Initialises the
+             {@link Navigation/Menus Menus} object
+          @property {object} config.messages Initialises the
+             {@link Navigation/Messages Messages} object
+          @property {string} config.properties.base-url
+          @property {string} config.properties.confirm
+          @property {string} config.properties.container-layout
+          @property {string} config.properties.container-name
+          @property {string} config.properties.content-name
+          @property {string} config.properties.content-icon
+          @property {string} config.properties.icons
+          @property {string} config.properties.link-display
+          @property {string} config.properties.location
+          @property {string} config.properties.logo
+          @property {string} config.properties.media-break
+          @property {string} config.properties.skin
+          @property {string} config.properties.title
+          @property {string} config.properties.title-abbrev
+          @property {string} config.properties.verify-token
+       */
       constructor(container, config) {
          this.container        = container;
          this.moniker          = config['moniker'];
@@ -28,12 +65,18 @@ WCom.Navigation = (function() {
          this.menu             = new Menus(this, config['menus']);
          this.messages         = new Messages(config['messages']);
          this.titleEntry       = 'Loading';
-         const head = (document.getElementsByTagName('head'))[0];
-         this.titleElement     = head.querySelector('title');
-         container.append(this.renderTitle());
+         container.append(this._renderTitle());
          window.addEventListener('popstate', this.popstateHandler());
          window.addEventListener('resize', this.resizeHandler());
       }
+      /** @function
+          @desc Attaches 'click' and 'submit' handlers to anchors and forms
+             in the container. Handlers are provided by the
+             {@link Navigation/Menus Menus} object
+          @param {element} container Search this element for anchors and forms
+          @param {object} options Passed to the menus 'click' and 'submit'
+             handler methods. Defaults to an empty object
+      */
       addEventListeners(container, options = {}) {
          const url = this.baseURL;
          for (const link of container.getElementsByTagName('a')) {
@@ -54,12 +97,26 @@ WCom.Navigation = (function() {
             }
          }
       }
+      /** @function
+          @desc Returns a bound function which handles the 'popstate' event.
+             If the event has a state with an href attribute call
+             {@link Navigation/Navigation#renderLocation render location}
+             on that
+          @returns {function}
+      */
       popstateHandler() {
          return function(event) {
             const state = event.state;
             if (state && state.href) this.renderLocation(state.href);
          }.bind(this);
       }
+      /** @function
+          @async
+          @desc Posts a form back to the server. Request a partial render of
+             the response
+          @param {string} action The URL to post back to
+          @param {element} form The form to post
+      */
       async process(action, form) {
          const options = { headers: { Prefer: 'render=partial' }, form };
          const { location, reload, text }
@@ -76,29 +133,21 @@ WCom.Navigation = (function() {
             console.warn('Neither content nor redirect in response to post');
          }
       }
-      async redirectAfterGet(href, location) {
-         const locationURL = new URL(location);
-         locationURL.searchParams.delete('mid');
-         if (locationURL != href) {
-            console.log('Redirect after get to ' + location);
-            await this.renderLocation(location);
-            return;
-         }
-         const state = history.state;
-         console.log('Redirect after get to self ' + location);
-         console.log('Current state ' + state.href);
-         let count = 0;
-         while (href == state.href) {
-            history.back();
-            if (++count > 3) break;
-         }
-         console.log('Recovered state ' + count + ' ' + state.href);
-      }
+      /** @function
+          @desc Renders messages and the context sensitive menus.
+             Scans the content panel for anchors and forms
+      */
       render() {
          this.messages.render(window.location.href);
          this.menu.render();
          this.scan(this.contentPanel);
       }
+      /** @function
+          @async
+          @desc Renders the supplied HTML by replacing the existing panel with
+             a new one
+          @param {string} html Markup for the content of the new panel
+      */
       async renderHTML(html) {
          let className = this.containerName;
          if (this.containerLayout) className += ' ' + this.containerLayout;
@@ -108,10 +157,15 @@ WCom.Navigation = (function() {
          panel.innerHTML = html;
          await this.scan(panel);
          this.contentPanel = document.getElementById(this.contentName);
-         this.contentPanel = this.display(
+         this.contentPanel = this.addReplace(
             this.contentContainer, 'contentPanel', panel
          );
       }
+      /** @function
+          @async
+          @desc Fetch and render the specified location
+          @param {string} href The location to fetch and render
+      */
       async renderLocation(href) {
          const url = new URL(href);
          url.searchParams.delete('mid');
@@ -120,22 +174,21 @@ WCom.Navigation = (function() {
          if (text && text.length > 0) {
             await this.menu.loadMenuData(url);
             await this.renderHTML(text);
-            this.setHeadTitle();
+            this._setHeadTitle();
             this.menu.render();
          }
          else if (location) {
             this.messages.render(location);
-            this.redirectAfterGet(href, location);
+            this._redirectAfterGet(href, location);
          }
          else {
             console.warn('Neither content nor redirect in response to get');
          }
       }
-      renderTitle() {
-         const title = this.logo.length ? [this.menu.iconImage(this.logo)] : [];
-         title.push(this.h.span({ className: 'title-text' }, this.title));
-         return this.h.div({ className: 'nav-title' }, title);
-      }
+      /** @function
+          @desc Returns a bound function which handles the 'resize' event
+          @returns {function}
+      */
       resizeHandler() {
          return function(event) {
             const linkDisplay = this.linkDisplay;
@@ -165,20 +218,62 @@ WCom.Navigation = (function() {
             }
          }.bind(this);
       }
+      /** @function
+          @async
+          @desc Scans the panel with the registered onload callbacks then
+             adds 'click' and 'submit' handlers
+          @param {element} panel The element to scan
+          @param {object} options Passed to the onload callbacks and
+             'addEventListeners'. Defaults to an empty object
+      */
       async scan(panel, options = {}) {
-         for (const scanCallback of WCom.Util.Event.onloadCallbacks())
-            await scanCallback(panel, options);
+         await WCom.Util.Event.onLoad(panel, options);
          this.addEventListeners(panel, options);
       }
-      setHeadTitle() {
+      async _redirectAfterGet(href, location) {
+         const locationURL = new URL(location);
+         locationURL.searchParams.delete('mid');
+         if (locationURL != href) {
+            console.log('Redirect after get to ' + location);
+            await this.renderLocation(location);
+            return;
+         }
+         const state = history.state;
+         console.log('Redirect after get to self ' + location);
+         console.log('Current state ' + state.href);
+         let count = 0;
+         while (href == state.href) {
+            history.back();
+            if (++count > 3) break;
+         }
+         console.log('Recovered state ' + count + ' ' + state.href);
+      }
+      _renderTitle() {
+         const title = this.logo.length ? [this.menu.iconImage(this.logo)] : [];
+         title.push(this.h.span({ className: 'title-text' }, this.title));
+         return this.h.div({ className: 'nav-title' }, title);
+      }
+      _setHeadTitle() {
+         const head = (document.getElementsByTagName('head'))[0];
+         const titleElement = head.querySelector('title');
          const entry = this.capitalise(this.titleEntry);
-         this.titleElement.innerHTML = this.titleAbbrev + ' - ' + entry;
+         titleElement.innerHTML = this.titleAbbrev + ' - ' + entry;
       }
    }
    Object.assign(Navigation.prototype, WCom.Util.Bitch);
    Object.assign(Navigation.prototype, WCom.Util.Markup);
    Object.assign(Navigation.prototype, WCom.Util.String);
+   /** @class
+       @classdesc Loads and renders context sensitive menus
+       @alias Navigation/Menus
+   */
    class Menus {
+      /** @constructs
+          @desc Initialises the menu object
+          @param {object} navigation An instance of the
+             {@link Navigation/Navigation Navigation} object
+          @param {object} config Data structure containing the menu definitions
+      */
       constructor(navigation, config) {
          this.config        = config;
          this.navigation    = navigation;
@@ -192,19 +287,28 @@ WCom.Navigation = (function() {
          this.headerMenu;
          this.globalMenu;
       }
-      addSelected(item) {
-         item.classList.add('selected');
-         return true;
-      }
-      clickHandler(href, options) {
+      /** @function
+          @desc Returns a bound function which handles the 'click' event
+          @param {string} href
+          @param {object} options
+          @property {object} options.renderLocation
+          @returns {function}
+      */
+      clickHandler(href, options = {}) {
          return function(event) {
             event.preventDefault();
-            if (options.renderLocation && options.renderLocation(href, event))
-               return;
-            for (const cb of WCom.Util.Event.onunloadCallbacks()) cb();
+            if (options.renderLocation) {
+               if (options.renderLocation(href, event)) return;
+            }
+            WCom.Util.Event.onUnload();
             this.navigation.renderLocation(href);
          }.bind(this);
       }
+      /** @function
+          @desc Returns a bound function which handles dialog confirmation
+          @param {string} name
+          @returns {function}
+      */
       confirmHandler(name) {
          return function(event) {
             if (this.confirm) {
@@ -215,6 +319,12 @@ WCom.Navigation = (function() {
             return false;
          }.bind(this);
       }
+      /** @function
+          @desc Returns either an image element or an icon element if icons
+             are available
+          @param {string} icon Either an icon name or a URL for an image
+          @returns {element}
+      */
       iconImage(icon) {
          if (icon && icon.match(/:/)) return this.h.img({ src: icon });
          else if (icon) {
@@ -224,10 +334,11 @@ WCom.Navigation = (function() {
          }
          return icon;
       }
-      isCurrentHref(href) {
-         return history.state && history.state.href.split('?')[0]
-            == href.split('?')[0] ? true : false;
-      }
+      /** @function
+          @async
+          @desc Fetches the menu data. Updates this objects 'config' attribute
+          @param {string} url
+      */
       async loadMenuData(url) {
          const state = { href: url + '' };
          history.pushState(state, 'Unused', url); // API Darwin award
@@ -239,29 +350,58 @@ WCom.Navigation = (function() {
          this.navigation.containerLayout = object['container-layout'];
          this.navigation.titleEntry = object['title-entry'];
       }
+      /** @function
+          @desc Render the menus
+      */
       render() {
          if (!this.config) return;
-         const content = [this.renderControl()];
+         const content = [this._renderControl()];
          if (!this.config['_global']) return;
-         const global = this.renderList(this.config['_global'], 'global');
+         const global = this._renderList(this.config['_global'], 'global');
          if (this.location == 'header') content.unshift(global);
          const cMenu = this.h.nav({ className: 'nav-menu' }, content);
-         this.headerMenu = this.display(this.container, 'headerMenu', cMenu);
+         this.headerMenu = this.addReplace(this.container, 'headerMenu', cMenu);
          if (this.location == 'header') return;
          const container = document.getElementById(this.location);
          const gMenu = this.h.nav({ className: 'nav-menu' }, global);
-         this.globalMenu = this.display(container, 'globalMenu', gMenu);
+         this.globalMenu = this.addReplace(container, 'globalMenu', gMenu);
       }
-      renderControl() {
+      /** @function
+          @desc Returns a bound function that handles the 'submit' event
+          @param {element} form
+          @param {object} options
+          @property {function} options.onUnload
+          @returns {function}
+      */
+      submitHandler(form, options = {}) {
+         form.setAttribute('submitlistener', true);
+         const action = form.action;
+         return function(event) {
+            event.preventDefault();
+            if (options.onUnload) options.onUnload();
+            else WCom.Util.Event.onUnload();
+            form.setAttribute('submitter', event.submitter.value);
+            this.navigation.process(action, form);
+         }.bind(this);
+      }
+      _addSelected(item) {
+         item.classList.add('selected');
+         return true;
+      }
+      _isCurrentHref(href) {
+         return history.state && history.state.href.split('?')[0]
+            == href.split('?')[0] ? true : false;
+      }
+      _renderControl() {
          if (!this.config['_control']) return;
          const panelAttr = { className: 'nav-panel control-panel' };
-         const list = this.renderList(this.config['_control'], 'control');
+         const list = this._renderList(this.config['_control'], 'control');
          this.contextPanels['control'] = this.h.div(panelAttr, list);
          const controlAttr = { className: 'nav-control' };
-         const link = this.h.a(this.renderControlIcon());
+         const link = this.h.a(this._renderControlIcon());
          return this.h.div(controlAttr, [link, this.contextPanels['control']]);
       }
-      renderControlIcon() {
+      _renderControlIcon() {
          const icons = this.icons;
          if (!icons)
             return this.h.span({ className: 'nav-control-label text' }, '≡');
@@ -271,13 +411,13 @@ WCom.Navigation = (function() {
          });
          return this.h.span({ className: 'nav-control-label' }, icon);
       }
-      renderItem(item, menuName) {
+      _renderItem(item, menuName) {
          const [text, href, icon] = item;
          const iconImage = this.iconImage(icon);
          const title = iconImage && this.linkDisplay == 'icon' ? text : '';
          const itemAttr = { className: menuName, title };
          if (typeof text != 'object') {
-            const label = this.renderLabel(icon, text);
+            const label = this._renderLabel(icon, text);
             if (href) {
                const onclick = this.clickHandler(href, {});
                const link = this.h.a({ href, onclick }, label);
@@ -294,11 +434,11 @@ WCom.Navigation = (function() {
          form.addEventListener('submit', this.submitHandler(form, {}));
          const onclick = this.confirmHandler(name);
          const buttonAttr = { className: 'form-button', onclick };
-         const label = this.h.span(this.renderLabel(icon, text['name']));
+         const label = this.h.span(this._renderLabel(icon, text['name']));
          form.append(this.h.button(buttonAttr, label));
          return this.h.li(itemAttr, form);
       }
-      renderLabel(icon, text) {
+      _renderLabel(icon, text) {
          const iconImage = this.iconImage(icon);
          return {
             both: [iconImage, text],
@@ -306,7 +446,7 @@ WCom.Navigation = (function() {
             text: text
          }[this.linkDisplay];
       }
-      renderList(list, menuName) {
+      _renderList(list, menuName) {
          const [title, itemList] = list;
          if (!itemList.length) return this.h.span({ className: 'empty-list' });
          const items = [];
@@ -317,21 +457,21 @@ WCom.Navigation = (function() {
                let className = 'nav-panel';
                if (menuName == 'context' || menuName == 'control')
                   className = 'slide-out';
-               const rendered = this.renderList(this.config[item], 'context');
+               const rendered = this._renderList(this.config[item], 'context');
                this.contextPanels[item] = this.h.div({ className }, rendered);
                context = item;
                continue;
             }
-            const listItem = this.renderItem(item, menuName);
+            const listItem = this._renderItem(item, menuName);
             if (context) {
                const panel = this.contextPanels[context];
                if (panel.firstChild.classList.contains('selected'))
-                  isSelected = this.addSelected(listItem);
+                  isSelected = this._addSelected(listItem);
                listItem.append(panel);
                context = false;
             }
-            if (this.isCurrentHref(item[1]))
-               isSelected = this.addSelected(listItem);
+            if (this._isCurrentHref(item[1]))
+               isSelected = this._addSelected(listItem);
             items.push(listItem);
          }
          const navList = this.h.ul({ className: 'nav-list' }, items);
@@ -339,41 +479,42 @@ WCom.Navigation = (function() {
          if (isSelected) navList.classList.add('selected');
          return navList;
       }
-      submitHandler(form, options = {}) {
-         form.setAttribute('submitlistener', true);
-         const action = form.action;
-         return function(event) {
-            event.preventDefault();
-            if (options.onUnload) options.onUnload();
-            else {
-               for (const cb of WCom.Util.Event.onunloadCallbacks()) cb();
-            }
-            form.setAttribute('submitter', event.submitter.value);
-            this.navigation.process(action, form);
-         }.bind(this);
-      }
    }
    Object.assign(Menus.prototype, WCom.Util.Bitch);
    Object.assign(Menus.prototype, WCom.Util.Markup);
+   /** @class
+       @classdesc Displays server messages
+       @alias Navigation/Messages
+   */
    class Messages {
+      /** @constructs
+          @desc Creates and appends 'messages' panel to the document body
+          @param {object} config
+          @property {integer} config.buffer-limit How many messages to buffer.
+             Defaults to 3
+          @property {integer} config.display-time How long to display each
+             message. Defaults to 20 seconds
+          @property {string} config.messages-url Where to fetch the messages
+      */
       constructor(config) {
+         const attr = { className: 'messages-panel', id: 'messages' };
+         this.panel = this.h.div(attr);
+         document.body.append(this.panel);
          this.bufferLimit = config['buffer-limit'] || 3;
          this.displayTime = config['display-time'] || 20;
          this.messagesURL = config['messages-url'];
          this.items = [];
-         this.panel = this.h.div({
-            className: 'messages-panel', id: 'messages'
-         });
-         document.body.append(this.panel);
       }
-      animate(item) {
-         setTimeout(function() {
-            item.classList.add('fade');
-         }, 1000 * this.displayTime);
-         setTimeout(function() {
-            item.classList.add('hide');
-         }, 1000 * (this.displayTime + 3));
-      }
+      /** @function
+          @async
+          @desc Fetch and render messages. Extracts the message id (mid) from
+             the query string in the supplied URL. Appends this to the
+             messages URL provided when this object was constructed. Fetching
+             this gets an array of messages from the server. Each of these
+             is appended to the 'messages' panel with handlers to make them
+             fade and disappear
+          @param {string} href Message id is extracted from the query string
+      */
       async render(href) {
          const url = new URL(href);
          const mid = url.searchParams.get('mid');
@@ -388,46 +529,102 @@ WCom.Navigation = (function() {
             item.addEventListener('click', function(event) {
                item.classList.add('hide');
             });
-            this.panel.append(item);
+            this.panel.appendChild(item);
             this.items.unshift(item);
-            this.animate(item);
+            this._animate(item);
          }
          while (this.items.length > this.bufferLimit) {
             this.items.pop().remove();
          }
       }
+      _animate(item) {
+         setTimeout(function() {
+            item.classList.add('fade');
+         }, 1000 * this.displayTime);
+         setTimeout(function() {
+            item.classList.add('hide');
+         }, 1000 * (this.displayTime + 3));
+      }
    }
    Object.assign(Messages.prototype, WCom.Util.Bitch);
    Object.assign(Messages.prototype, WCom.Util.Markup);
+   /** @class
+       @classdesc Creates the Navigation object on page load. These are the
+          public methods exposed by this package
+       @alias Navigation/Manager
+   */
    class Manager {
+      /** @constructs
+          @desc Calls
+             {@link Navigation/Manager#createNavigation create navigation}
+             when the page loads
+       */
       constructor() {
          this.navigator;
          WCom.Util.Event.onReady(
             function() { this.createNavigation() }.bind(this)
          );
       }
+      /** @function
+          @desc Create a new instance of
+             {@link Navigation/Navigation Navigation} and then calls it's
+             {@link Navigation/Navigation#render render} method. The document
+             should contain an element with id 'navigation' that has a JSON
+             encoded data attribute 'data-navigation-config'. These are passed
+             to the Navigation object's constructor
+      */
       createNavigation() {
          const el = document.getElementById(navId);
          if (!el) return;
          this.navigator = new Navigation(el, JSON.parse(el.dataset[dsName]));
          this.navigator.render();
       }
+      /** @function
+          @desc Calls
+             {@link Navigation/Navigation#addEventListeners add event listeners}
+             on the {@link Navigation/Navigation Navigation} object
+      */
       onContentLoad() {
          if (!this.navigator) return;
          const el = document.getElementById(this.navigator.contentName);
          if (el) this.navigator.addEventListeners(el);
       }
+      /** @function
+          @desc Fetches and renders the supplied location by calling
+             {@link Navigation/Navigation#renderLocation render location}
+             on the {@link Navigation/Navigation Navigation} object
+          @param {string} href The location to render
+      */
       renderLocation(href) {
          if (this.navigator) this.navigator.renderLocation(href);
       }
+      /** @function
+          @desc Fetches and renders any pending server messages by calling
+             {@link Navigation/Messages#render render} on the
+             {@link Navigation/Messages messages} object
+          @param {string} href Should have a message id in the query string
+      */
       renderMessage(href) {
          if (this.navigator) this.navigator.messages.render(href);
       }
+      /** @function
+          @desc Scans the supplied element. Inflates forms and tables then
+             adds 'click' and 'submit' handlers. Calls
+             {@link Navigation/Navigation#scan scan} on the
+             {@link Navigation/Navigation Navigation} object
+          @param {element} el The element to scan for links and forms
+          @param {object} options Passed to the 'Navigation' scan method
+      */
       scan(el, options) {
          if (el && this.navigator) this.navigator.scan(el, options);
       }
    }
+   /** @module Navigation
+    */
    return {
+      /** @instance
+          @desc An instance of class {@link Navigation/Manager}
+      */
       manager: new Manager()
    };
 })();

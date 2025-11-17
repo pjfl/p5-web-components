@@ -101,33 +101,32 @@ body:has(aside.nav-link-text) {
     grid-template-columns: #sizes[sidebar-width-text] 1fr;
 }
 header {
-    grid-area: header; padding: 0 0.5rem; position: sticky; top: 0; z-index: 3;
+    grid-area: header; padding: 0 0.5rem; position: sticky; top: 0; z-index: 5;
 }
 aside {
     grid-area: sidebar; padding-left: 0.5rem; position: sticky;
-    top: @nav-header-height; z-index: 2;
+    top: @nav-header-height; z-index: 5;
 }
 main {
     grid-area: main; overflow: auto; position: relative;
-    scrollbar-color: #colours[selected] #colours[panel-bg]; z-index: 1;
+    scrollbar-color: #colours[selected] #colours[panel-bg];
+    z-index: 1;
 }
 footer {
     padding: 0.5rem;
 }
-.standard-container {
+.layout-container {
     display: flex; flex-direction: column; height: 100%;
-    justify-content: space-between; position: absolute; width: 100%;
-    .standard {
+    justify-content: space-between; position: absolute;
+    width: 100%;
+    h1, h2, h3, h4, h5 {
+        font-family: #fonts[system]; margin: 1rem; text-wrap: balance;
+    }
+    h1 .content, h2 .content, h3 .content, h4 .content, h5 .content {
+        font-family: #fonts[data];
+    }
+    .layout {
         display: flex; line-height: 1.5; padding: 0.5rem;
-        h1, h2, h3, h4, h5 {
-            font-family: #fonts[system]; margin: 1rem; text-wrap: balance;
-        }
-        h1 .content, h2 .content, h3 .content, h4 .content, h5 .content {
-            font-family: #fonts[data];
-        }
-        .inline-panel {
-            display: inline-block; vertical-align: top;
-        }
         .panel {
             display: flex; gap: 1rem;
             .block-container {
@@ -147,8 +146,8 @@ footer {
         border-top: 0.5rem solid #colours[nav-bg]; font-family: #fonts[system];
         font-size: larger; height: @nav-header-height;
         img {
-            height: 24px; width: 24px; margin: 0.3rem 0.25rem 0 0;
-            vertical-align: top;
+            height: 24px; margin: 0.3rem 0.25rem 0 0;
+            vertical-align: top; width: 24px;
             @media (max-width: @lower-break) {
                 margin-left: 0.75rem;
             }
@@ -431,7 +430,7 @@ footer {
     width: @nav-link-text;
 }
 .messages-panel {
-    bottom: 2rem; left: 1rem; position: absolute; z-index: 3;
+    bottom: 2rem; left: 1rem; position: absolute; z-index: 7;
     .message-item {
         background: #colours[message-bg];
         border: 2px solid #colours[message-border]; border-radius: 5px;
@@ -490,7 +489,7 @@ footer {
         border: 1px solid; border-radius: 5px;
         box-shadow: 3px 3px 3px #colours[panel-shadow];
         color: #colours[text]; max-height: 90%; max-width: 80%;
-        overflow: auto; z-index: 5;
+        overflow: auto; z-index: 4;
         .modal-header {
             align-items: center;
             background: #colours[title-bg];
@@ -575,7 +574,7 @@ footer {
     }
 }
 .modal-outer-wrapper.mask {
-    background: #grads[body-bg]; z-index: 4;
+    background: #grads[body-bg]; isolation: isolate; z-index: 6;
 }
 .documentation {
     font-family: #fonts[system];
