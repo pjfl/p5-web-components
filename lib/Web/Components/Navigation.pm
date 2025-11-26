@@ -363,12 +363,20 @@ has 'title_entry' =>
    };
 
 # Private attributes
+has '_base_colour' =>
+   is      => 'lazy',
+   isa     => Str,
+   default => sub {
+      my $self    = shift;
+      my $session = $self->context->session;
+
+      return $session->can('base_colour') ? $session->base_colour : NUL;
+   };
+
 has '_base_url' =>
    is      => 'lazy',
    isa     => class_type('URI'),
-   default => sub {
-      return shift->context->request->uri_for(NUL);
-   };
+   default => sub { shift->context->request->uri_for(NUL) };
 
 has '_container' =>
    is      => 'lazy',
@@ -395,6 +403,7 @@ has '_data' =>
             'messages'   => $self->_messages,
             'moniker'    => $self->model->moniker,
             'properties' => {
+               'base-colour'      => $self->_base_colour,
                'base-url'         => $self->_base_url,
                'confirm'          => $self->confirm_message,
                'container-layout' => $self->container_layout,
@@ -406,7 +415,7 @@ has '_data' =>
                'location'         => $self->menu_location,
                'logo'             => $self->logo,
                'media-break'      => $self->media_break,
-               'skin'             => $self->context->session->skin,
+               'skin'             => $self->_skin,
                'title'            => $self->title,
                'title-abbrev'     => $self->title_abbrev,
                'verify-token'     => $self->context->verification_token,
@@ -454,6 +463,16 @@ has '_messages' =>
 has '_name' => is => 'rwp', isa => Str, default => NUL;
 
 has '_order' => is => 'ro', isa => ArrayRef, default => sub { [] };
+
+has '_skin' =>
+   is      => 'lazy',
+   isa     => Str,
+   default => sub {
+      my $self    = shift;
+      my $session = $self->context->session;
+
+      return $session->can('skin') ? $session->skin : NUL;
+   };
 
 =back
 

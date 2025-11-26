@@ -76,7 +76,7 @@ WCom.Modal = (function() {
    }
    Object.assign(Backdrop.prototype, WCom.Util.Markup);
    /** @class
-       @classdesc Displays buttons on the modal dialogue
+       @classdesc Creates buttons for the modal dialogue
        @alias Modal/Button
    */
    class Button {
@@ -162,18 +162,36 @@ WCom.Modal = (function() {
    class Drag {
       /** @constructs
           @desc Creates a new drag object
-          @param {object} args
+          @param {object} options
+          @property {string} options.scrollWrapper Class used to to select
+             the element that the 'scroll' event handler is attached to.
+             Defaults to '.main'
       */
-      constructor(args) {
+      constructor(options) {
          this.drag = {};
          this.dragNodeX = null;
          this.dragNodeY = null;
-         this.scrollWrapper = document.querySelector(args.scrollWrapper);
+         const scrollWrapper = options.scrollWrapper || '.main';
+         this.scrollWrapper = document.querySelector(scrollWrapper);
       }
       /** @function
           @desc Start the drag
           @param {event} event
           @param {object} options
+          @property {boolean} options.autoScroll
+          @property {integer} options.autoScrollSpeed
+          @property {integer} options.autoScrollStep
+          @property {object} options.constraints
+          @property {element} options.dragNode
+          @property {object} options.dragNodeOffset
+          @property {function} options.dropCallback
+          @property {object} options.dropTargets
+          @property {integer} options.fixLeft
+          @property {function} options.hoverCallback
+          @property {string} options.hoverClass
+          @property {function} options.moveCallback
+          @property {boolean} options.offsetDragNode
+          @property {boolean} options.positionAbsolute
        */
       start(event, options = {}) {
          if (!event) throw new Error('Event not specified');
@@ -182,7 +200,7 @@ WCom.Modal = (function() {
          const autoScroll = options.autoScroll === true
                ? 80 : options.autoScroll || false;
          this.drag = {
-            autoScroll: autoScroll,
+            autoScroll,
             autoScrollSpeed: options.autoScrollSpeed || 10,
             autoScrollStep: options.autoScrollStep || 5,
             constraints: options.constraints,
@@ -419,7 +437,7 @@ WCom.Modal = (function() {
          this.classList = options.classList || false;
          this.closeCallback = options.closeCallback;
          this.dragConstraints = options.dragConstraints;
-         this.dragScrollWrapper = options.dragScrollWrapper || '.main';
+         this.dragScrollWrapper = options.dragScrollWrapper;
          this.dropCallback = options.dropCallback;
          this.icons = options.icons;
          this.id = options.id || 'modal';
@@ -926,17 +944,26 @@ WCom.Modal = (function() {
     */
    return {
       /** @function
-          @desc Creates a modal dialogue and calls it's render method. Uses
+          @desc Creates a modal dialogue and calls it's
+             {@link Modal/Modal#render render} method. Uses
              an instance of {@link Modal/ModalUtil ModalUtil} to create a
              container and some buttons
-          @param {object} args Passed to both Modal and ModalUtil constructors
-          @property {string} args.title The dialogue title
+          @param {object} options Passed to both Modal and ModalUtil constructors
+          @property {string} options.title The dialogue title
           @returns {object} An instance of {@link Modal/Modal Modal}
        */
       create,
       /** @function
-          @desc Creates a modal dialogue alert
-          @param {object} args
+          @desc Creates and renders a modal dialogue alert
+          @param {object} options
+          @property {function} options.callback Called when the Okay button is
+             clicked
+          @property {string} options.classList Passed to the modal constructor
+          @property {string} options.icon Defaults to 'info'. Popup alert class
+             applied to the modal content container
+          @property {string} options.label Defaults to 'Okay'. Button text
+          @property {string} options.text Defaults to ''. Text to display
+          @property {string} options.title Passed to the modal constructor
           @returns {object} An instance of {@link Modal/Modal Modal}
        */
       createAlert: function(args) {
@@ -959,7 +986,15 @@ WCom.Modal = (function() {
       },
       /** @function
           @desc Creates a modal dialogue selector
-          @param {object} args
+          @param {object} options
+          @property {string} options.icons URL of the icons SVG
+             containing symbols
+          @property {string} options.onchange Evaluated when the selector value
+             changes
+          @property {string} options.target The selector updates this elements
+             value
+          @property {string} options.title Defaults to 'Select Item'
+          @property {string} options.url URL of the selector content
           @returns {object} An instance of {@link Modal/Modal Modal}
        */
       createSelector: function(args) {

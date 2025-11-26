@@ -45,6 +45,7 @@ WCom.Navigation = (function() {
          this.container        = container;
          this.moniker          = config['moniker'];
          this.properties       = config['properties'];
+         this.baseColour       = this.properties['base-colour'];
          this.baseURL          = this.properties['base-url'];
          this.confirm          = this.properties['confirm'];
          this.containerLayout  = this.properties['container-layout'];
@@ -68,6 +69,11 @@ WCom.Navigation = (function() {
          container.append(this._renderTitle());
          window.addEventListener('popstate', this.popstateHandler());
          window.addEventListener('resize', this.resizeHandler());
+         if (this.baseColour) {
+            document.body.setAttribute(
+               'style', '--base-colour: ' + this.baseColour
+            );
+         }
       }
       /** @function
           @desc Attaches 'click' and 'submit' handlers to anchors and forms
@@ -355,7 +361,7 @@ WCom.Navigation = (function() {
       */
       render() {
          if (!this.config) return;
-         const content = [this._renderControl()];
+         const content = [this._renderControl(), this._renderMobile()];
          if (!this.config['_global']) return;
          const global = this._renderList(this.config['_global'], 'global');
          if (this.location == 'header') content.unshift(global);
@@ -395,11 +401,11 @@ WCom.Navigation = (function() {
       _renderControl() {
          if (!this.config['_control']) return;
          const panelAttr = { className: 'nav-panel control-panel' };
-         const list = this._renderList(this.config['_control'], 'control');
-         this.contextPanels['control'] = this.h.div(panelAttr, list);
-         const controlAttr = { className: 'nav-control' };
+         const panel = this._renderList(this.config['_control'], 'control');
+         this.contextPanels['control'] = this.h.div(panelAttr, panel);
          const link = this.h.a(this._renderControlIcon());
-         return this.h.div(controlAttr, [link, this.contextPanels['control']]);
+         const attr = { className: 'nav-control' };
+         return this.h.div(attr, [link, this.contextPanels['control']]);
       }
       _renderControlIcon() {
          const icons = this.icons;
@@ -479,6 +485,23 @@ WCom.Navigation = (function() {
          if (isSelected) navList.classList.add('selected');
          return navList;
       }
+      _renderMobile() {
+         const linkDisplay = this.linkDisplay;
+         this.linkDisplay = 'text';
+         const control = this._renderList(this.config['_control'], 'mobile');
+         const global = this._renderList(this.config['_global'], 'mobile');
+         this.linkDisplay = linkDisplay;
+         const panelAttr = { className: 'nav-panel mobile-panel' };
+         const panel = [control, global];
+         this.contextPanels['mobile'] = this.h.div(panelAttr, panel);
+         const hamburger = this.h.span('≡');
+         const checkboxAttr = { className: 'hamburger', id: 'hamburger' };
+         const labelContent = [this.h.checkbox(checkboxAttr), hamburger];
+         const labelAttr = { className: 'nav-hamburger', htmlFor: 'hamburger' };
+         const label = this.h.label(labelAttr, labelContent);
+         const attr = { className: 'nav-mobile' };
+         return this.h.div(attr, [label, this.contextPanels['mobile']]);
+      }
    }
    Object.assign(Menus.prototype, WCom.Util.Bitch);
    Object.assign(Menus.prototype, WCom.Util.Markup);
@@ -489,20 +512,20 @@ WCom.Navigation = (function() {
    class Messages {
       /** @constructs
           @desc Creates and appends 'messages' panel to the document body
-          @param {object} config
-          @property {integer} config.buffer-limit How many messages to buffer.
+          @param {object} options
+          @property {integer} options.buffer-limit How many messages to buffer.
              Defaults to 3
-          @property {integer} config.display-time How long to display each
+          @property {integer} options.display-time How long to display each
              message. Defaults to 20 seconds
-          @property {string} config.messages-url Where to fetch the messages
+          @property {string} options.messages-url Where to fetch the messages
       */
-      constructor(config) {
+      constructor(options) {
          const attr = { className: 'messages-panel', id: 'messages' };
          this.panel = this.h.div(attr);
          document.body.append(this.panel);
-         this.bufferLimit = config['buffer-limit'] || 3;
-         this.displayTime = config['display-time'] || 20;
-         this.messagesURL = config['messages-url'];
+         this.bufferLimit = options['buffer-limit'] || 3;
+         this.displayTime = options['display-time'] || 20;
+         this.messagesURL = options['messages-url'];
          this.items = [];
       }
       /** @function

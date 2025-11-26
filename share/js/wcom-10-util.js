@@ -189,6 +189,7 @@ WCom.Util = (function() {
       a(attr, content)        { return this._tag('a', attr, content) }
       canvas(attr, content)   { return this._tag('canvas', attr, content) }
       caption(attr, content)  { return this._tag('caption', attr, content) }
+      datalist(attr, content) { return this._tag('datalist', attr, content) }
       /** @function
           @desc Return markup for a div element
           @param {object} attr Attributes to set on the document element
@@ -277,7 +278,6 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for a checkbox input element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
           @returns {string}
       */
       checkbox(attr) {
@@ -285,9 +285,17 @@ WCom.Util = (function() {
          return this._tag('input', attr);
       }
       /** @function
+          @desc Return markup for a colour picker input element
+          @param {object} attr Attributes to set on the document element
+          @returns {string}
+      */
+      colour(attr) {
+         attr['type'] = 'color';
+         return this._tag('input', attr);
+      }
+      /** @function
           @desc Return markup for a file element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
           @returns {string}
       */
       file(attr) {
@@ -297,7 +305,6 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for a hidden input element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
           @returns {string}
       */
       hidden(attr) {
@@ -307,7 +314,6 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for a SVG element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
           @returns {string}
       */
       icon(attr) {
@@ -332,7 +338,6 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for a radio button input element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
           @returns {string}
       */
       radio(attr) {
@@ -342,7 +347,6 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for a text input element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
           @returns {string}
       */
       text(attr) {
@@ -358,7 +362,7 @@ WCom.Util = (function() {
       typeOf(x) { return this._typeof(x) }
       /** @function
           @desc Return the co-ordinates where the event takes place
-          @param {event} ev Event whose co-ordinates are being returned
+          @param {event} event Event whose co-ordinates are being returned
           @param {string} key Defaults to page
       */
       getCoords(event, coordKey = 'page') {
@@ -444,8 +448,8 @@ WCom.Util = (function() {
             'onsubmit'
          ];
          const htmlProps = [
-            'disabled', 'readonly', 'max', 'maxlength',
-            'min', 'minlength', 'required'
+            'disabled', 'inputmode', 'list', 'max', 'maxlength',
+            'min', 'minlength', 'readonly', 'required'
          ];
          const styleProps = [ 'height', 'width' ];
          const el = document.createElement(tag);
@@ -782,9 +786,10 @@ WCom.Util = (function() {
                 parameters
              @param {string} url Contains '*' for each of the arguments
              @param {array} args Substituted in for each '*' in the URL
-             @param {object} query Keys and values for the query string
+             @param {object} query Keys and values for the query string.
+                Defaults to empty object
              @param {object} options If options contains 'requestBase' prepend
-                this to the returned string
+                this to the returned string. Defaults to empty object
              @returns {string}
          */
          createURL: function(url, args, query = {}, options = {}) {
