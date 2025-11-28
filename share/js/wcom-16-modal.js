@@ -478,7 +478,7 @@ WCom.Modal = (function() {
          const modalAttr = { className: 'modal ' + classes, id: this.id };
          this.el = this.h.div(modalAttr);
          this.modalHeader = this.h.div({
-            className: 'modal-header', onmousedown: this._clickHandler(this.el)
+            className: 'modal-header', onmousedown: this._mouseHandler(this.el)
          }, [
             this.h.h1({ className: 'modal-title' }, this.title),
             this._createCloseIcon()
@@ -515,7 +515,14 @@ WCom.Modal = (function() {
             className: 'close-icon', icons, name: 'close'
          }));
       }
-      _clickHandler(el) {
+      _keyHandler(event) {
+         const { keyCode } = event;
+         if (!modalList.isTopModal(this.ident)) return;
+         const btn = this.buttons.find(b => b.key && keyCodes[b.key] === keyCode);
+         if (btn) this._buttonHandler(btn);
+         else if (keyCode === keyCodes['escape']) this.close();
+      }
+      _mouseHandler(el) {
          return function(event) {
             if (event.target.tagName === 'BUTTON') return;
             if (event.target.tagName === 'SPAN') return;
@@ -534,13 +541,6 @@ WCom.Modal = (function() {
                positionAbsolute: this.positionAbsolute
             });
          }.bind(this);
-      }
-      _keyHandler(event) {
-         const { keyCode } = event;
-         if (!modalList.isTopModal(this.ident)) return;
-         const btn = this.buttons.find(b => b.key && keyCodes[b.key] === keyCode);
-         if (btn) this._buttonHandler(btn);
-         else if (keyCode === keyCodes['escape']) this.close();
       }
       _renderButtons(el) {
          this.buttonBox = this.h.div({ className: 'modal-footer' });

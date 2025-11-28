@@ -448,7 +448,7 @@ WCom.Util = (function() {
             'onsubmit'
          ];
          const htmlProps = [
-            'disabled', 'inputmode', 'list', 'max', 'maxlength',
+            'colorspace', 'disabled', 'inputmode', 'list', 'max', 'maxlength',
             'min', 'minlength', 'readonly', 'required'
          ];
          const styleProps = [ 'height', 'width' ];
