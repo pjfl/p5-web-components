@@ -139,11 +139,20 @@ has 'context' =>
 =item C<control_icon>
 
 An immutable string which defaults to C<user-settings>. The name of the symbol
-in the SVG icons file for the user settings menu
+in the SVG icons file used for the control menu link
 
 =cut
 
 has 'control_icon' => is => 'ro', isa => Str, default => 'user-settings';
+
+=item C<control_title>
+
+An immutable string which defaults to C<System>. The title for the used for the
+control menu link
+
+=cut
+
+has 'control_title' => is => 'ro', isa => Str, default => 'Control';
 
 =item C<global>
 
@@ -410,6 +419,7 @@ has '_data' =>
                'container-name'   => $self->container_name,
                'content-name'     => $self->content_name,
                'control-icon'     => $self->control_icon,
+               'control-title'    => $self->control_title,
                'icons'            => $self->icons,
                'link-display'     => $self->link_display,
                'location'         => $self->menu_location,

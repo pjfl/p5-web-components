@@ -31,6 +31,7 @@ WCom.Navigation = (function() {
           @property {string} config.properties.container-name
           @property {string} config.properties.content-name
           @property {string} config.properties.content-icon
+          @property {string} config.properties.content-title
           @property {string} config.properties.icons
           @property {string} config.properties.link-display
           @property {string} config.properties.location
@@ -52,6 +53,7 @@ WCom.Navigation = (function() {
          this.containerName    = this.properties['container-name'];
          this.contentName      = this.properties['content-name'];
          this.controlIcon      = this.properties['control-icon'];
+         this.controlTitle     = this.properties['control-title'];
          this.icons            = this.properties['icons'];
          this.linkDisplay      = this.properties['link-display'];
          this.location         = this.properties['location'];
@@ -69,11 +71,9 @@ WCom.Navigation = (function() {
          container.append(this._renderTitle());
          window.addEventListener('popstate', this.popstateHandler());
          window.addEventListener('resize', this.resizeHandler());
-         if (this.baseColour) {
-            document.body.setAttribute(
-               'style', '--base-colour: ' + this.baseColour
-            );
-         }
+         if (this.baseColour) document.body.setAttribute(
+            'style', '--bg-base: ' + this.baseColour
+         );
       }
       /** @function
           @desc Attaches 'click' and 'submit' handlers to anchors and forms
@@ -285,6 +285,7 @@ WCom.Navigation = (function() {
          this.navigation    = navigation;
          this.container     = navigation.container;
          this.controlIcon   = navigation.controlIcon || 'settings';
+         this.controlTitle  = navigation.controlTitle || 'Control';
          this.icons         = navigation.icons;
          this.linkDisplay   = navigation.linkDisplay;
          this.location      = navigation.location;
@@ -403,7 +404,8 @@ WCom.Navigation = (function() {
          const panelAttr = { className: 'nav-panel control-panel' };
          const panel = this._renderList(this.config['_control'], 'control');
          this.contextPanels['control'] = this.h.div(panelAttr, panel);
-         const link = this.h.a(this._renderControlIcon());
+         const linkAttr = { title: this.controlTitle };
+         const link = this.h.a(linkAttr, this._renderControlIcon());
          const attr = { className: 'nav-control' };
          return this.h.div(attr, [link, this.contextPanels['control']]);
       }
