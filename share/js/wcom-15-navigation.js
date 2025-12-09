@@ -291,6 +291,8 @@ WCom.Navigation = (function() {
          this.location      = navigation.location;
          this.token         = navigation.token;
          this.contextPanels = {};
+         this.iconWidth     = '24px';
+         this.iconHeight    = '24px';
          this.headerMenu;
          this.globalMenu;
       }
@@ -333,11 +335,22 @@ WCom.Navigation = (function() {
           @returns {element}
       */
       iconImage(icon) {
-         if (icon && icon.match(/:/)) return this.h.img({ src: icon });
+         if (icon && icon.match(/:/)) {
+            const img = this.h.img({ src: icon });
+            img.setAttribute('height', this.iconHeight);
+            img.setAttribute('width', this.iconWidth);
+            return img;
+         }
          else if (icon) {
             const icons = this.icons;
             if (!icons) return this.h.span({ className: 'text' }, '≡');
-            return this.h.icon({ className: 'icon', icons, name: icon });
+            return this.h.icon({
+               className: 'icon',
+               icons,
+               name: icon,
+               height: '24px',
+               width: '24px',
+            });
          }
          return icon;
       }
@@ -442,16 +455,17 @@ WCom.Navigation = (function() {
          form.addEventListener('submit', this.submitHandler(form, {}));
          const onclick = this.confirmHandler(name);
          const buttonAttr = { className: 'form-button', onclick };
-         const label = this.h.span(this._renderLabel(icon, text['name']));
+         const label = this._renderLabel(icon, text['name']);
          form.append(this.h.button(buttonAttr, label));
          return this.h.li(itemAttr, form);
       }
       _renderLabel(icon, text) {
          const iconImage = this.iconImage(icon);
+         const label = this.h.span(text);
          return {
-            both: [iconImage, text],
-            icon: iconImage ? iconImage : text,
-            text: text
+            both: [iconImage, label],
+            icon: iconImage ? iconImage : label,
+            text: label
          }[this.linkDisplay];
       }
       _renderList(list, menuName) {
