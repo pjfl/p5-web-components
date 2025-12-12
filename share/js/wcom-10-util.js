@@ -695,7 +695,7 @@ WCom.Util = (function() {
                const initialiser = namespace[trait]['initialise'];
                if (initialiser) initialiser.bind(object)(args);
                for (const method of Object.keys(namespace[trait].around)) {
-                  object.around(method, namespace[trait].around[method]);
+                  object.around(method, namespace[trait].around[method], trait);
                }
             }
          },
@@ -705,10 +705,10 @@ WCom.Util = (function() {
              @param {string} method Name of the method being wrapper
              @param {function} modifier Function that wraps the named method
          */
-         around: function(method, modifier) {
+         around: function(method, modifier, trait) {
             const isBindable = func => func.hasOwnProperty('prototype');
             if (!this[method]) {
-               throw new Error(`Around no method: ${method}`);
+               throw new Error(`Around no method: ${trait} ${method}`);
             }
             const original = this[method].bind(this);
             const around = isBindable(modifier)

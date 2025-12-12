@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds configurable custom footers
           - More CSS
           - Title text for control menu
           - CSS done for now

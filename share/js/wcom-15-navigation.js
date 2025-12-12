@@ -65,6 +65,7 @@ WCom.Navigation = (function() {
          this.token            = this.properties['verify-token'];
          this.contentContainer = document.getElementById(this.containerName);
          this.contentPanel     = document.getElementById(this.contentName);
+         this.footer           = new Footer(this);
          this.menu             = new Menus(this, config['menus']);
          this.messages         = new Messages(config['messages']);
          this.titleEntry       = 'Loading';
@@ -270,6 +271,44 @@ WCom.Navigation = (function() {
    Object.assign(Navigation.prototype, WCom.Util.Markup);
    Object.assign(Navigation.prototype, WCom.Util.String);
    /** @class
+       @classdesc Loads and renders footer content
+       @alias Navigation/Footer
+   */
+   class Footer {
+      /** @constructs
+          @desc Initialises the footer object
+          @param {object} navigation An instance of the
+             {@link Navigation/Navigation Navigation} object
+      */
+      constructor(navigation) {
+         this.navigation = navigation;
+         this.footers = {};
+         this.currentAction;
+      }
+      /** @function
+          @desc Fetch and render the footer contents
+          @param {object} options Configuration for the fetch and render
+          @property {object} options.action Key used to cache footer markup
+          @property {object} options.url URL to fetch footer markup from
+      */
+      async render(source) {
+         if (!source || !source.action || !source.url) return;
+         if (this.currentAction && this.currentAction == source.action) return;
+         const footer = document.getElementById('footer');
+         if (this.footers[source.action]) {
+            footer.innerHTML = this.footers[source.action];
+            this.currentAction = source.action;
+            return;
+         }
+         const opt = { headers: { prefer: 'render=partial' }, response: 'text'};
+         const { location, text } = await this.bitch.sucks(source.url, opt);
+         footer.innerHTML = text;
+         this.footers[source.action] = text;
+         this.currentAction = source.action;
+      }
+   }
+   Object.assign(Footer.prototype, WCom.Util.Bitch);
+   /** @class
        @classdesc Loads and renders context sensitive menus
        @alias Navigation/Menus
    */
@@ -368,7 +407,8 @@ WCom.Navigation = (function() {
          this.config = object['menus'];
          this.token = object['verify-token'];
          this.navigation.containerLayout = object['container-layout'];
-         this.navigation.titleEntry = object['title-entry'];
+         this.navigation.footer.render(object['footer-config']);
+         this.navigation.titleEntry = object['title-entry'] || 'Not found';
       }
       /** @function
           @desc Render the menus
@@ -445,6 +485,8 @@ WCom.Navigation = (function() {
                link.setAttribute('clicklistener', true);
                return this.h.li(itemAttr, link);
             }
+            if (menuName == 'mobile')
+               return this.h.li( { className: menuName });
             const labelAttr = { className: 'drop-menu' };
             return this.h.li(itemAttr, this.h.span(labelAttr, label));
          }
@@ -508,7 +550,7 @@ WCom.Navigation = (function() {
          const global = this._renderList(this.config['_global'], 'mobile');
          this.linkDisplay = linkDisplay;
          const panelAttr = { className: 'nav-panel mobile-panel' };
-         const panel = [control, global];
+         const panel = [global, control];
          this.contextPanels['mobile'] = this.h.div(panelAttr, panel);
          const hamburger = this.h.span('≡');
          const checkboxAttr = { className: 'hamburger', id: 'hamburger' };

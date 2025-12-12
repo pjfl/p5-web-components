@@ -209,7 +209,7 @@ sub _finalise_stash { # Add necessary defaults for the view to render
 
    $stash->{code} //= HTTP_OK unless exists $stash->{redirect};
    $stash->{finalised} = TRUE;
-   $stash->{page} //= { %{$self->_template_wrappers} };
+   $stash->{page} = { %{$self->_template_wrappers}, %{$stash->{page} // {}} };
    $stash->{page}->{layout} //= $self->moniker . "/${method}";
    $stash->{view} //= $self->_default_view;
    return;

@@ -1,9 +1,10 @@
 package Web::Components::Navigation;
 
-use Web::ComposableRequest::Constants qw( EXCEPTION_CLASS FALSE NUL SPC TRUE );
-
+use Web::ComposableRequest::Constants
+                          qw( EXCEPTION_CLASS FALSE NUL SPC TRUE );
 use HTTP::Status          qw( HTTP_OK );
-use Unexpected::Types     qw( ArrayRef Bool HashRef Object PositiveInt Str );
+use Unexpected::Types     qw( ArrayRef Bool HashRef
+                              Object PositiveInt Str Undef);
 use Web::Components::Util qw( clear_redirect formpost throw );
 use Ref::Util             qw( is_hashref );
 use Scalar::Util          qw( blessed );
@@ -153,6 +154,15 @@ control menu link
 =cut
 
 has 'control_title' => is => 'ro', isa => Str, default => 'Control';
+
+=item C<footer_action>
+
+An immutable string without default. When set the front end will use
+the endpoint which results from this to fetch the footer contents
+
+=cut
+
+has 'footer_action' => is => 'ro', isa => Str, predicate => TRUE;
 
 =item C<global>
 
@@ -368,10 +378,20 @@ has 'title_entry' =>
       my @parts = split m{ / }mx, $self->context->action;
       my $label = $self->_get_nav_label($parts[0] . '/' . $parts[-1]);
 
-      return (split m{ \| }mx, $label)[0] // NUL;
+      return (split m{ \| }mx, $label)[0] // 'Not found';
    };
 
 # Private attributes
+has '_action_path' =>
+   is      => 'lazy',
+   isa     => Str,
+   default => sub {
+      my $self  = shift;
+      my @parts = split m{ / }mx, $self->context->action;
+
+      return $parts[0] . '/' . $parts[-1];
+   };
+
 has '_base_colour' =>
    is      => 'lazy',
    isa     => Str,
@@ -432,6 +452,21 @@ has '_data' =>
             },
          }),
       };
+   };
+
+has '_footer_url' =>
+   is        => 'lazy',
+   isa       => Str|Undef,
+   default   => sub {
+      my $self = shift;
+
+      return unless $self->has_footer_action;
+
+      my $context = $self->context;
+      my $actionp = $self->_action_path;
+      my $url     = $context->uri_for_action($self->footer_action, [$actionp]);
+
+      return $url->as_string;
    };
 
 has '_html' =>
@@ -562,6 +597,12 @@ sub finalise {
       'title-entry'      => $self->title_entry,
       'verify-token'     => $context->verification_token,
    };
+
+   if ($self->_footer_url) {
+      $data->{'footer-config'} = {
+         action => $self->_action_path, url => $self->_footer_url,
+      };
+   }
 
    $context->stash(
       code      => HTTP_OK,

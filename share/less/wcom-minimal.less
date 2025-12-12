@@ -3,6 +3,8 @@
 @upper-break: 680px;
 
 /* Colours */
+@bg-darkest: black;
+@bg-lightest: white;
 @button-indicator: limegreen;
 @button-border: gainsboro;
 @exception-bg: lightpink;
@@ -27,6 +29,7 @@
 /* Dimensions */
 @exception-label-min-width: 10rem;
 @exception-max-width: 50rem;
+@exception-row-gap: 0.5rem;
 @message-max-width: 16rem;
 @nav-context-width: 8rem;
 @nav-control-width: 10rem;
@@ -42,6 +45,7 @@
 @button-font-size: 0.7rem;
 @button-font-weight: normal;
 @data-font-weight: normal;
+@footer-font-size: 0.8rem;
 @nav-link-font-size: 1rem;
 @nav-link-font-weight: normal;
 @preview-font-size: 0.8rem;
@@ -63,14 +67,15 @@
 }
 html {
     color-scheme: unset; overflow: hidden;
-    &:has(body.theme-dark) {
+    &:has(body.dark-theme) {
         color-scheme: dark;
     }
-    &:has(body.theme-light) {
+    &:has(body.light-theme) {
         color-scheme: light;
     }
 }
 body {
+    --bg-lightest : @bg-lightest;
     --bg-lighter: hsl(
         from var(--bg-base) calc(h * 1.82) s calc(l * 1.1)
     );
@@ -83,6 +88,7 @@ body {
     --bg-darker: hsl(
         from var(--bg-base) calc(h * 1.55) s calc(l * 0.37)
     );
+    --bg-darkest: @bg-darkest;
     --body-bg: linear-gradient(135deg, transparent, var(--bg-base));
     --button-bg: linear-gradient(0deg, var(--bg-base), var(--bg-lighter));
     --button-bg-disabled: linear-gradient(
@@ -103,12 +109,12 @@ body {
     &:has(aside.nav-link-text) {
         grid-template-columns: (@nav-width-text + 0.5rem) 1fr;
     }
-    &.text-light, &.theme-dark {
+    &.text-light, &.dark-theme {
         form.classic {
-            label, legend, .alert-info {
+            label, legend {
                 color: @text-light;
             }
-            select {
+            select, .alert-info {
                 color: @text-dark;
             }
         }
@@ -119,6 +125,14 @@ body {
         .navigation, .sidebar {
             .nav-list .drop-menu {
                 color: @text-light;
+            }
+        }
+        .state-table {
+            .preference-columns td {
+                color: @text-dark;
+            }
+            .dialog-input select {
+                color: @text-dark;
             }
         }
         .version-number {
@@ -176,7 +190,8 @@ main {
     }
 }
 footer {
-    padding: 0.5rem;
+    align-items: baseline; display: flex;
+    justify-content: space-between; padding: 0.5rem;
 }
 .navigation, .sidebar {
     li.global {
@@ -340,14 +355,15 @@ footer {
     }
     .nav-mobile {
         display: none; left: 0.5rem; position: absolute; top: 0.75rem;
-        .hamburger[type=checkbox], .mobile-panel {
-            display: none;
-        }
         &:has(.hamburger[type=checkbox]:checked) .mobile-panel {
             background: var(--bg-light); border: 1px solid @line-border;
-            border-radius: 5px; display: inline-block; left: -0.5rem;
+            border-radius: 5px; direction: rtl; display: inline-block;
+            left: -0.5rem;
             max-height: (100vh - 15%); max-height: (100dvh - 15%);
             overflow: auto; position: absolute; z-index: 6;
+        }
+        .hamburger[type=checkbox], .mobile-panel {
+            display: none;
         }
         .nav-hamburger {
             align-items: center; display: flex; justify-content: center;
@@ -357,13 +373,20 @@ footer {
                 height: 24px; line-height: 1rem; width: 24px;
             }
         }
-        .nav-list.context {
-            border: 0;
-        }
-        .nav-list.mobile {
-            width: 100%;
-            .drop-menu {
-                color: @text-watermark; padding-left: 0.5rem;
+        .nav-list {
+            &.context {
+                border: 0;
+            }
+            &.mobile {
+                width: 100%;
+                .drop-menu {
+                    color: @text-watermark; padding-left: 0.5rem;
+                }
+            }
+            &.selected {
+                .context.selected::before {
+                    left: 0; right: unset;
+                }
             }
         }
         @media (max-width: @lower-break) {
@@ -402,7 +425,7 @@ footer {
     .nav-list {
         &.context li.context {
             a, .drop-menu {
-                padding: 0.5625rem 0.5rem 0.4375rem 0.5rem !important;
+                padding: 0.5rem !important;
             }
         }
         &.global {
@@ -434,22 +457,17 @@ footer {
         column-gap: 0.25rem; display: flex; font-family: #fonts[sans];
         font-size: larger; height: @nav-header-height;
         justify-content: center;
-        &::after {
-            border-bottom: 40px solid transparent;
-            border-right: 28px solid var(--bg-base);
-            content: ''; display: inline-block; height: 0; width: 0;
-            @media (max-width: @lower-break) {
-                border-bottom: 0; border-right: 0;
-                border-top-right-radius: 10px;
-                box-shadow: 0.5rem 0 var(--bg-base);
-                height: 100%; width: 1rem;
-            }
-        }
         &::before {
             border-top-left-radius: 10px;
             box-shadow: inset 0.5rem 0 var(--bg-base);
             content: ''; display: inline-block; margin-left: -0.5rem;
             height: 100%; width: 1rem;
+        }
+        &::after {
+            background:
+                linear-gradient(70deg, transparent 50%, var(--bg-base) 50%);
+            content: ''; display: inline-block;
+            height: (@nav-header-height - 0.5rem); width: 40px;
         }
         .title-text {
             line-height: 1.5rem;
@@ -482,7 +500,7 @@ footer {
                 width: @nav-indicator-width;
             }
             a, .drop-menu {
-                padding: 0.5625rem 0.5rem 0.4375rem 0.5rem !important;
+                padding: 0.5rem !important;
             }
         }
         &.global {
@@ -560,7 +578,8 @@ footer {
 .main .exception, .modal .exception {
     background: @exception-bg; border: 1px solid @line-border;
     border-radius: 5px; box-shadow: 3px 3px 3px @panel-shadow;
-    margin: 0.5rem 0; max-width: @exception-max-width; padding: 0.5rem;
+    margin: 0.5rem 0; max-width: @exception-max-width;
+    padding: 0.5rem 1rem;
     h1, h2, h3, h4, h5 {
         margin: 0.5rem 0; text-wrap: balance;
         & .content {
@@ -570,8 +589,12 @@ footer {
     svg.error {
         height: 40px; width: 40px; vertical-align: middle;
     }
+    .exception-header {
+        align-items: center; display: flex; column-gap: 0.5rem; margin: 0;
+        padding-bottom: 0.5rem;
+    }
     .line {
-        display: flex;
+        display: flex; padding-bottom: @exception-row-gap;
         label {
             font-family: #fonts[sans]; min-width: @exception-label-min-width;
         }
@@ -625,7 +648,7 @@ footer {
             z-index: 6;
             .modal-title {
                 flex-grow: 2; font-family: #fonts[sans]; font-size: 1rem;
-                font-weight: normal; margin: 0; padding-top: 0.25rem;
+                font-weight: normal; line-height: 1.5rem; margin: 0;
             }
             .modal-close {
                 align-items: center; background: var(--button-bg);
@@ -678,14 +701,14 @@ footer {
             }
         }
         .modal-content-wrapper {
-            padding: 0.5rem 1rem 0.25rem 1rem;
+            padding: 0.5rem 1rem 0.25rem;
             .input-button.right {
                 right: 0rem;
             }
         }
         .modal-footer {
             display: flex; gap: 1rem; justify-content: space-between;
-            padding: 0 1rem 1rem 1rem;
+            padding: 0 1rem 1rem;
             .input-button.right {
                 right: 0rem;
             }
@@ -701,7 +724,62 @@ footer {
         }
     }
 }
-.version-number {
-    color: @text-watermark; font-family: #fonts[sans]; font-size: 0.8rem;
-    opacity: 0.8;
+.flame-container {
+    display: inline-block; width: 120px; height: 80px;
+    padding: 15px 0 0 20px; overflow: hidden;
+    .animation-container {
+        width: 60px; height: 60px; transform-origin: center bottom;
+        animation: flicker 3ms 200ms ease-in infinite alternate;
+        .flame {
+            bottom: 0; position: absolute;
+            border-top-left-radius: 50%;
+            border-bottom-left-radius: 50%;
+            border-bottom-right-radius: 50%;
+            transform: rotate(-45deg) scale(1, 1);
+        }
+        .yellow {
+            left: 15px; width: 30px; height: 30px;
+            background: gold; box-shadow: 0 0 9px 4px gold;
+        }
+        .orange {
+            left: 10px; width: 40px; height: 40px;
+            background: orange; box-shadow: 0 0 9px 4px orange;
+        }
+        .red {
+            left: 5px; width: 50px; height: 50px;
+            background: OrangeRed; box-shadow: 0 0 5px 4px OrangeRed;
+        }
+        .white {
+            bottom: -4px; left: 15px; width: 30px; height: 30px;
+            background: white; box-shadow: 0 0 9px 4px white;
+        }
+        .circle {
+            border-radius: 50%; position: absolute;
+        }
+        .blue {
+            bottom: -25px; left: 25px; width: 10px; height: 10px;
+            background: SlateBlue; box-shadow: 0 0 15px 10px SlateBlue;
+        }
+        .black {
+            bottom: -50px; left: 10px; width: 40px; height: 40px;
+            background: black; box-shadow: 0 0 15px 10px black;
+        }
+        @keyframes flicker {
+              0% { transform: rotate(-1deg); }
+             20% { transform: rotate(1deg); }
+             40% { transform: rotate(-1deg); }
+             60% { transform: rotate(1deg) scaleY(1.04); }
+             80% { transform: rotate(-2deg) scaleY(0.92); }
+            100% { transform: rotate(1deg); }
+        }
+    }
+}
+.footer {
+    a {
+        text-decoration: none;
+    }
+    .copyright, .secondary-link {
+        color: @text-watermark; font-family: #fonts[sans];
+        font-size: @footer-font-size; opacity: 0.8;
+    }
 }
