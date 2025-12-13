@@ -1,7 +1,10 @@
 // -*- coding: utf-8; -*-
-/** @namespace
-    @classdesc Takes navigation away from the browser. Displays context
-       sensitive menus. Displays server messages
+/** @file Web Components - Navigation
+    @classdesc Takes navigation away from the browser. Loads and displays
+       context sensitive menus. Loads and displays server messages. Load caches
+       and displays footers
+    @author pjfl@cpan.org (Peter Flanigan)
+    @version 0.13.26
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -164,9 +167,16 @@ WCom.Navigation = (function() {
          panel.innerHTML = html;
          await this.scan(panel);
          this.contentPanel = document.getElementById(this.contentName);
-         this.contentPanel = this.addReplace(
-            this.contentContainer, 'contentPanel', panel
-         );
+         // this.contentPanel = this.addReplace(
+         //    this.contentContainer, 'contentPanel', panel
+         // );
+         this.contentPanel = this._animatedReplace('contentPanel', panel);
+         this.addEventListeners(this.footer.element);
+      }
+      _animatedReplace(key, panel) {
+         this.contentContainer.appendChild(panel);
+         this.contentPanel.parentNode.removeChild(this.contentPanel);
+         return panel;
       }
       /** @function
           @async
@@ -282,11 +292,12 @@ WCom.Navigation = (function() {
       */
       constructor(navigation) {
          this.navigation = navigation;
+         this.element = document.getElementById('footer');
          this.footers = {};
          this.currentAction;
       }
       /** @function
-          @desc Fetch and render the footer contents
+          @desc Fetch and render the footer contents. Attaches event handlers
           @param {object} options Configuration for the fetch and render
           @property {object} options.action Key used to cache footer markup
           @property {object} options.url URL to fetch footer markup from
@@ -294,17 +305,26 @@ WCom.Navigation = (function() {
       async render(source) {
          if (!source || !source.action || !source.url) return;
          if (this.currentAction && this.currentAction == source.action) return;
-         const footer = document.getElementById('footer');
          if (this.footers[source.action]) {
-            footer.innerHTML = this.footers[source.action];
-            this.currentAction = source.action;
-            return;
+            this.element.innerHTML = this.footers[source.action];
          }
-         const opt = { headers: { prefer: 'render=partial' }, response: 'text'};
-         const { location, text } = await this.bitch.sucks(source.url, opt);
-         footer.innerHTML = text;
-         this.footers[source.action] = text;
+         else {
+            const headers = { prefer: 'render=partial' };
+            const opt = { headers, response: 'text' };
+            const { location, text } = await this.bitch.sucks(source.url, opt);
+            if (text) {
+               this.element.innerHTML = text;
+               this.footers[source.action] = text;
+            }
+            else if (location) {
+               console.warn('Footer.render - Unexpected redirect ' + location);
+            }
+            else {
+               console.warn('Footer.render - Neither location nor text');
+            }
+         }
          this.currentAction = source.action;
+         this.navigation.addEventListeners(this.element);
       }
    }
    Object.assign(Footer.prototype, WCom.Util.Bitch);
@@ -407,8 +427,8 @@ WCom.Navigation = (function() {
          this.config = object['menus'];
          this.token = object['verify-token'];
          this.navigation.containerLayout = object['container-layout'];
-         this.navigation.footer.render(object['footer-config']);
          this.navigation.titleEntry = object['title-entry'] || 'Not found';
+         this.navigation.footer.render(object['footer-config']);
       }
       /** @function
           @desc Render the menus

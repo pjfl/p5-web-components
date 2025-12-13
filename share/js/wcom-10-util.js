@@ -1,10 +1,10 @@
-if (!window.WCom) window.WCom = {};
-/** @namespace
-    @classdesc Web Components Utilities
-    @desc Exports mixins
+/** @file Web Components - Utilities
+    @classdesc Exports mixins used by the other Web Component Modules
+    @author pjfl@cpan.org (Peter Flanigan)
+    @version 0.13.26
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
-    @alias WCom/Util
 */
+if (!window.WCom) window.WCom = {};
 WCom.Util = (function() {
    /** @class
        @classdesc The fetch API can be improved upon. A plain object can

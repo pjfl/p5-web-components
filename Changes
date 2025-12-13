@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Git hook trys to update version in JS files
           - Adds configurable custom footers
           - More CSS
           - Title text for control menu

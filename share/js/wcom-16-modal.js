@@ -1,6 +1,8 @@
 // -*- coding: utf-8; -*-
-/** @namespace
+/** @file Web Components - Modal
     @classdesc Displays modal dialogues
+    @author pjfl@cpan.org (Peter Flanigan)
+    @version 0.13.26
     @alias WCom/Modal
 */
 WCom.Modal = (function() {

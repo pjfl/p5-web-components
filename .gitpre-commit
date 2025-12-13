@@ -15,7 +15,7 @@ use Perl::Version;
 sub __read_all_from ($) {
    my $path = shift;
 
-   open my $fh, '<', $path or die "Path ${path} cannot open: ${OS_ERROR}";
+   die "Path ${path} cannot open: ${OS_ERROR}" unless open my $fh, '<', $path;
 
    local $RS = undef; my $content = <$fh>; close $fh; return $content;
 }
@@ -23,7 +23,7 @@ sub __read_all_from ($) {
 sub __write_data_to ($$) {
    my ($path, $data) = @_;
 
-   open my $fh, '>', $path or die "Path ${path} cannot open: ${OS_ERROR}";
+   die "Path ${path} cannot open: ${OS_ERROR}" unless open my $fh, '>', $path;
 
    print {$fh} $data; close $fh; return;
 }
@@ -34,11 +34,11 @@ sub __get_module_from ($) {
        map    { m{ \A [q\'\"] }mx ? eval $_ : $_ }
        map    { m{ \A \s* (?:module|name) \s+ [=]?[>]? \s* ([^,;]+) [,;]? }imx }
        grep   { m{ \A \s*   (module|name) }imx }
-       split m{ [\n] }mx, $_[ 0 ])[ 0 ];
+       split m{ [\n] }mx, $_[0])[0];
 }
 
 sub __get_ignore_rev_regex () {
-   my $ignore_rev_file = '.gitignore-rev'; -f $ignore_rev_file or return;
+   my $ignore_rev_file = '.gitignore-rev'; return unless -f $ignore_rev_file;
 
    my $paths = __read_all_from $ignore_rev_file; chomp $paths;
 
@@ -48,15 +48,23 @@ sub __get_ignore_rev_regex () {
 sub __update_version ($$) {
    my ($rev_ref, $path) = @_;
 
-   my $rev = ${ $rev_ref }; my $content = __read_all_from $path;
+   my $rev     = ${ $rev_ref };
+   my $cmd     = "git add ${path}";
+   my $content = __read_all_from $path;
 
-   $content =~ m{ \$ (Rev (?:ision)?) (?:[:] \s+ (\d+) \s+)? \$ }mx or return 0;
-   $content =~ s{ \$ (Rev (?:ision)?) (?:[:] \s+ (\d+) \s+)? \$ }{\$$1\$}gmx;
-   $rev < ($2 || 0) + 1 and $rev = ${ $rev_ref } = ($2 || 0) + 1;
-   $content =~ s{ \$ (Rev (?:ision)?) \$ }{\$$1: $rev \$}gmx;
-   __write_data_to $path, $content;
-
-   my $cmd = "git add ${path}"; qx{ $cmd };
+   if ($content =~ m{ \$ (Rev (?:ision)?) (?:[:] \s+ (\d+) \s+)? \$ }mx) {
+      $content =~ s{ \$ (Rev (?:ision)?) (?:[:] \s+ (\d+) \s+)? \$ }{\$$1\$}gmx;
+      $rev = ${ $rev_ref } = ($2 || 0) + 1 if $rev < ($2 || 0) + 1;
+      $content =~ s{ \$ (Rev (?:ision)?) \$ }{\$$1: $rev \$}gmx;
+      __write_data_to $path, $content; qx{ $cmd };
+   }
+   elsif ($content =~ m{ ([\@]version \s+ [0-9]+\.[0-9]+\.)([0-9]+) }mx) {
+      $content =~ s{ ([\@]version \s+ [0-9]+\.[0-9]+\.)([0-9]+) }{$1}gmx;
+      $rev = ${ $rev_ref } = ($2 || 0) + 1 if $rev < ($2 || 0) + 1;
+      $content =~ s{ ([\@]version \s+ [0-9]+\.[0-9]+\.) }{$1$rev}gmx;
+      __write_data_to $path, $content; qx{ $cmd };
+   }
+   else { return 0 }
 
    return 1;
 }
@@ -72,7 +80,7 @@ if (defined $project_file) {
 
    my $distname = lc $module; $distname =~ s{ :: }{-}gmx;
 
-   $rev_file = catfile( updir, ".${distname}.rev" );
+   $rev_file = catfile(updir, ".${distname}.rev");
 
    if (-f $rev_file) { $rev = __read_all_from $rev_file; chomp $rev; $rev++ }
 }
@@ -84,12 +92,13 @@ if (defined $rev and qx{ git branch 2>/dev/null } =~ m{ ^ [*] \s+ master }mx) {
    my $found  = 0;
 
    for my $path (map { s{ \A .+ \s+ }{}mx; $_ } grep { m{ \A [AM] }mx } @stat) {
-      $ignore and $path =~ m{ (?: $ignore ) }mx and next; $found = 1;
-      $main   ne  $path and __update_version \$rev, $path;
+      next if $ignore and $path =~ m{ (?: $ignore ) }mx;
+      $found = 1;
+      __update_version \$rev, $path if $main ne $path;
    }
 
-   $found and __update_version \$rev, $main
-          and __write_data_to $rev_file, "${rev}\n";
+   __write_data_to $rev_file, "${rev}\n"
+      if $found and __update_version \$rev, $main
 }
 
 my $change_file = 'Changes';
@@ -98,18 +107,18 @@ if (-f $change_file) {
    my $changes    = __read_all_from $change_file;
    my $change_ver = qv( (split q( ),
                          (grep { m{ \A v? [0-9._]+ }mx } split m{ [\n] }mx,
-                          $changes)[ 0 ] || q())[ 0 ] || '0.1.1' );
-   my $meta       = defined $module
-                  ? Module::Metadata->new_from_module( $module ) : undef;
-   my $module_ver = $meta ? $meta->version : qv( '0.1.1' );
+                          $changes)[0] || q())[0] || '0.1.1' );
+   my $meta;
+   $meta = Module::Metadata->new_from_module($module) if defined $module;
+   my $module_ver = $meta ? $meta->version : qv('0.1.1');
 
-   $meta or warn 'No meta object for module '.($module // '<undef>');
+   warn 'No meta object for module ' . ($module // '<undef>') unless $meta;
 
-   my $pmv = Perl::Version->new( $module_ver ); $pmv->components( 2 );
-   my $pcv = Perl::Version->new( $change_ver ); $pcv->components( 2 );
+   my $pmv = Perl::Version->new($module_ver); $pmv->components(2);
+   my $pcv = Perl::Version->new($change_ver); $pcv->components(2);
 
    if ($pmv > $pcv) {
-      my $stamp  = time2str( '%Y-%m-%d %H:%M:%S', time );
+      my $stamp  = time2str('%Y-%m-%d %H:%M:%S', time);
       my $header = sprintf "%-9.9s %s", $module_ver, $stamp;
 
       $changes =~ s{ ^ $ }{\n$header}mx; __write_data_to $change_file, $changes;
