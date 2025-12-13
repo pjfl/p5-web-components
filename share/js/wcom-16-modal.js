@@ -1,8 +1,8 @@
-// -*- coding: utf-8; -*-
-/** @file Web Components - Modal
+/** -*- coding: utf-8; -*-
+    @file Web Components - Modal
     @classdesc Displays modal dialogues
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.26
+    @version 0.13.27
     @alias WCom/Modal
 */
 WCom.Modal = (function() {

@@ -1,10 +1,10 @@
-// -*- coding: utf-8; -*-
-/** @file Web Components - Navigation
+/** -*- coding: utf-8; -*-
+    @file Web Components - Navigation
     @classdesc Takes navigation away from the browser. Loads and displays
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.26
+    @version 0.13.27
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -28,6 +28,7 @@ WCom.Navigation = (function() {
              {@link Navigation/Menus Menus} object
           @property {object} config.messages Initialises the
              {@link Navigation/Messages Messages} object
+          @property {string} config.properties.base-colour
           @property {string} config.properties.base-url
           @property {string} config.properties.confirm
           @property {string} config.properties.container-layout

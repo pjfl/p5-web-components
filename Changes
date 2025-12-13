@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Added version number to less file
           - Git hook trys to update version in JS files
           - Adds configurable custom footers
           - More CSS
