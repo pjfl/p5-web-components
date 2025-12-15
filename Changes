@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Removed dependency on File::DataClass::Schema
           - Eliminated use of innerHTML and eval string in JS
           - Added version number to less file
           - Git hook trys to update version in JS files

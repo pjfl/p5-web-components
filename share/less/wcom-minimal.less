@@ -1,5 +1,5 @@
 /* @author  pjfl@cpan.org (Peter Flanigan)
- * @version 0.13.28
+ * @version 0.13.29
  * Breaks */
 @lower-break: 480px;
 @upper-break: 680px;
@@ -255,7 +255,7 @@ footer {
             max-height: @nav-panel-max-height;
         }
         a {
-            display: inline-block; padding: 0.5rem 0.375rem;
+            display: inline-block; padding: 0.375rem 0.375rem 0.625rem;
         }
         img {
             height: 24px; width: 24px; vertical-align: top;
@@ -371,7 +371,6 @@ footer {
     }
     .nav-menu {
         background: var(--bg-base);
-        border-right: 1px solid hsl(from @panel-shadow h s l / 0.5);
     }
     .nav-mobile {
         display: none; left: 0.5rem; position: absolute; top: 0.75rem;
@@ -429,7 +428,8 @@ footer {
 .navigation {
     align-items: center; display: flex; justify-content: left;
     &::before {
-        background: var(--bg-base); border-top: 0.5rem;
+        background: var(--bg-base);
+        border-left: 1px solid hsl(from @line-border h s l / 0.5);
         border-top-left-radius: 20px; content: ''; display: inline-block;
         height: @nav-header-height; width: @nav-width-both;
         @media (max-width: @lower-break) {
@@ -449,7 +449,7 @@ footer {
             }
         }
         &.global {
-            align-items: flex-start; display: inline-flex;
+            align-items: flex-start; column-gap: 1rem; display: inline-flex;
             li.global {
                 a, .drop-menu {
                     align-items: center; display: flex;
@@ -505,11 +505,20 @@ footer {
         }
     }
  }
+.foo {
+    background: linear-gradient(
+        to right, @line-border 1px, transparent 1px, transparent
+    );
+    background-position-x: 100%;
+    background-repeat: no-repeat;
+    background-size: 50% 100%;
+}
 .sidebar {
     &::after {
         background:
             linear-gradient(to bottom, var(--bg-base), transparent);
-        border-right: 1px dashed hsl(from @panel-shadow h s l / 0.5);
+        border-left: 1px dashed hsl(from @line-border h s l / 0.5);
+        border-right: 1px dashed hsl(from @line-border h s l / 0.5);
         content: ''; display: block; height: 5rem;
         @media (max-width: @lower-break) {
             display: none;
@@ -576,6 +585,10 @@ footer {
                 padding-top: 0;
             }
         }
+    }
+    .nav-menu {
+        border-left: 1px solid hsl(from @line-border h s l / 0.5);
+        border-right: 1px solid hsl(from @line-border h s l / 0.5);
     }
 }
 .contact-page {

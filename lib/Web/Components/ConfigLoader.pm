@@ -2,9 +2,8 @@ package Web::Components::ConfigLoader;
 
 use Web::ComposableRequest::Constants qw( FALSE TRUE );
 use File::DataClass::Types qw( Directory File Path );
-use Web::Components::Util  qw( ns_environment );
+use Web::Components::Util  qw( load_file ns_environment );
 use File::DataClass::IO    qw( io );
-use File::DataClass::Schema;
 use Moo::Role;
 
 =encoding utf-8
@@ -186,10 +185,8 @@ around 'BUILDARGS' => sub {
       $attr->{config_file} = $config_file if $config_file;
    }
 
-   my $schema = File::DataClass::Schema->new( storage_class => 'Any' );
-
    if ($attr->{config_file}) {
-      $attr = { %{$attr}, %{$schema->load($attr->{config_file})} };
+      $attr = { %{$attr}, %{load_file($attr->{config_file})} };
    }
 
    if (my $file = $attr->{local_config_file}) {
@@ -197,7 +194,7 @@ around 'BUILDARGS' => sub {
 
       if ($config_file->exists) {
          $attr->{local_config_file} = $config_file;
-         $attr = { %{$attr}, %{$schema->load($config_file)} };
+         $attr = { %{$attr}, %{load_file($config_file)} };
       }
    }
 

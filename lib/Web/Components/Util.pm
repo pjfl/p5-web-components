@@ -5,6 +5,8 @@ use parent 'Exporter::Tiny';
 
 use Web::ComposableRequest::Constants qw( EXCEPTION_CLASS FALSE TRUE );
 use Unexpected::Functions             qw( Unspecified );
+use File::DataClass::IO               qw( io );
+use JSON::MaybeXS                     qw( decode_json );
 use List::Util                        qw( pairs );
 use Scalar::Util                      qw( blessed );
 use Sys::Hostname                     qw( hostname );
@@ -13,8 +15,8 @@ use Module::Pluggable::Object;
 use Moo::Role ();
 
 our @EXPORT_OK = qw( build_routes clear_redirect deref exception first_char
-                     formpost fqdn is_arrayref load_components ns_environment
-                     throw );
+                     formpost fqdn is_arrayref load_components load_file
+                     ns_environment throw );
 
 =pod
 
@@ -238,6 +240,37 @@ sub _app_prefix ($) {
 
 sub _env_prefix ($) {
    return uc _app_prefix $_[0];
+}
+
+=item C<load_file>
+
+Loads the given file and decodes it returning a hash reference. Takes decoded
+JSON and walks the structure removing stupid JSON::PP::Booleans
+
+=cut
+
+sub load_file {
+   return _debollock(decode_json(io(shift)->slurp));
+}
+
+sub _debollock {
+   my $data = shift;
+
+   if (ref $data eq 'HASH') {
+      for my $fml (keys %{$data}) {
+         $data->{$fml} = q() . $data->{$fml} if blessed $data->{$fml};
+         $data->{$fml} = _debollock($data->{$fml}) if (ref $data->{$fml});
+      }
+   }
+   elsif (ref $data eq 'ARRAY') {
+      for (my $fml = 0; $fml < scalar @{$data}; $fml++) {
+         $data->[$fml] = q() . $data->[$fml] if blessed $data->[$fml];
+         $data->[$fml] = _debollock($data->[$fml]) if (ref $data->[$fml]);
+      }
+   }
+   else { $data = "${data}" }
+
+   return $data;
 }
 
 =item C<ns_environment>
