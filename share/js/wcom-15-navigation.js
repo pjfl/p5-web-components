@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.27
+    @version 0.13.28
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -63,6 +63,7 @@ WCom.Navigation = (function() {
          this.location         = this.properties['location'];
          this.logo             = this.properties['logo'];
          this.mediaBreak       = this.properties['media-break'];
+         this.shiny            = this.properties['shiny'];
          this.skin             = this.properties['skin'];
          this.title            = this.properties['title'];
          this.titleAbbrev      = this.properties['title-abbrev'];
@@ -90,21 +91,23 @@ WCom.Navigation = (function() {
       */
       addEventListeners(container, options = {}) {
          const url = this.baseURL;
-         for (const link of container.getElementsByTagName('a')) {
-            const href = link.href + '';
-            if (href.length && url == href.substring(0, url.length)
-                && !link.getAttribute('clicklistener')) {
-               const handler = this.menu.clickHandler(href, options);
-               link.addEventListener('click', handler);
-               link.setAttribute('clicklistener', true);
+         for (const el of container.querySelectorAll('a, form')) {
+            if (el.tagName == 'FORM') {
+               const action = el.action + '';
+               if (action.length && url == action.substring(0, url.length)
+                   && !el.getAttribute('submitlistener')) {
+                  const handler = this.menu.submitHandler(el, options);
+                  el.addEventListener('submit', handler);
+               }
             }
-         }
-         for (const form of container.getElementsByTagName('form')) {
-            const action = form.action + '';
-            if (action.length && url == action.substring(0, url.length)
-                && !form.getAttribute('submitlistener')) {
-               const handler = this.menu.submitHandler(form, options);
-               form.addEventListener('submit', handler);
+            else {
+               const href = el.href + '';
+               if (href.length && url == href.substring(0, url.length)
+                   && !el.getAttribute('clicklistener')) {
+                  const handler = this.menu.clickHandler(href, options);
+                  el.addEventListener('click', handler);
+                  el.setAttribute('clicklistener', true);
+               }
             }
          }
       }
@@ -164,20 +167,17 @@ WCom.Navigation = (function() {
          if (this.containerLayout) className += ' ' + this.containerLayout;
          this.contentContainer.setAttribute('class', className);
          const attr = { id: this.contentName, className: this.contentName };
-         const panel = this.h.div(attr);
-         panel.innerHTML = html;
-         await this.scan(panel);
+         const panel = this.h.div(attr, this.h.frag(html));
          this.contentPanel = document.getElementById(this.contentName);
-         // this.contentPanel = this.addReplace(
-         //    this.contentContainer, 'contentPanel', panel
-         // );
-         this.contentPanel = this._animatedReplace('contentPanel', panel);
-         this.addEventListeners(this.footer.element);
-      }
-      _animatedReplace(key, panel) {
-         this.contentContainer.appendChild(panel);
-         this.contentPanel.parentNode.removeChild(this.contentPanel);
-         return panel;
+         if (this.shiny) {
+            this.contentPanel = this._animatedReplace(panel, this.contentPanel);
+         }
+         else {
+            this.contentPanel = this.addOrReplace(
+               this.contentContainer, panel, this.contentPanel
+            );
+         }
+         await this.scan(panel);
       }
       /** @function
           @async
@@ -190,8 +190,8 @@ WCom.Navigation = (function() {
          const opt = { headers: { prefer: 'render=partial' }, response: 'text'};
          const { location, text } = await this.bitch.sucks(url, opt);
          if (text && text.length > 0) {
+            this.renderHTML(text);
             await this.menu.loadMenuData(url);
-            await this.renderHTML(text);
             this._setHeadTitle();
             this.menu.render();
          }
@@ -246,7 +246,25 @@ WCom.Navigation = (function() {
       */
       async scan(panel, options = {}) {
          await WCom.Util.Event.onLoad(panel, options);
+         this.addEventListeners(this.footer.element, options);
          this.addEventListeners(panel, options);
+      }
+      _animatedReplace(panel, oldPanel) {
+         const container = this.contentContainer;
+         panel.classList.add('fade');
+         panel.classList.add('loading');
+         oldPanel.classList.add('fade');
+         oldPanel.classList.add('unloading');
+         container.appendChild(panel);
+         setTimeout(function() { panel.classList.remove('fade') }, 1000 * 0.25);
+         setTimeout(function() {
+            panel.classList.remove('loading');
+            for (const el of container.querySelectorAll('.panel')) {
+               container.removeChild(el);
+               break;
+            }
+         }, 1000 * 1.25);
+         return panel;
       }
       async _redirectAfterGet(href, location) {
          const locationURL = new URL(location);
@@ -273,9 +291,9 @@ WCom.Navigation = (function() {
       }
       _setHeadTitle() {
          const head = (document.getElementsByTagName('head'))[0];
-         const titleElement = head.querySelector('title');
+         const title = head.querySelector('title');
          const entry = this.capitalise(this.titleEntry);
-         titleElement.innerHTML = this.titleAbbrev + ' - ' + entry;
+         title.replaceWith(this.h.title(this.titleAbbrev + ' - ' + entry));
       }
    }
    Object.assign(Navigation.prototype, WCom.Util.Bitch);
@@ -306,16 +324,19 @@ WCom.Navigation = (function() {
       async render(source) {
          if (!source || !source.action || !source.url) return;
          if (this.currentAction && this.currentAction == source.action) return;
+         const oldContainer = this.element.querySelector('.footer-container');
          if (this.footers[source.action]) {
-            this.element.innerHTML = this.footers[source.action];
+            this.element.replaceChild(this.footers[source.action],oldContainer);
          }
          else {
             const headers = { prefer: 'render=partial' };
             const opt = { headers, response: 'text' };
             const { location, text } = await this.bitch.sucks(source.url, opt);
             if (text) {
-               this.element.innerHTML = text;
-               this.footers[source.action] = text;
+               const attr = { className: 'footer-container' };
+               const newContainer = this.h.div(attr, this.h.frag(text));
+               this.element.replaceChild(newContainer, oldContainer);
+               this.footers[source.action] = newContainer;
             }
             else if (location) {
                console.warn('Footer.render - Unexpected redirect ' + location);
@@ -329,6 +350,7 @@ WCom.Navigation = (function() {
       }
    }
    Object.assign(Footer.prototype, WCom.Util.Bitch);
+   Object.assign(Footer.prototype, WCom.Util.Markup);
    /** @class
        @classdesc Loads and renders context sensitive menus
        @alias Navigation/Menus
@@ -441,11 +463,12 @@ WCom.Navigation = (function() {
          const global = this._renderList(this.config['_global'], 'global');
          if (this.location == 'header') content.unshift(global);
          const cMenu = this.h.nav({ className: 'nav-menu' }, content);
-         this.headerMenu = this.addReplace(this.container, 'headerMenu', cMenu);
+         this.headerMenu
+            = this.addOrReplace(this.container, cMenu, this.headerMenu);
          if (this.location == 'header') return;
          const container = document.getElementById(this.location);
          const gMenu = this.h.nav({ className: 'nav-menu' }, global);
-         this.globalMenu = this.addReplace(container, 'globalMenu', gMenu);
+         this.globalMenu = this.addOrReplace(container, gMenu, this.globalMenu);
       }
       /** @function
           @desc Returns a bound function that handles the 'submit' event

@@ -342,6 +342,15 @@ the current request
 
 has 'model' => is => 'ro', isa => Object, required => TRUE;
 
+=item C<shiny>
+
+Boolean which defaults to false. If true the FE will animate the page
+transitions
+
+=cut
+
+has 'shiny' => is => 'ro', isa => Bool, default => FALSE;
+
 =item C<title>
 
 An immutable string which defaults to null. If set will be displayed as the
@@ -445,6 +454,7 @@ has '_data' =>
                'location'         => $self->menu_location,
                'logo'             => $self->logo,
                'media-break'      => $self->media_break,
+               'shiny'            => $self->shiny,
                'skin'             => $self->_skin,
                'title'            => $self->title,
                'title-abbrev'     => $self->title_abbrev,

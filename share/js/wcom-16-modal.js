@@ -2,7 +2,7 @@
     @file Web Components - Modal
     @classdesc Displays modal dialogues
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.27
+    @version 0.13.28
     @alias WCom/Modal
 */
 WCom.Modal = (function() {
@@ -615,27 +615,21 @@ WCom.Modal = (function() {
       createModalContainer() {
          const spinner = this._createSpinner();
          const loader = this.h.div({ className: 'modal-loader' }, spinner);
-         this.frame = this.h.div({
-            className: 'selector',
-            id: 'selector-frame',
-            style: 'visibility:hidden;'
-         });
+         this.frame = this._createFrame();
          this.selector = new Selector(this.frame);
-         const container = this.h.div({
-            className: 'modal-frame-container'
-         }, [loader, this.frame]);
-         const onload = function() {
+         const attr = { className: 'modal-frame-container' };
+         const container = this.h.div(attr, [loader, this.frame]);
+         const onload = function(frame) {
             loader.style.display = 'none';
             const selector = this.selector;
             if (this.initValue)
                selector.setModalValue(this.initValue, this.valueStore);
-            for (const anchor of this.frame.querySelectorAll('a')) {
+            for (const anchor of frame.querySelectorAll('a')) {
                anchor.addEventListener('click', function(event) {
                   this.valueStore = selector.setValueStore(this.valueStore);
                   this.initValue = this.valueStore.value;
                }.bind(this));
             }
-            this.frame.style.visibility = 'visible';
          }.bind(this);
          this.scanOptions = {
             formClass: this.formClass,
@@ -687,6 +681,10 @@ WCom.Modal = (function() {
       getModalValue(success) {
          return this.selector.getModalValue(success);
       }
+      _createFrame(content) {
+         const attr = { className: 'selector', id: 'selector-frame' };
+         return this.h.div(attr, content);
+      }
       _createSpinner(modifierClass = '') {
          const icon = this.h.icon({
             name: 'spinner',
@@ -702,7 +700,12 @@ WCom.Modal = (function() {
       async _loadFrameContent(url, onload) {
          const opt = { headers: { prefer: 'render=partial' }, response: 'text'};
          const { location, text } = await this.bitch.sucks(url, opt);
-         if (text && text.length > 0) this.frame.innerHTML = text;
+         if (text && text.length > 0) {
+            const newFrame = this._createFrame(this.h.frag(text));
+            this.frame.parentNode.replaceChild(newFrame, this.frame);
+            this.frame = newFrame;
+            this.selector.frame = newFrame;
+         }
          else if (location) {
             // TODO: Deal with
             console.warn('Redirect in response to modal loadFrameContent');
@@ -710,7 +713,7 @@ WCom.Modal = (function() {
          else {
             console.warn('Neither content nor redirect in response to get');
          }
-         if (onload) onload();
+         if (onload) onload(this.frame);
          if (this.onload) this.onload(this.frame, this.scanOptions);
       }
    }
@@ -940,6 +943,7 @@ WCom.Modal = (function() {
       const options = { ...args, icons: util.icons, unloadIndex };
       modal = new Modal(args.title, content, buttons, options);
       modal.render();
+      if (args.setCurrent) modal.current = modal;
       return modal;
    };
    /** @module Modal
@@ -1001,18 +1005,34 @@ WCom.Modal = (function() {
        */
       createSelector: function(args) {
          const { icons, onchange, target, title = 'Select Item', url } = args;
+         const parseHandler = function(handler) {
+            const lookup = WCom.Util.Modifiers.objectLookup;
+            const result = handler.match(/([^\(]+)\((.+)\)/);
+            const method = lookup(result[1]);
+            if (!method) return [];
+            const parent = result[1].replace(/\.[^\.]+$/, '');
+            const args = JSON.parse(result[2]) || {};
+            return [method, args, lookup(parent)];
+         };
          const callback = function(ok, modal, result) {
             if (!ok || !target) return;
             const el = document.getElementById(target);
             if (!el) return;
             if (result.value) {
                const newValue = result.value.replace(/!/g, '/');
-               if (onchange && el.value != newValue)
-                  eval(onchange.replace(/%value/g, result.value));
+               if (onchange && el.value != newValue) {
+                  const handler = onchange.replace(/%value/g, result.value);
+                  const tuple = parseHandler(handler);
+                  if (tuple[0]) tuple[0].call(tuple[2], tuple[1]);
+               }
                el.value = newValue;
             }
             else if (result.files && result.files[0]) {
-               if (onchange) eval(onchange.replace(/%value/g, 'result.files'));
+               if (onchange) {
+                  const handler = onchange.replace(/%value/g, 'result.files');
+                  const tuple = parseHandler(handler);
+                  if (tuple[0]) tuple[0].call(tuple[2], tuple[1]);
+               }
                el.value = result.files;
             }
             if (el.focus) el.focus();

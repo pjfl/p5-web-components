@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.26
+    @version 0.13.28
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -258,6 +258,7 @@ WCom.Util = (function() {
       textarea(attr, content) { return this._tag('textarea', attr, content) }
       th(attr, content)       { return this._tag('th', attr, content) }
       thead(attr, content)    { return this._tag('thead', attr, content) }
+      title(attr, content)    { return this._tag('title', attr, content) }
       tr(attr, content)       { return this._tag('tr', attr, content) }
       ul(attr, content)       { return this._tag('ul', attr, content) }
       upload(attr, content)   { return this._tag('upload', attr, content) }
@@ -333,7 +334,7 @@ WCom.Util = (function() {
          const wrapperAttr = { className: 'icon-wrapper' };
          if (onclick) wrapperAttr.onclick = onclick;
          if (title) wrapperAttr.title = title;
-         return this.span(wrapperAttr, this._frag(svg.trim()));
+         return this.span(wrapperAttr, this.frag(svg.trim()));
       }
       /** @function
           @desc Return markup for a radio button input element
@@ -354,12 +355,13 @@ WCom.Util = (function() {
          return this._tag('input', attr);
       }
       /** @function
-          @desc Returns 'element' and 'array' types in addition
-             to the built in ones
-          @param {variable} x The variable to test
-          @returns {string}
+          @desc Returns elements created from the fragment of markup provided
+          @param {string} content Fragment of markup
+          @returns {element}
       */
-      typeOf(x) { return this._typeof(x) }
+      frag(content) {
+         return document.createRange().createContextualFragment(content.trim());
+      }
       /** @function
           @desc Return the co-ordinates where the event takes place
           @param {event} event Event whose co-ordinates are being returned
@@ -432,14 +434,12 @@ WCom.Util = (function() {
          };
       }
       /** @function
-          @private
-          @desc Returns elements created from the fragment of markup provided
-          @param {string} content Fragment of markup
-          @returns {element}
+          @desc Returns 'element' and 'array' types in addition
+             to the built in ones
+          @param {variable} x The variable to test
+          @returns {string}
       */
-      _frag(content) {
-         return document.createRange().createContextualFragment(content);
-      }
+      typeOf(x) { return this._typeof(x) }
       _tag(tag, attr, content) {
          const events = [
             'onchange', 'onclick', 'ondragenter', 'ondragleave', 'ondragover',
@@ -597,19 +597,20 @@ WCom.Util = (function() {
       Markup: {
          /** @function
              @desc Adds or replaces an element in the container
-             @example this.foo = this.addReplace( container, 'foo', element );
+             @example this.el = this.addOrReplace( container, newEl, this.el );
              @param {element} container Container element
-             @param {string} attribute Attribute on the self referential object
-             @param {element} el Adds to or replaces the element in the
-               container with this one
+             @param {element} newEl Adds to or replaces the element in the
+                container with this one
+             @param {element} oldEl This is the element which is replaced if
+                it exists
              @returns {element} The replacement element
           */
-         addReplace: function(container, attribute, el) {
-            if (this[attribute] && container.contains(this[attribute])) {
-               container.replaceChild(el, this[attribute]);
+         addOrReplace: function(container, newEl, oldEl) {
+            if (oldEl && container.contains(oldEl)) {
+               container.replaceChild(newEl, oldEl);
             }
-            else { container.appendChild(el) }
-            return el;
+            else { container.appendChild(newEl) }
+            return newEl;
          },
          /** @function
              @desc Sets custom properties ('x' and 'y') on button elements
@@ -645,6 +646,16 @@ WCom.Util = (function() {
             let existingValue = object[key] || '';
             if (existingValue) existingValue += ' ';
             object[key] = existingValue + value;
+         },
+         /** @function
+             @desc Calls click on the selected document element
+             @param {object} options
+             @property {string} options.id Id of the element to click
+         */
+         clickMe: function(options) {
+            const el = document.getElementById(options.id);
+            if (!el) return;
+            el.click();
          },
          /** @instance
              @desc An instance of {@link Util/HtmlTiny}
@@ -716,6 +727,48 @@ WCom.Util = (function() {
             this[method] = function(args1, args2, args3, args4, args5) {
                return around(original, args1, args2, args3, args4, args5);
             };
+         },
+         /** @function
+             @desc Looks up the request method on the WCom object. Wraps
+                a call to it and returns it as an event handler
+             @param {string} handler Method to lookup and wrap
+             @param {boolean} allowDefault If true default event propagation
+                is not prevented
+             @returns {function} Event handler function
+          */
+         getEventHandler: function(handler, allowDefault) {
+            if (!handler.match(/^WCom\./)) {
+               console.warn(`Unknown event handler: ${handler}`);
+               return;
+            }
+            const result = handler.match(/([^\(]+)\((.+)\)/);
+            const method = this.objectLookup(result[1]);
+            if (!method) {
+               console.warn('Unknown handler method: ' + result[1]);
+               return;
+            }
+            const args = JSON.parse(result[2]) || {};
+            if (allowDefault) {
+               return function(event) { method.call(this, args) };
+            }
+            return function(event) {
+               event.preventDefault();
+               method.call(this, args);
+            };
+         },
+         /** @function
+             @desc Traverses the object space starting at window
+             @param {string} key Dot separated list of objects
+             @returns {object} The object if it was found
+         */
+         objectLookup: function(keys) {
+            if (!keys) return;
+            let el = window;
+            for (const key of keys.split(/\./)) {
+               if (!el[key]) return;
+               el = el[key];
+            }
+            return el;
          },
          /** @function
              @desc Deletes all the entries in the supplied list
