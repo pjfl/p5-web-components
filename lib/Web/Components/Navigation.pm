@@ -3,7 +3,7 @@ package Web::Components::Navigation;
 use Web::ComposableRequest::Constants
                           qw( EXCEPTION_CLASS FALSE NUL SPC TRUE );
 use HTTP::Status          qw( HTTP_OK );
-use Unexpected::Types     qw( ArrayRef Bool HashRef
+use Unexpected::Types     qw( ArrayRef Bool HashRef Num
                               Object PositiveInt Str Undef);
 use Web::Components::Util qw( clear_redirect formpost throw );
 use Ref::Util             qw( is_hashref );
@@ -154,6 +154,15 @@ control menu link
 =cut
 
 has 'control_title' => is => 'ro', isa => Str, default => 'Control';
+
+=item C<dom_wait>
+
+An immutable number which defaults to 0.5. Length of time in seconds to
+wait for the DOM to stabalise
+
+=cut
+
+has 'dom_wait' => is => 'ro', isa => Num, default => 0.5;
 
 =item C<footer_action>
 
@@ -342,15 +351,6 @@ the current request
 
 has 'model' => is => 'ro', isa => Object, required => TRUE;
 
-=item C<shiny>
-
-Boolean which defaults to false. If true the FE will animate the page
-transitions
-
-=cut
-
-has 'shiny' => is => 'ro', isa => Bool, default => FALSE;
-
 =item C<title>
 
 An immutable string which defaults to null. If set will be displayed as the
@@ -449,12 +449,13 @@ has '_data' =>
                'content-name'     => $self->content_name,
                'control-icon'     => $self->control_icon,
                'control-title'    => $self->control_title,
+               'dom-wait'         => $self->dom_wait,
                'icons'            => $self->icons,
                'link-display'     => $self->link_display,
                'location'         => $self->menu_location,
                'logo'             => $self->logo,
                'media-break'      => $self->media_break,
-               'shiny'            => $self->shiny,
+               'shiny'            => $self->context->shiny,
                'skin'             => $self->_skin,
                'title'            => $self->title,
                'title-abbrev'     => $self->title_abbrev,

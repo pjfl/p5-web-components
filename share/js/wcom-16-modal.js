@@ -2,11 +2,12 @@
     @file Web Components - Modal
     @classdesc Displays modal dialogues
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.28
+    @version 0.13.30
     @alias WCom/Modal
 */
 WCom.Modal = (function() {
    const eventUtil = WCom.Util.Event;
+   const modifierUtil = WCom.Util.Modifiers;
    const navManager = WCom.Navigation.manager;
    const keyCodes = { enter: 13, escape: 27 };
    const modalList = (() => {
@@ -943,12 +944,16 @@ WCom.Modal = (function() {
       const options = { ...args, icons: util.icons, unloadIndex };
       modal = new Modal(args.title, content, buttons, options);
       modal.render();
-      if (args.setCurrent) modal.current = modal;
+      if (args.setCurrent) WCom.Modal.current(modal);
       return modal;
    };
+   let CurrentModal;
    /** @module Modal
     */
    return {
+      closeCurrent: function() {
+         if (CurrentModal) CurrentModal.close();
+      },
       /** @function
           @desc Creates a modal dialogue and calls it's
              {@link Modal/Modal#render render} method. Uses
@@ -1005,15 +1010,6 @@ WCom.Modal = (function() {
        */
       createSelector: function(args) {
          const { icons, onchange, target, title = 'Select Item', url } = args;
-         const parseHandler = function(handler) {
-            const lookup = WCom.Util.Modifiers.objectLookup;
-            const result = handler.match(/([^\(]+)\((.+)\)/);
-            const method = lookup(result[1]);
-            if (!method) return [];
-            const parent = result[1].replace(/\.[^\.]+$/, '');
-            const args = JSON.parse(result[2]) || {};
-            return [method, args, lookup(parent)];
-         };
          const callback = function(ok, modal, result) {
             if (!ok || !target) return;
             const el = document.getElementById(target);
@@ -1022,22 +1018,28 @@ WCom.Modal = (function() {
                const newValue = result.value.replace(/!/g, '/');
                if (onchange && el.value != newValue) {
                   const handler = onchange.replace(/%value/g, result.value);
-                  const tuple = parseHandler(handler);
-                  if (tuple[0]) tuple[0].call(tuple[2], tuple[1]);
+                  for (const tuple of modifierUtil.parseJS(handler)) {
+                     tuple[0].call(tuple[1], tuple[2]);
+                  }
                }
                el.value = newValue;
             }
             else if (result.files && result.files[0]) {
                if (onchange) {
                   const handler = onchange.replace(/%value/g, 'result.files');
-                  const tuple = parseHandler(handler);
-                  if (tuple[0]) tuple[0].call(tuple[2], tuple[1]);
+                  for (const tuple of modifierUtil.parseJS(handler)) {
+                     tuple[0].call(tuple[1], tuple[2]);
+                  }
                }
                el.value = result.files;
             }
             if (el.focus) el.focus();
          }.bind(this);
          return create({ callback, icons, title, url });
+      },
+      current: function(modal) {
+         if (modal) CurrentModal = modal;
+         return CurrentModal;
       }
    };
 })();

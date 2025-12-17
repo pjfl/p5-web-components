@@ -6,17 +6,17 @@ use parent 'Exporter::Tiny';
 use Web::ComposableRequest::Constants qw( EXCEPTION_CLASS FALSE TRUE );
 use Unexpected::Functions             qw( Unspecified );
 use File::DataClass::IO               qw( io );
-use JSON::MaybeXS                     qw( decode_json );
 use List::Util                        qw( pairs );
 use Scalar::Util                      qw( blessed );
 use Sys::Hostname                     qw( hostname );
 use Web::ComposableRequest::Util      qw( is_hashref );
+use JSON::MaybeXS                     qw( );
 use Module::Pluggable::Object;
 use Moo::Role ();
 
-our @EXPORT_OK = qw( build_routes clear_redirect deref exception first_char
-                     formpost fqdn is_arrayref load_components load_file
-                     ns_environment throw );
+our @EXPORT_OK = qw( build_routes clear_redirect deref exception dump_file
+                     first_char formpost fqdn is_arrayref load_components
+                     load_file ns_environment throw );
 
 =pod
 
@@ -94,6 +94,25 @@ sub deref ($$;$) {
    elsif (is_hashref $x)              { $r = $x->{$k} // $default }
 
    return $r;
+}
+
+=item C<dump_file>
+
+   dump_file $path, $data;
+
+Encodes data as JSON (based on file extension) and prints to the specified file
+
+=cut
+
+sub dump_file ($$) {
+   my ($path, $data) = @_;
+
+   if ($path->extension eq 'json') {
+      $path->print(_json_parser()->encode($data));
+   }
+   else { throw('File type [_1] unsupported', [$path->extension]) }
+
+   return;
 }
 
 =item C<exception>
@@ -244,31 +263,24 @@ sub _env_prefix ($) {
 
 =item C<load_file>
 
-Loads the given file and decodes it returning a hash reference. Takes decoded
-JSON and walks the structure removing stupid JSON::PP::Booleans
+   $data = load_file $path, $flag;
+
+Loads the given file and decodes it returning a hash reference. If C<flag>
+is true returns the raw data otherwise booleans are returned unblessed
 
 =cut
 
-sub load_file {
-   return _debollock(decode_json(io(shift)->slurp));
-}
+sub load_file ($;$) {
+   my ($path, $flag) = @_;
 
-sub _debollock {
-   my $data = shift;
+   my $data = {};
 
-   if (ref $data eq 'HASH') {
-      for my $fml (keys %{$data}) {
-         $data->{$fml} = q() . $data->{$fml} if blessed $data->{$fml};
-         $data->{$fml} = _debollock($data->{$fml}) if (ref $data->{$fml});
-      }
+   if ($path->extension eq 'json') {
+      my $args = { unblessed_bool => $flag ? 0 : 1 };
+
+      $data = _json_parser($args)->decode(scalar io($path)->slurp);
    }
-   elsif (ref $data eq 'ARRAY') {
-      for (my $fml = 0; $fml < scalar @{$data}; $fml++) {
-         $data->[$fml] = q() . $data->[$fml] if blessed $data->[$fml];
-         $data->[$fml] = _debollock($data->[$fml]) if (ref $data->[$fml]);
-      }
-   }
-   else { $data = "${data}" }
+   else { throw('File type [_1] unsupported', [$path->extension]) }
 
    return $data;
 }
@@ -305,6 +317,14 @@ sub throw (;@) {
 }
 
 # Private functions
+sub _json_parser {
+   my $args = shift // {};
+
+   return JSON::MaybeXS->new({
+      utf8 => 1, pretty => 1, convert_blessed => 1, %{$args}
+   });
+}
+
 sub _qualify {
    my ($appclass, $roles) = @_; $roles //= [];
 

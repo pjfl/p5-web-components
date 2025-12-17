@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.28
+    @version 0.13.30
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -36,6 +36,7 @@ WCom.Navigation = (function() {
           @property {string} config.properties.content-name
           @property {string} config.properties.content-icon
           @property {string} config.properties.content-title
+          @property {number} config.properties.dom-wait
           @property {string} config.properties.icons
           @property {string} config.properties.link-display
           @property {string} config.properties.location
@@ -58,6 +59,7 @@ WCom.Navigation = (function() {
          this.contentName      = this.properties['content-name'];
          this.controlIcon      = this.properties['control-icon'];
          this.controlTitle     = this.properties['control-title'];
+         this.domWait          = this.properties['dom-wait'];
          this.icons            = this.properties['icons'];
          this.linkDisplay      = this.properties['link-display'];
          this.location         = this.properties['location'];
@@ -162,7 +164,7 @@ WCom.Navigation = (function() {
              a new one
           @param {string} html Markup for the content of the new panel
       */
-      async renderHTML(html) {
+      renderHTML(html) {
          let className = this.containerName;
          if (this.containerLayout) className += ' ' + this.containerLayout;
          this.contentContainer.setAttribute('class', className);
@@ -177,7 +179,7 @@ WCom.Navigation = (function() {
                this.contentContainer, panel, this.contentPanel
             );
          }
-         await this.scan(panel);
+         this.scan(panel);
       }
       /** @function
           @async
@@ -246,8 +248,10 @@ WCom.Navigation = (function() {
       */
       async scan(panel, options = {}) {
          await WCom.Util.Event.onLoad(panel, options);
-         this.addEventListeners(this.footer.element, options);
-         this.addEventListeners(panel, options);
+         setTimeout(function() {
+            this.addEventListeners(this.footer.element, options);
+            this.addEventListeners(panel, options)
+         }.bind(this), 1000 * this.domWait);
       }
       _animatedReplace(panel, oldPanel) {
          const container = this.contentContainer;

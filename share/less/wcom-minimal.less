@@ -1,5 +1,5 @@
 /* @author  pjfl@cpan.org (Peter Flanigan)
- * @version 0.13.29
+ * @version 0.13.30
  * Breaks */
 @lower-break: 480px;
 @upper-break: 680px;
@@ -32,6 +32,7 @@
 @exception-label-min-width: 10rem;
 @exception-max-width: 50rem;
 @exception-row-gap: 0.5rem;
+@label-min-width: 5rem;
 @message-max-width: 16rem;
 @nav-context-width: 8rem;
 @nav-control-width: 10rem;
@@ -166,7 +167,11 @@ main {
         justify-content: space-between; position: absolute; width: 100%;
         h1, h2, h3, h4, h5 {
             font-family: #fonts[sans]; margin: 1rem; text-wrap: balance;
-            & .content {
+            label {
+                display: inline-block; margin-right: 0.5rem;
+                min-width: @label-min-width; text-align: right;
+            }
+            .content {
                 font-family: #fonts[serif]; font-weight: @data-font-weight;
             }
         }
@@ -433,7 +438,8 @@ footer {
         border-top-left-radius: 20px; content: ''; display: inline-block;
         height: @nav-header-height; width: @nav-width-both;
         @media (max-width: @lower-break) {
-            width: 1rem;
+            border-bottom: 1px solid hsl(from @line-border h s l / 0.5);
+            width: 3.5rem !important;
         }
     }
     &.nav-link-icon::before {
@@ -724,8 +730,9 @@ footer {
                 background: var(--button-bg);
                 border: 2px outset @button-border; border-radius: 50px;
                 color: @text-link; cursor: pointer; display: inline-block;
-                overflow: hidden; padding: 0.25rem 0.75rem; position: relative;
-                text-decoration: none; transition: border 500ms, color 500ms;
+                overflow: hidden; padding: 0.1875rem 0.75rem 0.3125rem;
+                position: relative; text-decoration: none;
+                transition: border 500ms, color 500ms;
                 &::before {
                     background: var(--button-bg-highlight); content: '';
                     display: block; height: 3rem; left: var(--x);

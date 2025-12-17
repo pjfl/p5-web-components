@@ -186,7 +186,7 @@ around 'BUILDARGS' => sub {
    }
 
    if ($attr->{config_file}) {
-      $attr = { %{$attr}, %{load_file($attr->{config_file})} };
+      $attr = { %{$attr}, %{load_file $attr->{config_file}} };
    }
 
    if (my $file = $attr->{local_config_file}) {
@@ -194,7 +194,7 @@ around 'BUILDARGS' => sub {
 
       if ($config_file->exists) {
          $attr->{local_config_file} = $config_file;
-         $attr = { %{$attr}, %{load_file($config_file)} };
+         $attr = { %{$attr}, %{load_file $config_file} };
       }
    }
 

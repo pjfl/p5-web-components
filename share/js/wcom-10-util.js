@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.28
+    @version 0.13.30
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -110,9 +110,10 @@ WCom.Util = (function() {
          const location = headers.get('location');
          if (location) return { location, status: 302 };
          if (want == 'blob') {
-            const key = 'content-disposition';
-            const { filename } = this._dispositionParser(headers.get(key));
             const blob = await response.blob();
+            const contentDisp = headers.get('Content-Disposition');
+            const disposition = this._dispositionParser(contentDisp);
+            const filename = disposition ? disposition.filename : '';
             return { blob, filename, status: response.status };
          }
          if (want == 'object') return {
@@ -729,39 +730,32 @@ WCom.Util = (function() {
             };
          },
          /** @function
-             @desc Looks up the request method on the WCom object. Wraps
-                a call to it and returns it as an event handler
-             @param {string} handler Method to lookup and wrap
-             @param {boolean} allowDefault If true default event propagation
-                is not prevented
+             @desc Looks up the requested functions on the WCom object. Wraps
+                a call to them and returns it as an event handler
+             @param {string} statements Static semi-colon separated function
+                call statements to lookup, inflate, and wrap
+             @param {boolean} allowDefault Unless true default event propagation
+                is prevented
              @returns {function} Event handler function
           */
-         getEventHandler: function(handler, allowDefault) {
-            if (!handler.match(/^WCom\./)) {
-               console.warn(`Unknown event handler: ${handler}`);
-               return;
-            }
-            const result = handler.match(/([^\(]+)\((.+)\)/);
-            const method = this.objectLookup(result[1]);
-            if (!method) {
-               console.warn('Unknown handler method: ' + result[1]);
-               return;
-            }
-            const args = JSON.parse(result[2]) || {};
-            if (allowDefault) {
-               return function(event) { method.call(this, args) };
-            }
+         getEventHandler: function(statements, allowDefault) {
+            const callList = this.parseJS(statements);
             return function(event) {
-               event.preventDefault();
-               method.call(this, args);
+               if (!allowDefault) event.preventDefault();
+               for (const c of callList) {
+                  // TODO: If args are an object inject the event
+                  // I think that BrainFuck might be a superior alternative
+                  c[0].call(c[1], c[2], c[3], c[4], c[5], c[6]);
+               }
             };
          },
          /** @function
              @desc Traverses the object space starting at window
              @param {string} key Dot separated list of objects
-             @returns {object} The object if it was found
+             @returns {object} The static object if it was found. Undefined
+                otherwise
          */
-         objectLookup: function(keys) {
+         lookupStatic: function(keys) {
             if (!keys) return;
             let el = window;
             for (const key of keys.split(/\./)) {
@@ -769,6 +763,53 @@ WCom.Util = (function() {
                el = el[key];
             }
             return el;
+         },
+         /** @function
+             @desc Parses JS statements. Simple ones
+             @param {string} statements Static semi-colon separated function
+                call statements to lookup and inflate
+             @returns {array} Returns an array of tuples. Each consisting of
+                a callable function, the object it will be bound to, and the
+                arguments should be passed to it when called
+         */
+         parseJS(statements) {
+            /* Eval string is bad so this instead */
+            const tuples = [];
+            for (const statement of statements.match(/([^;]+);?[ ]?/g)) {
+               if (!statement.match(/^WCom\./)) {
+                  console.warn(`Statement not recognised: ${statement}`);
+                  continue;
+               }
+               const result = statement.match(/([^\(]+)\((.+)?\)/);
+               if (!result) {
+                  console.warn(`Unknown statement: ${statement}`);
+                  continue;
+               }
+               const methodKey = result[1];
+               const argsStr = result[2] || '';
+               const method = this.lookupStatic(methodKey);
+               if (!method) {
+                  console.warn(`Unknown static function: ${methodKey}`);
+                  continue;
+               }
+               const parentKey = methodKey.replace(/\.[^\.]+$/, '');
+               const parent = this.lookupStatic(parentKey);
+               const isObject = argsStr.match(/^[\{\[]/);
+               const argsWrap = isObject ? argsStr : `[${argsStr}]`;
+               try {
+                  const arg = argsStr.length ? JSON.parse(argsWrap) : {};
+                  if (isObject) tuples.push([method, parent, arg]);
+                  else {
+                     tuples.push(
+                        [method, parent, arg[0], arg[1], arg[2], arg[3], arg[4]]
+                     );
+                  }
+               }
+               catch(e) {
+                  console.warn(`JSON Parser error: ${argsWrap}`);
+               }
+            }
+            return tuples;
          },
          /** @function
              @desc Deletes all the entries in the supplied list
