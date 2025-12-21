@@ -30,7 +30,7 @@ Defines the following attributes;
 
 =item C<config_file>
 
-The configuration file is discovered by the loader once the 'home' attribute
+The configuration file is discovered by the loader once the C<home> attribute
 has been established
 
 =item C<has_config_file>
@@ -58,7 +58,7 @@ has 'config_home' =>
 
 =item C<home>
 
-This is the directory that the loader has chosen to call 'home'
+This is the directory that the loader has chosen to call home
 
 =cut
 

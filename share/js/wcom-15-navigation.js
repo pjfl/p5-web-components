@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.30
+    @version 0.13.31
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -500,6 +500,17 @@ WCom.Navigation = (function() {
          return history.state && history.state.href.split('?')[0]
             == href.split('?')[0] ? true : false;
       }
+      _mobileClickHandler(item) {
+         return function(event) {
+            const navPanel = item.querySelector('.nav-panel');
+            const panels = item.parentNode.querySelectorAll('.nav-panel');
+            for (const panel of panels) {
+               if (panel == navPanel) continue;
+               panel.classList.add('hide');
+            }
+            navPanel.classList.toggle('hide');
+         }.bind(this);
+      }
       _renderControl() {
          if (!this.config['_control']) return;
          const panelAttr = { className: 'nav-panel control-panel' };
@@ -533,10 +544,13 @@ WCom.Navigation = (function() {
                link.setAttribute('clicklistener', true);
                return this.h.li(itemAttr, link);
             }
-            if (menuName == 'mobile')
-               return this.h.li( { className: menuName });
+            let item = this.h.li(itemAttr);
             const labelAttr = { className: 'drop-menu' };
-            return this.h.li(itemAttr, this.h.span(labelAttr, label));
+            if (menuName == 'mobile') {
+               labelAttr.onclick = this._mobileClickHandler(item);
+            }
+            item.appendChild(this.h.span(labelAttr, label));
+            return item;
          }
          if (!text || text['method'] != 'post') return;
          const verify = this.h.hidden({ name: '_verify', value: this.token });
@@ -566,10 +580,11 @@ WCom.Navigation = (function() {
          let isSelected = false;
          for (const item of itemList) {
             if (typeof item == 'string' && this.config[item]) {
+               const rendered = this._renderList(this.config[item], 'context');
                let className = 'nav-panel';
                if (menuName == 'context' || menuName == 'control')
                   className = 'slide-out';
-               const rendered = this._renderList(this.config[item], 'context');
+               if (menuName == 'mobile') className += ' hide';
                this.contextPanels[item] = this.h.div({ className }, rendered);
                context = item;
                continue;

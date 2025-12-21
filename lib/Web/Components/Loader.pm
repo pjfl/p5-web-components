@@ -6,9 +6,9 @@ use HTTP::Status          qw( HTTP_BAD_REQUEST HTTP_FOUND
                               HTTP_INTERNAL_SERVER_ERROR );
 use Unexpected::Types     qw( ArrayRef CodeRef HashRef NonEmptySimpleStr
                               Object RequestFactory );
+use Ref::Util             qw( is_arrayref );
 use Scalar::Util          qw( blessed );
-use Web::Components::Util qw( deref exception is_arrayref
-                              load_components throw );
+use Web::Components::Util qw( deref exception load_components throw );
 use Try::Tiny;
 use Web::ComposableRequest;
 use Web::Simple::Role;

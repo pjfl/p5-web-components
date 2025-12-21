@@ -46,7 +46,7 @@ Defines the following attributes;
 
 =item C<authorised_method>
 
-Defaults to the string C<is_authorised>. A method on the C<model> object which
+Defaults to the string B<is_authorised>. A method on the C<model> object which
 is called with C<context> and the action path to an endpoint. Returns true if
 access is authorised, false otherwise
 
@@ -81,7 +81,7 @@ has 'container_class' =>
 
 =item C<container_layout>
 
-A mutable string which defaults to C<centred>. Used as a class name in the HTML
+A mutable string which defaults to B<centred>. Used as a class name in the HTML
 it is also shared with the JS code
 
 =cut
@@ -90,7 +90,7 @@ has 'container_layout' => is => 'rw', isa => Str, default => 'centred';
 
 =item C<container_name>
 
-An immutable string which defaults to C<layout>. Used as a class name in the
+An immutable string which defaults to B<layout>. Used as a class name in the
 HTML it is also shared with the JS code
 
 =cut
@@ -99,7 +99,7 @@ has 'container_name' => is => 'ro', isa => Str, default => 'layout';
 
 =item C<container_tag>
 
-An immutable string which default to C<div>. The HTML element to render
+An immutable string which defaults to B<div>. The HTML element to render
 
 =cut
 
@@ -107,7 +107,7 @@ has 'container_tag' => is => 'ro', isa => Str, default => 'div';
 
 =item C<content_class>
 
-A lazy immutable string which defaults to C<content_name>
+A lazy immutable string which defaults to B<content_name>
 
 =cut
 
@@ -118,7 +118,7 @@ has 'content_class' =>
 
 =item C<content_name>
 
-An immutable string which defaults to C<panel>. Used as an id and a class name
+An immutable string which defaults to B<panel>. Used as an id and a class name
 in the HTML it is also shared with the JS code
 
 =cut
@@ -139,7 +139,7 @@ has 'context' =>
 
 =item C<control_icon>
 
-An immutable string which defaults to C<user-settings>. The name of the symbol
+An immutable string which defaults to B<user-settings>. The name of the symbol
 in the SVG icons file used for the control menu link
 
 =cut
@@ -148,7 +148,7 @@ has 'control_icon' => is => 'ro', isa => Str, default => 'user-settings';
 
 =item C<control_title>
 
-An immutable string which defaults to C<System>. The title for the used for the
+An immutable string which defaults to B<System>. The title for the used for the
 control menu link
 
 =cut
@@ -157,7 +157,7 @@ has 'control_title' => is => 'ro', isa => Str, default => 'Control';
 
 =item C<dom_wait>
 
-An immutable number which defaults to 0.5. Length of time in seconds to
+An immutable number which defaults to B<0.5>. Length of time in seconds to
 wait for the DOM to stabalise
 
 =cut
@@ -186,7 +186,7 @@ has 'global' => is => 'ro', isa => ArrayRef, default => sub { [] };
 =item C<icons>
 
 A lazy string representation of a partial URI. This should point to an SVG file
-containing named symbols. Defaults to C<< img/icons.svg >>
+containing named symbols. Defaults to B<< img/icons.svg >>
 
 =cut
 
@@ -208,7 +208,7 @@ has '_icons' =>
 
 =item C<json_view>
 
-An immutable string which defaults to C<json>. Stashed by C<finalise> as the
+An immutable string which defaults to B<json>. Stashed by C<finalise> as the
 view which will serialise the response as JSON
 
 =cut
@@ -217,9 +217,9 @@ has 'json_view' => is => 'ro', isa => Str, default => 'json';
 
 =item C<link_display>
 
-A lazy string which defaults to either the value is the C<session> if it
-exists or the string C<both>. An enumerated type with values; C<both>, C<icon>,
-or C<text>. Controls how the C<global> menu display links
+A lazy string which defaults to either the value in the C<session> if it
+exists or the string B<both>. An enumerated type with values; B<both>, B<icon>,
+or B<text>. Controls how the C<global> menu display links
 
 =cut
 
@@ -266,18 +266,17 @@ has 'logo' =>
    default  => sub {
       my $self = shift;
 
-      return $self->context->request->uri_for($self->_logo)->as_string
-         if $self->_logo;
+      return NUL unless $self->_logo;
 
-      return NUL;
+      return $self->context->request->uri_for($self->_logo)->as_string;
    };
 
 has '_logo' => is => 'ro', isa => Str, init_arg => 'logo', default => NUL;
 
 =item C<media_break>
 
-An immutable positive integer with a default of C<680> pixels. When the
-display window's <innerWidth> drop below this (due to a resize event)
+An immutable positive integer with a default of B<680> pixels. When the
+display window's C<innerWidth> drops below this (due to a resize event)
 C<link_display> is set to C<icon> which reduces the display width requirement
 
 =cut
@@ -286,7 +285,7 @@ has 'media_break' => is => 'ro', isa => PositiveInt, default => 680;
 
 =item C<menu_location>
 
-A lazy string which defaults to C<header>. Can be set to C<sidebar>. Effects
+A lazy string which defaults to B<header>. Can be set to B<sidebar>. Effects
 where the navigation menus are rendered
 
 =cut
@@ -310,7 +309,7 @@ has '_menu_location' =>
 
 =item C<message_action>
 
-An immutable string which defaults to C<api/navigation_messages>. This is the
+An immutable string which defaults to B<api/navigation_messages>. This is the
 action path for the API call that the message object in the JS will make to
 collect messages
 
@@ -330,11 +329,11 @@ configure the JS message collection and display code. Attributes are;
 
 =item buffer-limit
 
-Maximum number of messages to buffer. Defaults to C<3>
+Maximum number of messages to buffer. Defaults to B<3>
 
 =item display-time
 
-How long in seconds to display each message for. Defaults to C<20> seconds
+How long in seconds to display each message for. Defaults to B<20> seconds
 
 =back
 
@@ -362,14 +361,14 @@ has 'title' => is => 'ro', isa => Str, default => NUL;
 
 =item C<title_abbrev>
 
-An immutable string which defaults to C<Nav>. Used to set the pages C<title>
+An immutable string which defaults to B<WCom>. Used to set the pages C<title>
 attribute in the HTML head. This is used in turn is used by the browser to
 create history links (the back button). Would set this from configuration to
 the abbreviation for the application
 
 =cut
 
-has 'title_abbrev' => is => 'ro', isa => Str, default => 'Nav';
+has 'title_abbrev' => is => 'ro', isa => Str, default => 'WCom';
 
 =item C<title_entry>
 

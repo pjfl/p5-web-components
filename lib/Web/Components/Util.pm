@@ -3,20 +3,20 @@ package Web::Components::Util;
 use strictures;
 use parent 'Exporter::Tiny';
 
-use Web::ComposableRequest::Constants qw( EXCEPTION_CLASS FALSE TRUE );
+use Web::ComposableRequest::Constants qw( EXCEPTION_CLASS FALSE NUL TRUE );
 use Unexpected::Functions             qw( Unspecified );
 use File::DataClass::IO               qw( io );
 use List::Util                        qw( pairs );
 use Scalar::Util                      qw( blessed );
 use Sys::Hostname                     qw( hostname );
-use Web::ComposableRequest::Util      qw( is_hashref );
+use Ref::Util                         qw( is_hashref );
 use JSON::MaybeXS                     qw( );
 use Module::Pluggable::Object;
 use Moo::Role ();
 
-our @EXPORT_OK = qw( build_routes clear_redirect deref exception dump_file
-                     first_char formpost fqdn is_arrayref load_components
-                     load_file ns_environment throw );
+our @EXPORT_OK = qw( build_routes clear_redirect deref dump_file exception
+                     first_char formpost fqdn load_components load_file
+                     ns_environment throw );
 
 =pod
 
@@ -161,18 +161,6 @@ Call C<gethostbyname> on the supplied hostname which defaults to this host
 
 sub fqdn (;$) {
    my $x = shift // hostname; return (gethostbyname($x))[0];
-}
-
-=item C<is_arrayref>
-
-   $bool = is_arrayref $scalar_variable;
-
-Tests to see if the scalar variable is an array ref
-
-=cut
-
-sub is_arrayref (;$) {
-   return $_[ 0 ] && ref $_[ 0 ] eq 'ARRAY' ? 1 : 0;
 }
 
 =item C<load_components>

@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds accordian to mobile menu
           - Fixes call to dispostion parsing
           - Removed dependency on File::DataClass::Schema
           - Eliminated use of innerHTML and eval string in JS
