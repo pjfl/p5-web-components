@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.30
+    @version 0.13.32
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -449,8 +449,8 @@ WCom.Util = (function() {
             'onsubmit'
          ];
          const htmlProps = [
-            'colorspace', 'disabled', 'inputmode', 'list', 'max', 'maxlength',
-            'min', 'minlength', 'readonly', 'required'
+            'colorspace', 'data-title', 'disabled', 'inputmode', 'list',
+            'max', 'maxlength', 'min', 'minlength', 'readonly', 'required'
          ];
          const styleProps = [ 'height', 'width' ];
          const el = document.createElement(tag);

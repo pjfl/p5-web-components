@@ -2,15 +2,15 @@
     @file Web Components - Modal
     @classdesc Displays modal dialogues
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.30
+    @version 0.13.32
     @alias WCom/Modal
 */
 WCom.Modal = (function() {
-   const eventUtil = WCom.Util.Event;
-   const modifierUtil = WCom.Util.Modifiers;
-   const navManager = WCom.Navigation.manager;
-   const keyCodes = { enter: 13, escape: 27 };
-   const modalList = (() => {
+   const Navigation = WCom.Navigation;
+   const Event      = WCom.Util.Event;
+   const Modifiers  = WCom.Util.Modifiers;
+   const keyCodes   = { enter: 13, escape: 27 };
+   const modalList  = (() => {
       let modals = [];
       return {
          add(id) {
@@ -464,7 +464,7 @@ WCom.Modal = (function() {
          this.backdrop.remove(this.el);
          this.backdrop = null;
          if (this.closeCallback) this.closeCallback();
-         if (this.unloadIndex) eventUtil.unregisterOnunload(this.unloadIndex);
+         if (this.unloadIndex) Event.unregisterOnunload(this.unloadIndex);
       }
       /** @function
           @desc Returns the elements bounding client rect. No really
@@ -603,7 +603,7 @@ WCom.Modal = (function() {
          this.labels = options.labels || ['Cancel', 'OK'];
          this.noButtons = options.noButtons || false;
          this.onload = options.onload
-            || function(c, o) { navManager.scan(c, o) };
+            || function(c, o) { Navigation.scan(c, o) };
          this.url = options.url;
          this.validateForm = options.validateForm;
          this.valueStore = options.valueStore || {};
@@ -937,7 +937,7 @@ WCom.Modal = (function() {
    const create = function(args) {
       let modal;
       const close = function(event) { if (modal) modal.close() };
-      const unloadIndex = eventUtil.registerOnunload(close);
+      const unloadIndex = Event.registerOnunload(close);
       const util = new ModalUtil(args);
       const content = util.createModalContainer();
       const buttons = util.getButtons();
@@ -951,6 +951,9 @@ WCom.Modal = (function() {
    /** @module Modal
     */
    return {
+      /** @function
+          @desc Closes the current modal
+      */
       closeCurrent: function() {
          if (CurrentModal) CurrentModal.close();
       },
@@ -1018,7 +1021,7 @@ WCom.Modal = (function() {
                const newValue = result.value.replace(/!/g, '/');
                if (onchange && el.value != newValue) {
                   const handler = onchange.replace(/%value/g, result.value);
-                  for (const tuple of modifierUtil.parseJS(handler)) {
+                  for (const tuple of Modifiers.parseJS(handler)) {
                      tuple[0].call(tuple[1], tuple[2]);
                   }
                }
@@ -1027,7 +1030,7 @@ WCom.Modal = (function() {
             else if (result.files && result.files[0]) {
                if (onchange) {
                   const handler = onchange.replace(/%value/g, 'result.files');
-                  for (const tuple of modifierUtil.parseJS(handler)) {
+                  for (const tuple of Modifiers.parseJS(handler)) {
                      tuple[0].call(tuple[1], tuple[2]);
                   }
                }
@@ -1037,6 +1040,11 @@ WCom.Modal = (function() {
          }.bind(this);
          return create({ callback, icons, title, url });
       },
+      /** @function
+          @desc Accessor/mutator for the current modal
+          @param {object} modal The modal to set as current
+          @returns {object} The current modal
+      */
       current: function(modal) {
          if (modal) CurrentModal = modal;
          return CurrentModal;

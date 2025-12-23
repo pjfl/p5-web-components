@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.31
+    @version 0.13.32
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -516,7 +516,8 @@ WCom.Navigation = (function() {
          const panelAttr = { className: 'nav-panel control-panel' };
          const panel = this._renderList(this.config['_control'], 'control');
          this.contextPanels['control'] = this.h.div(panelAttr, panel);
-         const linkAttr = { title: this.controlTitle };
+         const linkAttr = {};
+         if (this.controlTitle) linkAttr['data-title'] = this.controlTitle;
          const link = this.h.a(linkAttr, this._renderControlIcon());
          const attr = { className: 'nav-control' };
          return this.h.div(attr, [link, this.contextPanels['control']]);
@@ -535,7 +536,8 @@ WCom.Navigation = (function() {
          const [text, href, icon] = item;
          const iconImage = this.iconImage(icon);
          const title = iconImage && this.linkDisplay == 'icon' ? text : '';
-         const itemAttr = { className: menuName, title };
+         const itemAttr = { className: menuName };
+         if (title) itemAttr['data-title'] = title;
          if (typeof text != 'object') {
             const label = this._renderLabel(icon, text);
             if (href) {
@@ -756,19 +758,36 @@ WCom.Navigation = (function() {
              adds 'click' and 'submit' handlers. Calls
              {@link Navigation/Navigation#scan scan} on the
              {@link Navigation/Navigation Navigation} object
-          @param {element} el The element to scan for links and forms
+          @param {element} content The element to scan for links and forms
           @param {object} options Passed to the 'Navigation' scan method
       */
-      scan(el, options) {
-         if (el && this.navigator) this.navigator.scan(el, options);
+      scan(content, options) {
+         if (content && this.navigator) this.navigator.scan(content, options);
       }
    }
+   const manager = new Manager();
    /** @module Navigation
     */
    return {
-      /** @instance
-          @desc An instance of class {@link Navigation/Manager}
+      /** @function
+          @desc Calls {@link Navigation/Manager#onContentLoad}
       */
-      manager: new Manager()
+      onContentLoad: manager.onContentLoad.bind(manager),
+      /** @function
+          @desc Calls {@link Navigation/Manager#renderLocation}
+          @param {string} href The location to render
+      */
+      renderLocation: manager.renderLocation.bind(manager),
+      /** @function
+          @desc Calls {@link Navigation/Manager#renderMessage}
+          @param {string} href The location to fetch the message from
+      */
+      renderMessage: manager.renderMessage.bind(manager),
+      /** @function
+          @desc Calls {@link Navigation/Manager#scan}
+          @param {object} content The element to scan for links and forms
+          @param {object} options Passed to the 'Navigation' scan method
+      */
+      scan: manager.scan.bind(manager)
    };
 })();

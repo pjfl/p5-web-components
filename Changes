@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Stops exposing JS manager objects
           - Adds accordian to mobile menu
           - Fixes call to dispostion parsing
           - Removed dependency on File::DataClass::Schema
