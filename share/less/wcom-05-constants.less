@@ -1,0 +1,126 @@
+/* @author  pjfl@cpan.org (Peter Flanigan)
+ * @version 0.13.33
+ */
+
+/* Breaks */
+@lower-break: 480px;
+@upper-break: 680px;
+
+/* Colours */
+@bg-lightest: whitesmoke;
+@bg-lighter: ivory;
+@bg-light: linen;
+@bg-base: bisque; /* #ffe4c4 hsl(33, 100%, 88%) */
+@bg-dark: khaki;
+@bg-darker:sienna;
+@bg-darkest: black;
+
+@text-dark: black;
+@text-disabled: gray;
+@text-doc-punc: sienna;
+@text-link: seagreen;
+@text-watermark: gray;
+
+@text-light: whitesmoke;
+@text-disabled-light: gainsboro;
+@text-link-light: cornsilk;
+@text-watermark-light: ivory;
+
+@btn-indicator: limegreen;
+@btn-border: gainsboro;
+@checkbox-bg-false: firebrick;
+@checkbox-bg-true: seagreen;
+@exception-bg: lightpink;
+@field-focus-outline: darkorange;
+@field-required: firebrick;
+@form-bg-border-focus: seagreen;
+@input-border: gainsboro;
+@line-border: gray;
+@line-border-light: hsl(from @line-border h s l / 0.5);
+@message-border: firebrick;
+@nav-selected: seagreen;
+@panel-shadow: gray;
+@row-bg-highlight: lightpink;
+@row-bg-inactive: gainsboro;
+@scrollbar-fg: darkorange;
+@text-close: firebrick;
+@title-border: darkorange;
+
+/* Dimensions */
+@alert-min-width: 10rem;
+@alert-max-width: 18rem;
+@checkbox-height: 1.25rem;
+@checkbox-width: 40px;
+@checkbox-width-knob: 20px;
+@dialog-title-min-width: 6rem;
+@display-text-min-width: 10rem;
+@display-text-max-width: 24rem;
+@ds-form-max-height-vertical: 60vh;
+@ds-form-max-width-horizontal: 21rem;
+@error-max-width: 50rem;
+@exception-label-min-width: 10rem;
+@exception-max-width: 50rem;
+@exception-row-gap: 0.5rem;
+@field-min-width: 13rem;
+@field-row-gap: 0.5rem;
+@field-col-gap: 0.5rem;
+@filemanager-min-width: 10rem;
+@filter-values-height: 8rem;
+@form-min-width: 15rem;
+@form-max-width: 60rem;
+@input-min-width: 4rem;
+@input-max-width: 24rem;
+@input-max-width-compound: 12rem;
+@label-min-width: 5rem;
+@label-width-base: 2.5rem;
+@label-width-tiny: 3rem;
+@label-width-narrow: (@label-width-base + @label-width-tiny);
+@label-width: (@label-width-tiny + @label-width-narrow);
+@label-width-wide: (@label-width-narrow + @label-width);
+@message-max-width: 16rem;
+@nav-context-width: 8rem;
+@nav-control-width: 10rem;
+@nav-header-height: 3rem;
+@nav-indicator-height: 2rem;
+@nav-indicator-width: 5px;
+@nav-width-both: 7rem;
+@nav-width-icon: 3.5rem;
+@nav-width-text: 6rem;
+@nav-panel-max-height: 32rem;
+@select-min-width: 4rem;
+@select-max-width: 12rem;
+@select-option-min-width: 8rem;
+@selector-min-width: 16rem;
+@tile-min-width: 8ch;
+@textarea-min-height: 3lh;
+@textarea-min-width: 18rem;
+@textarea-max-width: 40rem;
+
+/* Font Sizes and Weights */
+@btn-font-size: 0.7rem;
+@btn-font-weight: normal;
+@data-font-size: 0.9rem;
+@data-font-weight: normal;
+@data-font-weight-strong: 410;
+@dialog-font-size: 0.8rem;
+@doc-code-font-size: 0.8rem;
+@footer-font-size: 0.8rem;
+@header-font-size: 0.85rem;
+@header-font-weight: normal;
+@link-font-weight: normal;
+@nav-link-font-size: 1rem;
+@nav-link-font-weight: normal;
+@preview-font-size: 0.8rem;
+@search-font-size: 0.8rem;
+@system-font-size: 0.8rem;
+@tag-font-size: 0.8rem;
+@tips-font-size: 0.8rem;
+@title-font-size: 1rem;
+@title-font-weight: normal;
+
+#fonts() {
+    cursive: 'Segoe Print', 'Bradley Hand', 'Chilanka', casual, cursive;
+    mono: 'Cascadia Code', 'Menlo', 'DejaVu Sans Mono', ui-monospace, monospace;
+    sans: 'Roboto', 'Segoe UI', 'Helvetica', system-ui, sans-serif;
+    serif: 'DejaVu Serif', 'Sitka Small', serif;
+}

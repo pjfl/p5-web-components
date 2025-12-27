@@ -150,15 +150,12 @@ is $server->to_psgi_app->($env)->[2]->[0], 'TableObject', 'Routes to method';
 $env->{PATH_INFO} = '/other';
 is $server->to_psgi_app->($env)->[2]->[0], 43, 'Other route to method';
 
-use Web::Components::Util qw( build_routes deref exception is_arrayref
+use Web::Components::Util qw( build_routes deref exception
                               load_components ns_environment throw );
 
 eval { throw 'Error' };
 
 like exception(), qr{ Error }mx, 'Throws and catches';
-is is_arrayref( [] ), 1, 'Is arrayref true';
-is is_arrayref( ' ' ), 0, 'Is arrayref false';
-is is_arrayref( 0 ), 0, 'Is arrayref false with false arg';
 is deref( { test => 'dummy' }, 'test' ), 'dummy', 'Deref a hash with key';
 is deref( {}, 'test', 'dummy' ), 'dummy', 'Deref a hash without key';
 is deref( {}, 'test', '' ), '', 'Deref a hash without key false default';

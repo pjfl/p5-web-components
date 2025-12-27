@@ -1,74 +1,7 @@
 /* @author  pjfl@cpan.org (Peter Flanigan)
  * @version 0.13.32
- * Breaks */
-@lower-break: 480px;
-@upper-break: 680px;
-
-/* Colours */
-@bg-darkest: black;
-@bg-lightest: white;
-@button-indicator: limegreen;
-@button-border: gainsboro;
-@exception-bg: lightpink;
-@line-border: gray;
-@line-border-light: hsl(from @line-border h s l / 0.5);
-@message-border: firebrick;
-@modal-header-border: darkorange;
-@nav-selected: seagreen;
-@panel-shadow: gray;
-@scrollbar-fg: darkorange;
-@text-close: firebrick;
-@title-bg: khaki;
-
-@text-dark: black;
-@text-disabled: gray;
-@text-link: seagreen;
-@text-watermark: gray;
-
-@text-light: whitesmoke;
-@text-disabled-light: gainsboro;
-@text-link-light: cornsilk;
-@text-watermark-light: ivory;
-
-/* Dimensions */
-@exception-label-min-width: 10rem;
-@exception-max-width: 50rem;
-@exception-row-gap: 0.5rem;
-@label-min-width: 5rem;
-@message-max-width: 16rem;
-@nav-context-width: 8rem;
-@nav-control-width: 10rem;
-@nav-header-height: 3rem;
-@nav-indicator-height: 2rem;
-@nav-indicator-width: 5px;
-@nav-width-both: 7rem;
-@nav-width-icon: 3.5rem;
-@nav-width-text: 6rem;
-@nav-panel-max-height: 32rem;
-
-/* Font Sizes and Weights */
-@button-font-size: 0.7rem;
-@button-font-weight: normal;
-@data-font-weight: normal;
-@doc-code-font-size: 0.8rem;
-@footer-font-size: 0.8rem;
-@nav-link-font-size: 1rem;
-@nav-link-font-weight: normal;
-@preview-font-size: 0.8rem;
-@title-font-size: 0.8rem;
-
-#fonts() {
-    cursive: 'Segoe Print', 'Bradley Hand', 'Chilanka', casual, cursive;
-    mono: 'Cascadia Code', 'Menlo', 'DejaVu Sans Mono', ui-monospace, monospace;
-    sans: 'Roboto', 'Segoe UI', 'Helvetica', system-ui, sans-serif;
-    serif: 'DejaVu Serif', 'Sitka Small', serif;
-}
-:root {
-    /* bisque #ffe4c4 hsl(33, 100%, 88%) */
-    @property --bg-base {
-        syntax: '<color>'; initial-value: bisque; inherits: true;
-    }
-}
+ */
+@import "wcom-05-constants";
 *, *::before, *::after {
     box-sizing: border-box;
 }
@@ -83,27 +16,17 @@ html {
 }
 body {
     --bg-lightest : @bg-lightest;
-    --bg-lighter: hsl(
-        from var(--bg-base) calc(h * 1.82) s calc(l * 1.1)
-    );
-    --bg-light: hsl(
-        from var(--bg-base) calc(h * 0.91) calc(s * 0.67) calc(l * 1.07)
-    );
-    --bg-dark: hsl(
-        from var(--bg-base) calc(h * 1.64) calc(s * 0.77) calc(l * 0.85)
-    );
-    --bg-darker: hsl(
-        from var(--bg-base) calc(h * 1.55) s calc(l * 0.37)
-    );
+    --bg-lighter: @bg-lighter;
+    --bg-light: @bg-light;
+    --bg-base: @bg-base;
+    --bg-dark: @bg-dark;
+    --bg-darker: @bg-darker;
     --bg-darkest: @bg-darkest;
     --body-bg: linear-gradient(135deg, transparent, var(--bg-base));
     --button-bg: linear-gradient(0deg, var(--bg-base), var(--bg-lighter));
-    --button-bg-disabled: linear-gradient(
-        0deg, @button-border, var(--bg-lighter)
-    );
-    --button-bg-highlight: radial-gradient(
-        @button-indicator, transparent, transparent
-    );
+    --button-bg-disabled: linear-gradient(0deg, @btn-border, var(--bg-lighter));
+    --button-bg-highlight:
+        radial-gradient(@btn-indicator, transparent, transparent);
     background: var(--body-bg); display: grid;
     grid-template-areas: 'header header' 'sidebar main';
     grid-template-columns: (@nav-width-both + 0.5rem) 1fr;
@@ -116,7 +39,13 @@ body {
     &:has(aside.nav-link-text) {
         grid-template-columns: (@nav-width-text + 0.5rem) 1fr;
     }
-    &.text-light, &.dark-theme {
+    &.relative {
+      --bg-lighter: hsl(from var(--bg-base) h s calc(l * 1.1));
+      --bg-light:   hsl(from var(--bg-base) h s calc(l * 1.07));
+      --bg-dark:    hsl(from var(--bg-base) h s calc(l * 0.85));
+      --bg-darker:  hsl(from var(--bg-base) h s calc(l * 0.37));
+    }
+    &.dark-theme {
         form.classic {
             label, legend {
                 color: @text-light;
@@ -130,6 +59,12 @@ body {
             color: @text-light !important;
         }
         .navigation, .sidebar {
+            li.global[data-title]:hover::after {
+                background: var(--bg-darker) !important;
+            }
+            .nav-control a[data-title]:hover::after {
+                background: var(--bg-darker) !important;
+            }
             .nav-list .drop-menu {
                 color: @text-light;
             }
@@ -209,14 +144,17 @@ main {
 footer {
     .footer-container {
         align-items: baseline; display: flex; flex-wrap: wrap;
-        justify-content: space-between; padding: 0.5rem;
+        justify-content: space-between; padding: 0.5rem 1rem 0.5rem 0.5rem;
         a {
             padding: 0 0.125rem; text-decoration: none;
         }
-        .copyright, .secondary-link {
+        .copyright, .secondary-link, .session-time {
             color: @text-watermark; font-family: #fonts[sans];
             font-size: @footer-font-size; opacity: 0.8;
             white-space: nowrap;
+        }
+        .session-time {
+            visibility: hidden;
         }
     }
 }
@@ -225,9 +163,9 @@ footer {
         isolation: isolate; position: relative;
         &:hover {
             &[data-title]::after {
-                background: @title-bg; border: 1px solid @line-border;
+                background: var(--bg-dark); border: 1px solid @line-border;
                 border-radius: 5px; content: attr(data-title);
-                font-family: #fonts[sans]; font-size: @title-font-size;
+                font-family: #fonts[sans]; font-size: @tips-font-size;
                 padding: 0.25rem 0.5rem; position: absolute;
             }
             .nav-panel {
@@ -271,15 +209,15 @@ footer {
         &:hover .nav-panel {
             max-height: @nav-panel-max-height;
         }
+        &[data-title]:hover::after {
+            background: var(--bg-dark); border: 1px solid @line-border;
+            border-radius: 5px; content: attr(data-title);
+            font-family: #fonts[sans]; font-size: @tips-font-size;
+            padding: 0.25rem 0.5rem; position: absolute; right: 2.25rem;
+            top: 0.375rem;
+        }
         a {
             display: inline-block; padding: 0.375rem 0.375rem 0.625rem;
-            &[data-title]:hover::after {
-                background: @title-bg; border: 1px solid @line-border;
-                border-radius: 5px; content: attr(data-title);
-                font-family: #fonts[sans]; font-size: @title-font-size;
-                padding: 0.25rem 0.5rem; position: absolute; right: 2.25rem;
-                top: 0.375rem;
-            }
         }
         img {
             height: 24px; width: 24px; vertical-align: top;
@@ -397,7 +335,7 @@ footer {
             background: var(--bg-light); border: none;
             border-radius: 3px; color: @text-link; cursor: pointer;
             font-family: #fonts[sans]; font-size: @nav-link-font-size;
-            font-weight: @button-font-weight; padding: 0;
+            font-weight: @btn-font-weight; padding: 0;
             text-align: left; text-decoration: none; width: 100%;
         }
     }
@@ -501,13 +439,18 @@ footer {
         }
     }
     .nav-menu {
-        border-bottom: 1px solid hsl(from @panel-shadow h s l / 0.5);
-        border-right: 1px solid hsl(from @panel-shadow h s l / 0.5);
+        border-bottom: 1px solid @line-border-light;
+        border-right: 1px solid @line-border-light;
         border-bottom-right-radius: 10px; display: flex; flex-grow: 2;
         height: @nav-header-height; justify-content: flex-end;
         padding: 0.5rem 0.5rem 0 0;
         .nav-control {
             position: relative;
+            &.selected > a::before {
+                background: @nav-selected; border-radius: 2px; content: '';
+                display: block; height: @nav-indicator-width; left: 0;
+                position: absolute; top: -0.5rem; width: 100%;
+            }
         }
     }
     .nav-title {
@@ -522,8 +465,8 @@ footer {
         justify-content: center;
         &::before {
             border-top-left-radius: 10px;
-            border-left: 1px solid hsl(from @panel-shadow h s l / 0.5);
-            border-top: 1px solid @panel-shadow;
+            border-left: 1px solid @line-border-light;
+            border-top: 1px solid @line-border-light;
             box-shadow: -3px -3px 3px var(--bg-base);
             box-sizing: content-box;
             content: ''; height: 2.5rem; width: 0.5rem;
@@ -735,7 +678,7 @@ footer {
         max-height: 90%; max-width: 80%; overflow: auto; z-index: 4;
         .modal-header {
             align-items: center; background: var(--bg-light);
-            border-bottom: 1px solid @modal-header-border;
+            border-bottom: 1px solid @title-border;
             border-top-left-radius: 5px; border-top-right-radius: 5px;
             display: flex; justify-content: space-between;
             padding: 0.25rem 0.5rem 0.25rem 1rem; position: sticky; top: 0;
@@ -762,7 +705,7 @@ footer {
         modal-header, .modal-footer {
             .button {
                 background: var(--button-bg);
-                border: 2px outset @button-border; border-radius: 50px;
+                border: 2px outset @btn-border; border-radius: 50px;
                 color: @text-link; cursor: pointer; display: inline-block;
                 overflow: hidden; padding: 0.1875rem 0.75rem 0.3125rem;
                 position: relative; text-decoration: none;
@@ -779,7 +722,7 @@ footer {
                     content: ''; inset: 3px; position: absolute; z-index: 2;
                 }
                 &:hover {
-                    border: 2px inset @button-border; color: @text-dark;
+                    border: 2px inset @btn-border; color: @text-dark;
                     &::before {
                         opacity: 1;
                     }
@@ -788,8 +731,8 @@ footer {
                     background: var(--button-bg-disabled);
                 }
                 span {
-                    font-family: #fonts[sans]; font-size: @button-font-size;
-                    font-weight: @button-font-weight; letter-spacing: 0.1rem;
+                    font-family: #fonts[sans]; font-size: @btn-font-size;
+                    font-weight: @btn-font-weight; letter-spacing: 0.1rem;
                     position: relative; text-decoration: none;
                     text-transform: uppercase; z-index: 3;
                 }

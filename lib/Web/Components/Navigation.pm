@@ -5,11 +5,12 @@ use Web::ComposableRequest::Constants
 use HTTP::Status          qw( HTTP_OK );
 use Unexpected::Types     qw( ArrayRef Bool HashRef Num
                               Object PositiveInt Str Undef);
-use Web::Components::Util qw( clear_redirect formpost throw );
+use HTML::Forms::Util     qw( json_bool );
 use Ref::Util             qw( is_hashref );
 use Scalar::Util          qw( blessed );
 use Type::Utils           qw( class_type );
 use Unexpected::Functions qw( UnknownMethod Unspecified );
+use Web::Components::Util qw( clear_redirect formpost throw );
 use HTML::Tiny;
 use JSON::MaybeXS;
 use Try::Tiny;
@@ -158,7 +159,7 @@ has 'control_title' => is => 'ro', isa => Str, default => 'Control';
 =item C<dom_wait>
 
 An immutable number which defaults to B<0.5>. Length of time in seconds to
-wait for the DOM to stabalise
+wait for the C<DOM> to stabilise
 
 =cut
 
@@ -168,6 +169,10 @@ has 'dom_wait' => is => 'ro', isa => Num, default => 0.5;
 
 An immutable string without default. When set the front end will use
 the endpoint which results from this to fetch the footer contents
+
+=item C<has_footer_action>
+
+Predicate
 
 =cut
 
@@ -361,7 +366,7 @@ has 'title' => is => 'ro', isa => Str, default => NUL;
 
 =item C<title_abbrev>
 
-An immutable string which defaults to B<WCom>. Used to set the pages C<title>
+An immutable string which defaults to C<WCom>. Used to set the pages C<title>
 attribute in the HTML head. This is used in turn is used by the browser to
 create history links (the back button). Would set this from configuration to
 the abbreviation for the application
@@ -430,18 +435,21 @@ has '_data' =>
    isa     => HashRef,
    default => sub {
       my $self     = shift;
+      my $context  = $self->context;
       my $location = 'navigation-' . $self->menu_location;
 
       return {
          'id'    => 'navigation',
          'class' => "navigation ${location} " . $self->link_display_class,
          'data-navigation-config' => $self->_json->encode({
+            'footer'     => $self->_footer,
             'menus'      => $self->_menus,
             'messages'   => $self->_messages,
             'moniker'    => $self->model->moniker,
             'properties' => {
                'base-colour'      => $self->_base_colour,
                'base-url'         => $self->_base_url,
+               'bling'            => json_bool $context->session->bling,
                'confirm'          => $self->confirm_message,
                'container-layout' => $self->container_layout,
                'container-name'   => $self->container_name,
@@ -454,20 +462,33 @@ has '_data' =>
                'location'         => $self->menu_location,
                'logo'             => $self->logo,
                'media-break'      => $self->media_break,
-               'shiny'            => $self->context->shiny,
+               'rel-colour'       => json_bool $context->session->rel_colour,
                'skin'             => $self->_skin,
                'title'            => $self->title,
                'title-abbrev'     => $self->title_abbrev,
-               'verify-token'     => $self->context->verification_token,
+               'verify-token'     => $context->verification_token,
             },
          }),
       };
    };
 
+has '_footer' =>
+   is      => 'lazy',
+   isa     => HashRef,
+   default => sub {
+      my $context = shift->context;
+      my $config  = { 'footer-id' => 'footer', 'update-frequency' => 10 };
+
+      $config->{'token-lifetime'} = $context->token_lifetime
+         if $context->can('token_lifetime');
+
+      return $config;
+   };
+
 has '_footer_url' =>
-   is        => 'lazy',
-   isa       => Str|Undef,
-   default   => sub {
+   is      => 'lazy',
+   isa     => Str|Undef,
+   default => sub {
       my $self = shift;
 
       return unless $self->has_footer_action;

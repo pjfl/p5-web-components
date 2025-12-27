@@ -2,7 +2,7 @@
     @file Web Components - Modal
     @classdesc Displays modal dialogues
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.32
+    @version 0.13.33
     @alias WCom/Modal
 */
 WCom.Modal = (function() {
@@ -708,8 +708,7 @@ WCom.Modal = (function() {
             this.selector.frame = newFrame;
          }
          else if (location) {
-            // TODO: Deal with
-            console.warn('Redirect in response to modal loadFrameContent');
+            Navigation.renderLocation(location);
          }
          else {
             console.warn('Neither content nor redirect in response to get');

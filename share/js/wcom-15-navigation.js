@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.32
+    @version 0.13.33
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -53,6 +53,7 @@ WCom.Navigation = (function() {
          this.properties       = config['properties'];
          this.baseColour       = this.properties['base-colour'];
          this.baseURL          = this.properties['base-url'];
+         this.bling            = this.properties['bling'];
          this.confirm          = this.properties['confirm'];
          this.containerLayout  = this.properties['container-layout'];
          this.containerName    = this.properties['container-name'];
@@ -65,21 +66,21 @@ WCom.Navigation = (function() {
          this.location         = this.properties['location'];
          this.logo             = this.properties['logo'];
          this.mediaBreak       = this.properties['media-break'];
-         this.shiny            = this.properties['shiny'];
+         this.relColour        = this.properties['rel-colour'];
          this.skin             = this.properties['skin'];
          this.title            = this.properties['title'];
          this.titleAbbrev      = this.properties['title-abbrev'];
          this.token            = this.properties['verify-token'];
          this.contentContainer = document.getElementById(this.containerName);
          this.contentPanel     = document.getElementById(this.contentName);
-         this.footer           = new Footer(this);
+         this.footer           = new Footer(this, config['footer']);
          this.menu             = new Menus(this, config['menus']);
          this.messages         = new Messages(config['messages']);
          this.titleEntry       = 'Loading';
          container.append(this._renderTitle());
          window.addEventListener('popstate', this.popstateHandler());
          window.addEventListener('resize', this.resizeHandler());
-         if (this.baseColour) document.body.setAttribute(
+         if (this.relColour && this.baseColour) document.body.setAttribute(
             'style', '--bg-base: ' + this.baseColour
          );
       }
@@ -171,7 +172,7 @@ WCom.Navigation = (function() {
          const attr = { id: this.contentName, className: this.contentName };
          const panel = this.h.div(attr, this.h.frag(html));
          this.contentPanel = document.getElementById(this.contentName);
-         if (this.shiny) {
+         if (this.bling) {
             this.contentPanel = this._animatedReplace(panel, this.contentPanel);
          }
          else {
@@ -249,7 +250,8 @@ WCom.Navigation = (function() {
       async scan(panel, options = {}) {
          await WCom.Util.Event.onLoad(panel, options);
          setTimeout(function() {
-            this.addEventListeners(this.footer.element, options);
+            if (this.footer.element)
+               this.addEventListeners(this.footer.element, options);
             this.addEventListeners(panel, options)
          }.bind(this), 1000 * this.domWait);
       }
@@ -312,10 +314,20 @@ WCom.Navigation = (function() {
           @desc Initialises the footer object
           @param {object} navigation An instance of the
              {@link Navigation/Navigation Navigation} object
+          @param {object} config Optional configuration provided by the server
+          @properties {string} footer-id The id of the footer element. Defaults
+             to 'footer'
+          @properties {integer} token-lifetime Time in seconds that the
+             CSRF token will last for. Defaults to one hour
+          @properties {integer} update-freq How frequently in seconds to
+             update the CSRF token timeout counter
       */
-      constructor(navigation) {
+      constructor(navigation, config = {}) {
          this.navigation = navigation;
-         this.element = document.getElementById('footer');
+         this.footerId = config['footer-id'] || 'footer';
+         this.tokenLifetime = config['token-lifetime'] || 3600;
+         this.updateFreq = config['update-frequency'] || 10;
+         this.element = document.getElementById(this.footerId);
          this.footers = {};
          this.currentAction;
       }
@@ -326,7 +338,8 @@ WCom.Navigation = (function() {
           @property {object} options.url URL to fetch footer markup from
       */
       async render(source) {
-         if (!source || !source.action || !source.url) return;
+         this.session_dt = new Date();
+         if (!this.element || !source || !source.action || !source.url) return;
          if (this.currentAction && this.currentAction == source.action) return;
          const oldContainer = this.element.querySelector('.footer-container');
          if (this.footers[source.action]) {
@@ -351,6 +364,30 @@ WCom.Navigation = (function() {
          }
          this.currentAction = source.action;
          this.navigation.addEventListeners(this.element);
+         this._startCountdown(this.element);
+      }
+      _startCountdown(container) {
+         const el = container.querySelector('.session-time');
+         if (!el) return;
+         if (this.timeoutId) clearTimeout(this.timeoutId);
+         const update = function() {
+            const now_dt = new Date();
+            const diff = now_dt - this.session_dt;
+            const time = this.tokenLifetime - Math.floor(diff / 1000);
+            if (time < 0) {
+               const text = document.createTextNode('Expired');
+               el.replaceChild(text, el.firstChild);
+            }
+            else {
+               const mins = Math.floor(time / 60);
+               const secs = String(time - (60 * mins)).padStart(2, 0);
+               const left = `${mins}m${secs}s`;
+               el.replaceChild(document.createTextNode(left), el.firstChild);
+               el.style['visibility'] = 'unset';
+            }
+            this.timeoutId = setTimeout(update, 1000 * this.updateFreq);
+         }.bind(this);
+         this.timeoutId = setTimeout(update, 1000 * this.updateFreq);
       }
    }
    Object.assign(Footer.prototype, WCom.Util.Bitch);
@@ -513,24 +550,27 @@ WCom.Navigation = (function() {
       }
       _renderControl() {
          if (!this.config['_control']) return;
+         const list = this._renderList(this.config['_control'], 'control');
          const panelAttr = { className: 'nav-panel control-panel' };
-         const panel = this._renderList(this.config['_control'], 'control');
-         this.contextPanels['control'] = this.h.div(panelAttr, panel);
-         const linkAttr = {};
-         if (this.controlTitle) linkAttr['data-title'] = this.controlTitle;
-         const link = this.h.a(linkAttr, this._renderControlIcon());
+         const panel = this.h.div(panelAttr, list);
+         this.contextPanels['control'] = panel;
+         const link = this.h.a({}, this._renderControlIcon());
          const attr = { className: 'nav-control' };
-         return this.h.div(attr, [link, this.contextPanels['control']]);
+         if (this.controlTitle) attr['data-title'] = this.controlTitle;
+         const control = this.h.div(attr, [link, panel]);
+         if (panel.firstChild.classList.contains('selected'))
+            this._addSelected(control);
+         return control;
       }
       _renderControlIcon() {
          const icons = this.icons;
-         if (!icons)
-            return this.h.span({ className: 'nav-control-label text' }, '≡');
          const name = this.controlIcon;
-         const icon = this.h.icon({
-            className: 'settings-icon', height: 24, icons, name, width: 24
-         });
-         return this.h.span({ className: 'nav-control-label' }, icon);
+         if (!icons || !name)
+            return this.h.span({ className: 'nav-control-label text' }, '≡');
+         const className = 'settings-icon';
+         const iconAttr = { className, height: 24, icons, name, width: 24 };
+         const attr = { className: 'nav-control-label' };
+         return this.h.span(attr, this.h.icon(iconAttr));
       }
       _renderItem(item, menuName) {
          const [text, href, icon] = item;
@@ -605,7 +645,7 @@ WCom.Navigation = (function() {
          }
          const navList = this.h.ul({ className: 'nav-list' }, items);
          if (menuName) navList.classList.add(menuName);
-         if (isSelected) navList.classList.add('selected');
+         if (isSelected) this._addSelected(navList);
          return navList;
       }
       _renderMobile() {
@@ -697,12 +737,12 @@ WCom.Navigation = (function() {
    /** @class
        @classdesc Creates the Navigation object on page load. These are the
           public methods exposed by this package
-       @alias Navigation/Manager
+       @alias Navigation/Factory
    */
-   class Manager {
+   class Factory {
       /** @constructs
           @desc Calls
-             {@link Navigation/Manager#createNavigation create navigation}
+             {@link Navigation/Factory#createNavigation create navigation}
              when the page loads
        */
       constructor() {
@@ -765,29 +805,29 @@ WCom.Navigation = (function() {
          if (content && this.navigator) this.navigator.scan(content, options);
       }
    }
-   const manager = new Manager();
+   const factory = new Factory();
    /** @module Navigation
     */
    return {
       /** @function
-          @desc Calls {@link Navigation/Manager#onContentLoad}
+          @desc Calls {@link Navigation/Factory#onContentLoad}
       */
-      onContentLoad: manager.onContentLoad.bind(manager),
+      onContentLoad: factory.onContentLoad.bind(factory),
       /** @function
-          @desc Calls {@link Navigation/Manager#renderLocation}
+          @desc Calls {@link Navigation/Factory#renderLocation}
           @param {string} href The location to render
       */
-      renderLocation: manager.renderLocation.bind(manager),
+      renderLocation: factory.renderLocation.bind(factory),
       /** @function
-          @desc Calls {@link Navigation/Manager#renderMessage}
+          @desc Calls {@link Navigation/Factory#renderMessage}
           @param {string} href The location to fetch the message from
       */
-      renderMessage: manager.renderMessage.bind(manager),
+      renderMessage: factory.renderMessage.bind(factory),
       /** @function
-          @desc Calls {@link Navigation/Manager#scan}
+          @desc Calls {@link Navigation/Factory#scan}
           @param {object} content The element to scan for links and forms
           @param {object} options Passed to the 'Navigation' scan method
       */
-      scan: manager.scan.bind(manager)
+      scan: factory.scan.bind(factory)
    };
 })();
