@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Moved filter constants to wcom-05-constants.less
           - Moved LESS attributes to constants
           - Stops exposing JS manager objects
           - Adds accordian to mobile menu

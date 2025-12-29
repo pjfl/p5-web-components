@@ -178,6 +178,14 @@ Predicate
 
 has 'footer_action' => is => 'ro', isa => Str, predicate => TRUE;
 
+=item C<footer_id>
+
+An immutable string which defaults to C<footer>. The id of the footer div
+
+=cut
+
+has 'footer_id' => is => 'ro', isa => Str, default => 'footer';
+
 =item C<global>
 
 An immutable array reference with an empty default. Contains a list of action
@@ -476,8 +484,9 @@ has '_footer' =>
    is      => 'lazy',
    isa     => HashRef,
    default => sub {
-      my $context = shift->context;
-      my $config  = { 'footer-id' => 'footer', 'update-frequency' => 10 };
+      my $self    = shift;
+      my $context = $self->context;
+      my $config  = { 'footer-id' => $self->footer_id };
 
       $config->{'token-lifetime'} = $context->token_lifetime
          if $context->can('token_lifetime');

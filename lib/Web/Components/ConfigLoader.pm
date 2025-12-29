@@ -28,18 +28,13 @@ Defines the following attributes;
 
 =over 3
 
-=item C<config_file>
+=item C<home>
 
-The configuration file is discovered by the loader once the C<home> attribute
-has been established
-
-=item C<has_config_file>
-
-Predicate
+This is the directory that the loader has chosen to call home
 
 =cut
 
-has 'config_file' => is => 'ro', isa => File, predicate => 'has_config_file';
+has 'home' => is => 'ro', isa => Directory;
 
 =item C<config_home>
 
@@ -56,13 +51,18 @@ has 'config_home' =>
    isa       => Directory,
    predicate => 'has_config_home';
 
-=item C<home>
+=item C<config_file>
 
-This is the directory that the loader has chosen to call home
+The configuration file is discovered by the loader once the C<home> attribute
+has been established
+
+=item C<has_config_file>
+
+Predicate
 
 =cut
 
-has 'home' => is => 'ro', isa => Directory;
+has 'config_file' => is => 'ro', isa => File, predicate => 'has_config_file';
 
 =item C<local_config_file>
 

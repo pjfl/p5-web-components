@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.33
+    @version 0.13.34
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -319,14 +319,14 @@ WCom.Navigation = (function() {
              to 'footer'
           @properties {integer} token-lifetime Time in seconds that the
              CSRF token will last for. Defaults to one hour
-          @properties {integer} update-freq How frequently in seconds to
-             update the CSRF token timeout counter
+          @properties {integer} update-frequency How frequently in seconds to
+             update the CSRF token timeout counter. Defaults to one minute
       */
       constructor(navigation, config = {}) {
          this.navigation = navigation;
          this.footerId = config['footer-id'] || 'footer';
          this.tokenLifetime = config['token-lifetime'] || 3600;
-         this.updateFreq = config['update-frequency'] || 10;
+         this.updateFreq = config['update-frequency'] || 60;
          this.element = document.getElementById(this.footerId);
          this.footers = {};
          this.currentAction;
@@ -338,7 +338,7 @@ WCom.Navigation = (function() {
           @property {object} options.url URL to fetch footer markup from
       */
       async render(source) {
-         this.session_dt = new Date();
+         this.sessionDT = new Date();
          if (!this.element || !source || !source.action || !source.url) return;
          if (this.currentAction && this.currentAction == source.action) return;
          const oldContainer = this.element.querySelector('.footer-container');
@@ -357,6 +357,7 @@ WCom.Navigation = (function() {
             }
             else if (location) {
                console.warn('Footer.render - Unexpected redirect ' + location);
+               this.navigation.renderLocation(location);
             }
             else {
                console.warn('Footer.render - Neither location nor text');
@@ -364,15 +365,14 @@ WCom.Navigation = (function() {
          }
          this.currentAction = source.action;
          this.navigation.addEventListeners(this.element);
-         this._startCountdown(this.element);
+         this._updateCountdown(this.element);
       }
-      _startCountdown(container) {
+      _updateCountdown(container) {
          const el = container.querySelector('.session-time');
          if (!el) return;
-         if (this.timeoutId) clearTimeout(this.timeoutId);
          const update = function() {
-            const now_dt = new Date();
-            const diff = now_dt - this.session_dt;
+            const nowDT = new Date();
+            const diff = nowDT - this.sessionDT;
             const time = this.tokenLifetime - Math.floor(diff / 1000);
             if (time < 0) {
                const text = document.createTextNode('Expired');
@@ -387,7 +387,8 @@ WCom.Navigation = (function() {
             }
             this.timeoutId = setTimeout(update, 1000 * this.updateFreq);
          }.bind(this);
-         this.timeoutId = setTimeout(update, 1000 * this.updateFreq);
+         if (this.timeoutId) clearTimeout(this.timeoutId);
+         update();
       }
    }
    Object.assign(Footer.prototype, WCom.Util.Bitch);
