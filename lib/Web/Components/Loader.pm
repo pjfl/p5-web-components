@@ -8,6 +8,7 @@ use Unexpected::Types     qw( ArrayRef CodeRef HashRef NonEmptySimpleStr
                               Object RequestFactory );
 use Ref::Util             qw( is_arrayref );
 use Scalar::Util          qw( blessed );
+use Unexpected::Functions qw( inflate_placeholders );
 use Web::Components::Util qw( deref exception load_components throw );
 use Try::Tiny;
 use Web::ComposableRequest;
@@ -264,6 +265,12 @@ sub _recognise_signature {
    return 0;
 }
 
+sub _inflate_placeholders {
+   my ($message, @args) = @_;
+
+   return inflate_placeholders [ '[?]', '[]', 1 ], $message, @args;
+}
+
 sub _redirect {
    my ($self, $context) = @_;
 
@@ -280,9 +287,7 @@ sub _redirect {
       if ($attr->{should_log_messages}) {
          my $level = $redirect->{level} ? $redirect->{level} : 'info';
 
-         if ($req->can('loc_default')) {
-            $self->log->$level($req->loc_default(@{$message}), $context);
-         }
+         $self->log->$level(_inflate_placeholders(@{$message}), $context);
       }
 
       if ($req->can('session')) {

@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Models context class defaults to config object attribute
           - Moved filter constants to wcom-05-constants.less
           - Moved LESS attributes to constants
           - Stops exposing JS manager objects

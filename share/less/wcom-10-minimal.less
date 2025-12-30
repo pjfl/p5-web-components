@@ -1,5 +1,5 @@
 /* @author  pjfl@cpan.org (Peter Flanigan)
- * @version 0.13.32
+ * @version 0.13.35
  */
 @import "wcom-05-constants";
 *, *::before, *::after {
@@ -40,10 +40,10 @@ body {
         grid-template-columns: (@nav-width-text + 0.5rem) 1fr;
     }
     &.relative {
-      --bg-lighter: hsl(from var(--bg-base) h s calc(l * 1.1));
-      --bg-light:   hsl(from var(--bg-base) h s calc(l * 1.07));
-      --bg-dark:    hsl(from var(--bg-base) h s calc(l * 0.85));
-      --bg-darker:  hsl(from var(--bg-base) h s calc(l * 0.37));
+      --bg-lighter: hsl(from var(--bg-base) h s calc(l * 1.07));
+      --bg-light:   hsl(from var(--bg-base) h s calc(l * 1.04));
+      --bg-dark:    hsl(from var(--bg-base) h s calc(l * 0.9));
+      --bg-darker:  hsl(from var(--bg-base) h s calc(l * 0.7));
     }
     &.dark-theme {
         form.classic {
@@ -56,15 +56,8 @@ body {
         }
         .messages-panel .message-item {
             background: var(--bg-darker) !important;
-            color: @text-light !important;
         }
         .navigation, .sidebar {
-            li.global[data-title]:hover::after {
-                background: var(--bg-darker) !important;
-            }
-            .nav-control a[data-title]:hover::after {
-                background: var(--bg-darker) !important;
-            }
             .nav-list .drop-menu {
                 color: @text-light;
             }
@@ -163,7 +156,7 @@ footer {
         isolation: isolate; position: relative;
         &:hover {
             &[data-title]::after {
-                background: var(--bg-dark); border: 1px solid @line-border;
+                background: var(--bg-darker); border: 1px solid @line-border;
                 border-radius: 5px; content: attr(data-title);
                 font-family: #fonts[sans]; font-size: @tips-font-size;
                 padding: 0.25rem 0.5rem; position: absolute;
@@ -210,7 +203,7 @@ footer {
             max-height: @nav-panel-max-height;
         }
         &[data-title]:hover::after {
-            background: var(--bg-dark); border: 1px solid @line-border;
+            background: var(--bg-darker); border: 1px solid @line-border;
             border-radius: 5px; content: attr(data-title);
             font-family: #fonts[sans]; font-size: @tips-font-size;
             padding: 0.25rem 0.5rem; position: absolute; right: 2.25rem;

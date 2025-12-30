@@ -36,7 +36,8 @@ Defines the following attributes;
 =item C<context_class>
 
 A required loadable class. The classname of the object created by
-C<get_context>
+C<get_context>. Defaults to C<Web::Components::Loader::Context> a minimal
+class which is provided
 
 =cut
 
@@ -44,7 +45,12 @@ has 'context_class' =>
    is      => 'lazy',
    isa     => LoadableClass,
    coerce  => TRUE,
-   default => 'Web::Components::Loader::Context';
+   default => sub {
+      my $self = shift;
+
+      return $self->config->can('context_class')
+           ? $self->config->context_class : 'Web::Components::Loader::Context';
+   };
 
 =item C<navigation_key>
 
