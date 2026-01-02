@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.32
+    @version 0.13.36
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -738,13 +738,14 @@ WCom.Util = (function() {
                 is prevented
              @returns {function} Event handler function
           */
-         getEventHandler: function(statements, allowDefault) {
+         getEventHandler: function(statements) {
             const callList = this.parseJS(statements);
             return function(event) {
-               if (!allowDefault) event.preventDefault();
                for (const c of callList) {
                   // TODO: If args are an object inject the event
                   // I think that BrainFuck might be a superior alternative
+                  if (c[2] && typeof c[2] == 'object' && !c[2].allowDefault)
+                     event.preventDefault();
                   c[0].call(c[1], c[2], c[3], c[4], c[5], c[6]);
                }
             };

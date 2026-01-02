@@ -78,7 +78,7 @@ has '_exception_layout' =>
       my $self = shift;
 
       return $self->config->can('exception_layout')
-           ? $self->config->exception_layout : 'page/exception';
+           ? $self->config->exception_layout : 'misc/exception';
    };
 
 has '_template_wrappers' =>
@@ -142,7 +142,8 @@ sub error {
 
 =item C<execute>
 
-Called by component loader for all model method calls
+Called by component loader for all model method calls. Calls each method in
+the method chain if C<is_authorised> returns true for each one
 
 =cut
 
@@ -163,7 +164,11 @@ sub execute {
 
       $method = NUL unless $self->is_authorised($context, $coderef);
 
-      $self->$method($context, @{$uri_args}) if $method;
+      if ($method) {
+         my $method_args = $self->method_args($context, $coderef, $uri_args);
+
+         $self->$method($context, @{$method_args});
+      }
 
       return $stash->{response} if $stash->{response};
 
@@ -188,6 +193,27 @@ sub get_context {
    my ($self, $args) = @_;
 
    return $self->context_class->new({ %{$args}, config => $self->config });
+}
+
+=item C<is_authorised>
+
+Left unimplemented to force an exception if not overridden in a subclass
+
+=cut
+
+sub is_authorised { ... }
+
+=item C<method_args>
+
+This default method just returns the arguments passed to it. Override this
+in a subclass to implement capture args
+
+=cut
+
+sub method_args {
+   my ($self, $context, $action, $uri_args) = @_;
+
+   return $uri_args;
 }
 
 =item C<verify_form_post>
