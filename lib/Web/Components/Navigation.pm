@@ -322,7 +322,7 @@ has '_menu_location' =>
 
 =item C<message_action>
 
-An immutable string which defaults to B<api/navigation_messages>. This is the
+An immutable string which defaults to B<api/collect_messages>. This is the
 action path for the API call that the message object in the JS will make to
 collect messages
 
@@ -331,7 +331,7 @@ collect messages
 has 'message_action' =>
    is      => 'ro',
    isa     => Str,
-   default => 'api/navigation_messages';
+   default => 'api/collect_messages';
 
 =item C<messages>
 

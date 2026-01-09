@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.34
+    @version 0.13.37
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -526,7 +526,8 @@ WCom.Navigation = (function() {
             event.preventDefault();
             if (options.onUnload) options.onUnload();
             else WCom.Util.Event.onUnload();
-            form.setAttribute('submitter', event.submitter.value);
+            if (event.submitter)
+               form.setAttribute('submitter', event.submitter.value);
             this.navigation.process(action, form);
          }.bind(this);
       }

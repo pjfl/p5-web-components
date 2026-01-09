@@ -2,7 +2,7 @@
     @file Web Components - Modal
     @classdesc Displays modal dialogues
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.33
+    @version 0.13.37
     @alias WCom/Modal
 */
 WCom.Modal = (function() {
@@ -653,6 +653,7 @@ WCom.Modal = (function() {
       getButtons() {
          if (this.noButtons) return [];
          return [{
+            key: 'escape',
             label: this.labels[0],
             onclick: function(modalObj) {
                try {
@@ -663,6 +664,7 @@ WCom.Modal = (function() {
                return true;
             }.bind(this)
          }, {
+            key: 'enter',
             label: this.labels[1],
             onclick: function(modalObj) {
                const modalValue = this.getModalValue(true);
