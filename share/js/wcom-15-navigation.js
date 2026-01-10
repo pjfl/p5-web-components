@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.37
+    @version 0.13.38
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -64,6 +64,7 @@ WCom.Navigation = (function() {
          this.icons            = this.properties['icons'];
          this.linkDisplay      = this.properties['link-display'];
          this.location         = this.properties['location'];
+         this.loggerURL        = this.properties['logger-url'];
          this.logo             = this.properties['logo'];
          this.mediaBreak       = this.properties['media-break'];
          this.relColour        = this.properties['rel-colour'];
@@ -115,6 +116,20 @@ WCom.Navigation = (function() {
          }
       }
       /** @function
+          @desc Server side logging
+          @param {string} level
+          @param {string} message
+      */
+      logger(level, message) {
+         if (this.loggerURL) {
+            const url = new URL(this.loggerURL.replace(/\%level/, level));
+            this.bitch.blows(url, { json: JSON.stringify({ data: message }) });
+         }
+
+         if (level == 'warn') { console.warn(message) }
+         else { console.log(message) }
+      }
+      /** @function
           @desc Returns a bound function which handles the 'popstate' event.
              If the event has a state with an href attribute call
              {@link Navigation/Navigation#renderLocation render location}
@@ -147,7 +162,9 @@ WCom.Navigation = (function() {
          }
          else if (text) { this.renderHTML(text) }
          else {
-            console.warn('Neither content nor redirect in response to post');
+            this.logger(
+               'warn', 'Neither content nor redirect in response to post'
+            );
          }
       }
       /** @function
@@ -203,7 +220,9 @@ WCom.Navigation = (function() {
             this._redirectAfterGet(href, location);
          }
          else {
-            console.warn('Neither content nor redirect in response to get');
+            this.logger(
+               'warn', 'Neither content nor redirect in response to get'
+            );
          }
       }
       /** @function
@@ -276,19 +295,19 @@ WCom.Navigation = (function() {
          const locationURL = new URL(location);
          locationURL.searchParams.delete('mid');
          if (locationURL != href) {
-            console.log('Redirect after get to ' + location);
+            this.logger('info', 'Redirect after get to ' + location);
             await this.renderLocation(location);
             return;
          }
          const state = history.state;
-         console.log('Redirect after get to self ' + location);
-         console.log('Current state ' + state.href);
+         this.logger('info', 'Redirect after get to self ' + location);
+         this.logger('info', 'Current state ' + state.href);
          let count = 0;
          while (href == state.href) {
             history.back();
             if (++count > 3) break;
          }
-         console.log('Recovered state ' + count + ' ' + state.href);
+         this.logger('info', 'Recovered state ' + count + ' ' + state.href);
       }
       _renderTitle() {
          const title = this.logo.length ? [this.menu.iconImage(this.logo)] : [];
@@ -356,11 +375,15 @@ WCom.Navigation = (function() {
                this.footers[source.action] = newContainer;
             }
             else if (location) {
-               console.warn('Footer.render - Unexpected redirect ' + location);
+               this.navigation.logger(
+                  'warn', 'Footer.render - Unexpected redirect ' + location
+               );
                this.navigation.renderLocation(location);
             }
             else {
-               console.warn('Footer.render - Neither location nor text');
+               this.navigation.logger(
+                  'warn', 'Footer.render - Neither location nor text'
+               );
             }
          }
          this.currentAction = source.action;

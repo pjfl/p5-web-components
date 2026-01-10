@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Added API logger endpoint
           - Default API endpoint changed
           - Implements method args
           - Models context class defaults to config object attribute

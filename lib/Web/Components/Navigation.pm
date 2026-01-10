@@ -4,7 +4,7 @@ use Web::ComposableRequest::Constants
                           qw( EXCEPTION_CLASS FALSE NUL SPC TRUE );
 use HTTP::Status          qw( HTTP_OK );
 use Unexpected::Types     qw( ArrayRef Bool HashRef Num
-                              Object PositiveInt Str Undef);
+                              Object PositiveInt ScalarRef Str Undef);
 use HTML::Forms::Util     qw( json_bool );
 use Ref::Util             qw( is_hashref );
 use Scalar::Util          qw( blessed );
@@ -264,6 +264,15 @@ has 'link_display_class' =>
    isa     => Str,
    default => sub { 'nav-link-' . shift->link_display };
 
+=item C<logger_action>
+
+An optional string which if supplied will provide the JS with an endpoint
+to log messages. No default
+
+=cut
+
+has 'logger_action' => is => 'ro', isa => Str;
+
 =item C<logo>
 
 A optional lazy string representation of a partial URI with a null
@@ -469,6 +478,7 @@ has '_data' =>
                'link-display'     => $self->link_display,
                'location'         => $self->menu_location,
                'logo'             => $self->logo,
+               'logger-url'       => $self->_logger_uri,
                'media-break'      => $self->media_break,
                'rel-colour'       => json_bool $context->session->rel_colour,
                'skin'             => $self->_skin,
@@ -494,7 +504,7 @@ has '_footer' =>
       return $config;
    };
 
-has '_footer_url' =>
+has '_footer_uri' =>
    is      => 'lazy',
    isa     => Str|Undef,
    default => sub {
@@ -522,6 +532,20 @@ has '_json' =>
    };
 
 has '_lists' => is => 'ro', isa => HashRef, default => sub { {} };
+
+has '_logger_uri' =>
+   is      => 'lazy',
+   isa     => Str|ScalarRef,
+   default => sub {
+      my $self = shift;
+
+      return json_bool FALSE unless $self->logger_action;
+
+      my $context = $self->context;
+      my $args    = ['%level'];
+
+      return $context->uri_for_action($self->logger_action, $args)->as_string;
+   };
 
 has '_menus' =>
    is      => 'lazy',
@@ -638,9 +662,9 @@ sub finalise {
       'verify-token'     => $context->verification_token,
    };
 
-   if ($self->_footer_url) {
+   if ($self->_footer_uri) {
       $data->{'footer-config'} = {
-         action => $self->_action_path, url => $self->_footer_url,
+         action => $self->_action_path, url => $self->_footer_uri,
       };
    }
 
