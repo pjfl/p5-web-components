@@ -1,11 +1,20 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.36
+    @version 0.13.39
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
 WCom.Util = (function() {
+   const _typeof = function(x) {
+      if (!x) return;
+      const type = typeof x;
+      if ((type == 'object') && (x.nodeType == 1)
+          && (typeof x.style == 'object')
+          && (typeof x.ownerDocument == 'object')) return 'element';
+      if (type == 'object' && Array.isArray(x)) return 'array';
+      return type;
+   };
    /** @class
        @classdesc The fetch API can be improved upon. A plain object can
           be passed for headers, forms are posted with either encoding type.
@@ -141,7 +150,7 @@ WCom.Util = (function() {
       }
       // https://github.com/yurks/content-disposition-parser
       _dispositionParser(data) {
-         if (!(data && typeof data === 'string')) return;
+         if (!(data && _typeof(data) === 'string')) return;
          const reParamSplit = /\s*;\s*/;
          const reHeaderSplit = /\s*:\s*/;
          const rePropertySplit = /\s*=\s*(.+)/;
@@ -270,7 +279,7 @@ WCom.Util = (function() {
           @returns {string}
       */
       button(attr, content) {
-         if (this._typeof(attr) == 'object') attr['type'] ||= 'submit';
+         if (_typeof(attr) == 'object') attr['type'] ||= 'submit';
          else {
             content = attr;
             attr = { type: 'submit' };
@@ -440,7 +449,7 @@ WCom.Util = (function() {
           @param {variable} x The variable to test
           @returns {string}
       */
-      typeOf(x) { return this._typeof(x) }
+      typeOf(x) { return _typeof(x) }
       _tag(tag, attr, content) {
          const events = [
             'onchange', 'onclick', 'ondragenter', 'ondragleave', 'ondragover',
@@ -454,7 +463,7 @@ WCom.Util = (function() {
          ];
          const styleProps = [ 'height', 'width' ];
          const el = document.createElement(tag);
-         const type = this._typeof(attr);
+         const type = _typeof(attr);
          if (type == 'object') {
             for (const prop of Object.keys(attr)) {
                if (events.includes(prop)) {
@@ -475,9 +484,9 @@ WCom.Util = (function() {
          else if (type == 'element') { content = [attr]; }
          else if (type == 'string')  { content = [attr]; }
          if (!content) return el;
-         if (this._typeof(content) != 'array') content = [content];
+         if (_typeof(content) != 'array') content = [content];
          for (const child of content) {
-            const childType = this._typeof(child);
+            const childType = _typeof(child);
             if (!childType) continue;
             if (childType == 'number' || childType == 'string') {
                el.appendChild(document.createTextNode(child));
@@ -485,15 +494,6 @@ WCom.Util = (function() {
             else { el.appendChild(child); }
          }
          return el;
-      }
-      _typeof(x) {
-         if (!x) return;
-         const type = typeof x;
-         if ((type == 'object') && (x.nodeType == 1)
-             && (typeof x.style == 'object')
-             && (typeof x.ownerDocument == 'object')) return 'element';
-         if (type == 'object' && Array.isArray(x)) return 'array';
-         return type;
       }
    }
    const esc = encodeURIComponent;
@@ -668,7 +668,7 @@ WCom.Util = (function() {
              @returns {boolean}
          */
          isHTML: function(s) {
-            if (typeof s != 'string') return false;
+            if (_typeof(s) != 'string') return false;
             if (s.match(new RegExp('^<'))) return true;
             return false;
          },
@@ -680,7 +680,7 @@ WCom.Util = (function() {
              @returns {boolean}
          */
          isHTMLOfClass: function(s, className) {
-            if (typeof s != 'string') return false;
+            if (_typeof(s) != 'string') return false;
             if (!s.match(new RegExp(`class="${className}"`))) return false;
             return true;
          }
@@ -742,10 +742,11 @@ WCom.Util = (function() {
             const callList = this.parseJS(statements);
             return function(event) {
                for (const c of callList) {
-                  // TODO: If args are an object inject the event
+                  if (c[2] && _typeof(c[2]) == 'object') {
+                     c[2].event = event;
+                     if (!c[2].allowDefault) event.preventDefault();
+                  }
                   // I think that BrainFuck might be a superior alternative
-                  if (c[2] && typeof c[2] == 'object' && !c[2].allowDefault)
-                     event.preventDefault();
                   c[0].call(c[1], c[2], c[3], c[4], c[5], c[6]);
                }
             };
@@ -798,17 +799,13 @@ WCom.Util = (function() {
                const isObject = argsStr.match(/^[\{\[]/);
                const argsWrap = isObject ? argsStr : `[${argsStr}]`;
                try {
-                  const arg = argsStr.length ? JSON.parse(argsWrap) : {};
-                  if (isObject) tuples.push([method, parent, arg]);
-                  else {
-                     tuples.push(
-                        [method, parent, arg[0], arg[1], arg[2], arg[3], arg[4]]
-                     );
-                  }
+                  const args = argsStr.length ? JSON.parse(argsWrap) : {};
+                  if (isObject) tuples.push([method, parent, args]);
+                  else tuples.push([
+                     method, parent, args[0], args[1], args[2], args[3], args[4]
+                  ]);
                }
-               catch(e) {
-                  console.warn(`JSON Parser error: ${argsWrap}`);
-               }
+               catch(e) { console.warn(`Modifiers.parseJS: ${e}`) }
             }
             return tuples;
          },

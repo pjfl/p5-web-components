@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.38
+    @version 0.13.39
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -24,6 +24,8 @@ WCom.Navigation = (function() {
              are rendered here
           @param {object} config
           @property {string} config.moniker Unique name of the server model
+          @property {object} config.footer Initialises the
+             {@link Navigation/Footer Footer} object
           @property {object} config.menus Initialises the
              {@link Navigation/Menus Menus} object
           @property {object} config.messages Initialises the
@@ -40,6 +42,7 @@ WCom.Navigation = (function() {
           @property {string} config.properties.icons
           @property {string} config.properties.link-display
           @property {string} config.properties.location
+          @property {string} config.properties.logger-url
           @property {string} config.properties.logo
           @property {string} config.properties.media-break
           @property {string} config.properties.skin
@@ -116,8 +119,9 @@ WCom.Navigation = (function() {
          }
       }
       /** @function
-          @desc Server side logging
-          @param {string} level
+          @desc Server side logging. Also console logs/warns
+          @param {string} level One of; alert, debug, error, fatal, info,
+             or warn
           @param {string} message
       */
       logger(level, message) {
@@ -295,7 +299,6 @@ WCom.Navigation = (function() {
          const locationURL = new URL(location);
          locationURL.searchParams.delete('mid');
          if (locationURL != href) {
-            this.logger('info', 'Redirect after get to ' + location);
             await this.renderLocation(location);
             return;
          }
