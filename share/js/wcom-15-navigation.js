@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.39
+    @version 0.13.40
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -39,6 +39,7 @@ WCom.Navigation = (function() {
           @property {string} config.properties.content-icon
           @property {string} config.properties.content-title
           @property {number} config.properties.dom-wait
+          @property {array}  config.properties.features
           @property {string} config.properties.icons
           @property {string} config.properties.link-display
           @property {string} config.properties.location
@@ -56,7 +57,6 @@ WCom.Navigation = (function() {
          this.properties       = config['properties'];
          this.baseColour       = this.properties['base-colour'];
          this.baseURL          = this.properties['base-url'];
-         this.bling            = this.properties['bling'];
          this.confirm          = this.properties['confirm'];
          this.containerLayout  = this.properties['container-layout'];
          this.containerName    = this.properties['container-name'];
@@ -65,12 +65,12 @@ WCom.Navigation = (function() {
          this.controlTitle     = this.properties['control-title'];
          this.domWait          = this.properties['dom-wait'];
          this.icons            = this.properties['icons'];
+         this.features         = this.properties['features'];
          this.linkDisplay      = this.properties['link-display'];
          this.location         = this.properties['location'];
          this.loggerURL        = this.properties['logger-url'];
          this.logo             = this.properties['logo'];
          this.mediaBreak       = this.properties['media-break'];
-         this.relColour        = this.properties['rel-colour'];
          this.skin             = this.properties['skin'];
          this.title            = this.properties['title'];
          this.titleAbbrev      = this.properties['title-abbrev'];
@@ -84,9 +84,9 @@ WCom.Navigation = (function() {
          container.append(this._renderTitle());
          window.addEventListener('popstate', this.popstateHandler());
          window.addEventListener('resize', this.resizeHandler());
-         if (this.relColour && this.baseColour) document.body.setAttribute(
-            'style', '--bg-base: ' + this.baseColour
-         );
+         if (this.features.includes('relative') && this.baseColour) {
+            document.body.setAttribute('style','--bg-base: ' + this.baseColour);
+         }
       }
       /** @function
           @desc Attaches 'click' and 'submit' handlers to anchors and forms
@@ -193,7 +193,7 @@ WCom.Navigation = (function() {
          const attr = { id: this.contentName, className: this.contentName };
          const panel = this.h.div(attr, this.h.frag(html));
          this.contentPanel = document.getElementById(this.contentName);
-         if (this.bling) {
+         if (this.features.includes('animation')) {
             this.contentPanel = this._animatedReplace(panel, this.contentPanel);
          }
          else {
@@ -273,9 +273,10 @@ WCom.Navigation = (function() {
       async scan(panel, options = {}) {
          await WCom.Util.Event.onLoad(panel, options);
          setTimeout(function() {
-            if (this.footer.element)
+            if (this.footer.element) {
                this.addEventListeners(this.footer.element, options);
-            this.addEventListeners(panel, options)
+            }
+            this.addEventListeners(panel, options);
          }.bind(this), 1000 * this.domWait);
       }
       _animatedReplace(panel, oldPanel) {

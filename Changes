@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds user features
           - Added API logger endpoint
           - Default API endpoint changed
           - Implements method args
