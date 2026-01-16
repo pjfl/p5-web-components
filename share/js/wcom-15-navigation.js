@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.40
+    @version 0.13.41
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -64,8 +64,8 @@ WCom.Navigation = (function() {
          this.controlIcon      = this.properties['control-icon'];
          this.controlTitle     = this.properties['control-title'];
          this.domWait          = this.properties['dom-wait'];
-         this.icons            = this.properties['icons'];
          this.features         = this.properties['features'];
+         this.icons            = this.properties['icons'];
          this.linkDisplay      = this.properties['link-display'];
          this.location         = this.properties['location'];
          this.loggerURL        = this.properties['logger-url'];
@@ -286,14 +286,16 @@ WCom.Navigation = (function() {
          oldPanel.classList.add('fade');
          oldPanel.classList.add('unloading');
          container.appendChild(panel);
-         setTimeout(function() { panel.classList.remove('fade') }, 1000 * 0.25);
          setTimeout(function() {
-            panel.classList.remove('loading');
-            for (const el of container.querySelectorAll('.panel')) {
-               container.removeChild(el);
-               break;
-            }
-         }, 1000 * 1.25);
+            panel.classList.remove('fade')
+            setTimeout(function() {
+               panel.classList.remove('loading');
+               for (const el of container.querySelectorAll('.panel')) {
+                  container.removeChild(el);
+                  break;
+               }
+            }, 1000);
+         }, 250);
          return panel;
       }
       async _redirectAfterGet(href, location) {
@@ -457,6 +459,9 @@ WCom.Navigation = (function() {
       clickHandler(href, options = {}) {
          return function(event) {
             event.preventDefault();
+            const target = (event.target.tagName == 'SPAN')
+                  ? event.target.parentNode : event.target;
+            if (target.getAttribute('disabled') == 'disabled') return;
             if (options.renderLocation) {
                if (options.renderLocation(href, event)) return;
             }

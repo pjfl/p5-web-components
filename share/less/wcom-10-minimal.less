@@ -1,5 +1,5 @@
 /* @author  pjfl@cpan.org (Peter Flanigan)
- * @version 0.13.40
+ * @version 0.13.41
  */
 @import "wcom-05-constants";
 *, *::before, *::after {
@@ -23,10 +23,9 @@ body {
     --bg-darker: @bg-darker;
     --bg-darkest: @bg-darkest;
     --body-bg: linear-gradient(135deg, transparent, var(--bg-base));
-    --button-bg: linear-gradient(0deg, var(--bg-base), var(--bg-lighter));
-    --button-bg-disabled: linear-gradient(0deg, @btn-border, var(--bg-lighter));
-    --button-bg-highlight:
-        radial-gradient(@btn-indicator, transparent, transparent);
+    --btn-bg: linear-gradient(0deg, var(--bg-base), var(--bg-lighter));
+    --btn-bg-disabled: linear-gradient(0deg, @btn-border, var(--bg-lighter));
+    --btn-bg-highlight: radial-gradient(@btn-highlight,transparent,transparent);
     background: var(--body-bg); display: grid;
     grid-template-areas: 'header header' 'sidebar main';
     grid-template-columns: (@nav-width-both + 0.5rem) 1fr;
@@ -43,33 +42,34 @@ body {
       --bg-lighter: hsl(from var(--bg-base) h s calc(l * 1.07));
       --bg-light:   hsl(from var(--bg-base) h s calc(l * 1.04));
       --bg-dark:    hsl(from var(--bg-base) h s calc(l * 0.9));
-      --bg-darker:  hsl(from var(--bg-base) h s calc(l * 0.7));
+      --bg-darker:  hsl(from var(--bg-base) h s calc(l * 0.49));
     }
     &.dark-theme {
         form.classic {
             label, legend {
                 color: @text-light;
             }
-            select, .alert-info {
+            select, .alert-info, select.select-multiple option {
                 color: @text-dark;
             }
+        }
+        .footer .secondary-link {
+            color: @text-light;
         }
         .messages-panel .message-item {
             background: var(--bg-darker) !important;
         }
         .navigation, .sidebar {
-            .nav-list .drop-menu {
+            .nav-list .drop-menu, .nav-title img {
                 color: @text-light;
             }
-        }
-        .nav-title img {
-                color: @text-light;
         }
         .state-table {
-            .preference-columns td {
-                color: @text-dark;
+            .active-control-label, .page-control li, .page-size-control,
+            .page-size-control a, .preference-link {
+                color: @text-light !important;
             }
-            .dialog-input select {
+            .dialog-input select, .preference-columns td {
                 color: @text-dark;
             }
         }
@@ -682,7 +682,7 @@ footer {
                 font-weight: normal; line-height: 1.5rem; margin: 0;
             }
             .modal-close {
-                align-items: center; background: var(--button-bg);
+                align-items: center; background: var(--btn-bg);
                 border-radius: 3px; box-shadow: 2px 2px 2px @panel-shadow;
                 color: @text-close; cursor: pointer; display: flex;
                 font-family: #fonts[sans]; font-size: smaller;
@@ -698,21 +698,21 @@ footer {
         }
         modal-header, .modal-footer {
             .button {
-                background: var(--button-bg);
+                background: var(--btn-bg);
                 border: 2px outset @btn-border; border-radius: 50px;
                 color: @text-link; cursor: pointer; display: inline-block;
                 overflow: hidden; padding: 0.1875rem 0.75rem 0.3125rem;
                 position: relative; text-decoration: none;
                 transition: border 500ms, color 500ms;
                 &::before {
-                    background: var(--button-bg-highlight); content: '';
+                    background: var(--btn-bg-highlight); content: '';
                     display: block; height: 3rem; left: var(--x);
                     opacity: 0; position: absolute;
                     top: var(--y); transform: translate(-50%, -50%);
                     transition: opacity 500ms; width: 3rem; z-index: 1;
                 }
                 &::after {
-                    background: var(--button-bg); border-radius: 50px;
+                    background: var(--btn-bg); border-radius: 50px;
                     content: ''; inset: 3px; position: absolute; z-index: 2;
                 }
                 &:hover {
@@ -722,7 +722,7 @@ footer {
                     }
                 }
                 &[disabled=disabled], &[disabled=disabled]::after {
-                    background: var(--button-bg-disabled);
+                    background: var(--btn-bg-disabled);
                 }
                 span {
                     font-family: #fonts[sans]; font-size: @btn-font-size;
