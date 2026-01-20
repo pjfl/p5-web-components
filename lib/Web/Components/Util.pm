@@ -14,9 +14,9 @@ use JSON::MaybeXS                     qw( );
 use Module::Pluggable::Object;
 use Moo::Role ();
 
-our @EXPORT_OK = qw( build_routes clear_redirect deref dump_file exception
-                     first_char formpost fqdn load_components load_file
-                     ns_environment throw );
+our @EXPORT_OK = qw( build_routes clear_redirect deref dump_file
+                     exception first_char formpost forward fqdn
+                     load_components load_file ns_environment throw );
 
 =pod
 
@@ -149,6 +149,28 @@ a button wrapped in a form
 
 sub formpost () {
    return { method => 'post' };
+}
+
+=item C<forward>
+
+   $bool = forward $context, $action;
+
+Stashes the keys and values to effect a forward to the supplied action.
+Returns false
+
+=cut
+
+sub forward ($$) {
+   my ($context, $action) = @_;
+
+   my ($moniker, $methods) = split m{ / }mx, $action, 2;
+
+   $context->stash->{forward} = {
+      model => $context->models->{$moniker},
+      method_chain => $methods,
+   };
+
+   return FALSE;
 }
 
 =item C<fqdn>

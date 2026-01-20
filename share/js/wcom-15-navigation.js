@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.41
+    @version 0.13.42
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -120,8 +120,7 @@ WCom.Navigation = (function() {
       }
       /** @function
           @desc Server side logging. Also console logs/warns
-          @param {string} level One of; alert, debug, error, fatal, info,
-             or warn
+          @param {string} level One of; alert, debug, error, info, or warn
           @param {string} message
       */
       logger(level, message) {
@@ -130,7 +129,10 @@ WCom.Navigation = (function() {
             this.bitch.blows(url, { json: JSON.stringify({ data: message }) });
          }
 
-         if (level == 'warn') { console.warn(message) }
+         if (level == 'debug') { console.debug(message) }
+         else if (level == 'error') { console.error(message) }
+         else if (level == 'info') { console.info(message) }
+         else if (level == 'warn') { console.warn(message) }
          else { console.log(message) }
       }
       /** @function
@@ -800,6 +802,16 @@ WCom.Navigation = (function() {
          this.navigator.render();
       }
       /** @function
+          @desc Calls {@link Navigation/Navigation#logger logger} method on
+             the {@link Navigation/Navigation Navigation} object
+          @param {string} level One of; alert, debug, error, info, or warn
+          @param {string} message
+      */
+      logger(level, message) {
+         if (!this.navigator) return;
+         this.navigator.logger(level, message);
+      }
+      /** @function
           @desc Calls
              {@link Navigation/Navigation#addEventListeners add event listeners}
              on the {@link Navigation/Navigation Navigation} object
@@ -843,6 +855,10 @@ WCom.Navigation = (function() {
    /** @module Navigation
     */
    return {
+      /** @function
+          @desc Calls {@link Navigation/Factory#logger}
+      */
+      logger: factory.logger.bind(factory),
       /** @function
           @desc Calls {@link Navigation/Factory#onContentLoad}
       */

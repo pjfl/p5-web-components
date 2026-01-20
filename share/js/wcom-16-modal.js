@@ -2,7 +2,7 @@
     @file Web Components - Modal
     @classdesc Displays modal dialogues
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.37
+    @version 0.13.42
     @alias WCom/Modal
 */
 WCom.Modal = (function() {
@@ -502,7 +502,8 @@ WCom.Modal = (function() {
          }
       }
       _buttonHandler(buttonConfig) {
-         if (buttonConfig.onclick(this) !== false) this.close();
+         if (buttonConfig.onclick && buttonConfig.onclick(this) !== false)
+            this.close();
       }
       _createCloseIcon() {
          const attr = {
@@ -609,6 +610,36 @@ WCom.Modal = (function() {
          this.valueStore = options.valueStore || {};
       }
       /** @function
+          @desc Creates a list of selectable options
+          @param {string} target Field id/name
+          @param {string} items A JSON string containing array of object
+             containing label and value
+          @returns {element}
+       */
+      createListContainer(target, items) {
+         const list = this.h.ul({ className: 'selectmany-group' });
+         if (items) {
+            const selected = {};
+            for (const el of document.getElementsByName(target)) {
+               selected[el.value] = true;
+            }
+            for (const item of JSON.parse(items)) {
+               const id = '_' + target + '-select-' + item.value;
+               const labelAttr = { className: 'item-label', htmlFor: id };
+               const label = this.h.label(labelAttr, item.label);
+               const checkboxAttr = { id, name: id, value: item.value };
+               if (selected[item.value]) checkboxAttr.checked = 'checked';
+               const checkbox = this.h.checkbox(checkboxAttr);
+               const wrapperAttr = { className: 'checkbox-wrapper' };
+               const wrapper = this.h.span(wrapperAttr, checkbox);
+               list.appendChild(this.h.li({}, [label, wrapper]));
+            }
+         }
+         this.frame = this._createFrame(list);
+         this.selector = this._createSelector();
+         return this.frame;
+      }
+      /** @function
           @desc Creates a container for the dialogue content and fetches the
              content from the server
           @returns {element}
@@ -617,7 +648,7 @@ WCom.Modal = (function() {
          const spinner = this._createSpinner();
          const loader = this.h.div({ className: 'modal-loader' }, spinner);
          this.frame = this._createFrame();
-         this.selector = new Selector(this.frame);
+         this.selector = this._createSelector();
          const attr = { className: 'modal-frame-container' };
          const container = this.h.div(attr, [loader, this.frame]);
          const onload = function(frame) {
@@ -687,6 +718,9 @@ WCom.Modal = (function() {
       _createFrame(content) {
          const attr = { className: 'selector', id: 'selector-frame' };
          return this.h.div(attr, content);
+      }
+      _createSelector() {
+         return new Selector(this.frame);
       }
       _createSpinner(modifierClass = '') {
          const icon = this.h.icon({
@@ -948,6 +982,32 @@ WCom.Modal = (function() {
       if (args.setCurrent) WCom.Modal.current(modal);
       return modal;
    };
+   const selectorCallback = function(target, callback) {
+      return function(ok, modal, result) {
+         if (!ok || !target) return;
+         let newValue = '';
+         let handler;
+         if (result.value) {
+            // TODO: Make this go away
+            newValue = result.value.replace(/!/g, '/');
+            if (callback) handler = callback.replace(/%value/g, result.value);
+         }
+         else if (result.files && result.files[0]) {
+            newValue = result.files;
+            if (callback) handler = callback.replace(/%value/g, 'result.files');
+         }
+         const el = document.getElementById(target);
+         if (!el) return;
+         const changed = el.value != newValue ? true : false;
+         if (newValue) el.value = newValue;
+         if (handler && newValue && changed) {
+            for (const tuple of Modifiers.parseJS(handler)) {
+               tuple[0].call(tuple[1], tuple[2]);
+            }
+         }
+         if (el.focus) el.focus();
+      };
+   };
    let CurrentModal;
    /** @module Modal
     */
@@ -1002,10 +1062,12 @@ WCom.Modal = (function() {
       /** @function
           @desc Creates a modal dialogue selector
           @param {object} options
-          @property {string} options.icons URL of the icons SVG
-             containing symbols
-          @property {string} options.onchange Evaluated when the selector value
+          @property {string} options.callback Evaluated when the selector value
              changes
+          @property {string} options.icons URL of the icons SVG containing
+             symbols
+          @property {string} options.items JSON string. Array of object used
+             to create the selector content instead of fetching the URL
           @property {string} options.target The selector updates this elements
              value
           @property {string} options.title Defaults to 'Select Item'
@@ -1013,33 +1075,20 @@ WCom.Modal = (function() {
           @returns {object} An instance of {@link Modal/Modal Modal}
        */
       createSelector: function(args) {
-         const { icons, onchange, target, title = 'Select Item', url } = args;
-         const callback = function(ok, modal, result) {
-            if (!ok || !target) return;
-            const el = document.getElementById(target);
-            if (!el) return;
-            if (result.value) {
-               const newValue = result.value.replace(/!/g, '/');
-               if (onchange && el.value != newValue) {
-                  const handler = onchange.replace(/%value/g, result.value);
-                  for (const tuple of Modifiers.parseJS(handler)) {
-                     tuple[0].call(tuple[1], tuple[2]);
-                  }
-               }
-               el.value = newValue;
-            }
-            else if (result.files && result.files[0]) {
-               if (onchange) {
-                  const handler = onchange.replace(/%value/g, 'result.files');
-                  for (const tuple of Modifiers.parseJS(handler)) {
-                     tuple[0].call(tuple[1], tuple[2]);
-                  }
-               }
-               el.value = result.files;
-            }
-            if (el.focus) el.focus();
-         }.bind(this);
-         return create({ callback, icons, title, url });
+         const { callback, icons, target, title = 'Select Item' } = args;
+         if (args.url) {
+            const selector = selectorCallback(target, callback);
+            return create({ callback: selector, icons, title, url: args.url });
+         }
+         else if (args.items) {
+            const selector = selectorCallback('_' + target, callback);
+            const util = new ModalUtil({ callback: selector, icons });
+            const content = util.createListContainer(target, args.items);
+            const buttons = util.getButtons();
+            const modal = new Modal(title, content, buttons, { icons });
+            modal.render();
+            return modal;
+         }
       },
       /** @function
           @desc Accessor/mutator for the current modal

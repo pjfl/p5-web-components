@@ -1,12 +1,12 @@
 package Web::Components::Model;
 
-use Web::ComposableRequest::Constants qw( EXCEPTION_CLASS FALSE NUL TRUE );
-
+use Web::ComposableRequest::Constants
+                          qw( EXCEPTION_CLASS FALSE NUL TRUE );
 use HTTP::Status          qw( HTTP_OK HTTP_INTERNAL_SERVER_ERROR );
 use Unexpected::Types     qw( HashRef LoadableClass Str );
 use Unexpected::Functions qw( BadCSRFToken UnknownMethod );
-use Web::Components::Util qw( exception throw );
 use Scalar::Util          qw( blessed );
+use Web::Components::Util qw( exception throw );
 use Moo;
 
 =pod
@@ -135,7 +135,7 @@ sub error {
 
    $self->_finalise_stash($context);
 
-   $nav->finalise_script_request if $nav;
+   $nav->stash_http_code if $nav;
 
    return;
 }
@@ -150,33 +150,39 @@ the method chain if C<is_authorised> returns true for each one
 sub execute {
    my ($self, $context, $methods) = @_;
 
-   my $stash    = $context->stash;
+   $context->stash(method_chain => $methods);
+
    my $nav_key  = $self->navigation_key;
    my $options  = { optional => TRUE, scrubber => FALSE };
    my $uri_args = $context->request->uri_params->($options);
    my $last_method;
 
-   $stash->{method_chain} = $methods;
+ FORWARD:
+   for my $method (split m{ / }mx, $context->stash('method_chain')) {
+      my $stash   = $context->stash;
+      my $model   = $stash->{model} // $self;
+      my $coderef = $model->can($method);
 
-   for my $method (split m{ / }mx, $methods) {
-      my $coderef = $self->can($method)
-         or throw UnknownMethod, [blessed $self, $method];
+      throw UnknownMethod, [blessed $model, $method] unless $coderef;
 
-      $method = NUL unless $self->is_authorised($context, $coderef);
+      if ($model->is_authorised($context, $coderef)) {
+         my $method_args = $model->method_args($context, $coderef, $uri_args);
 
-      if ($method) {
-         my $method_args = $self->method_args($context, $coderef, $uri_args);
-
-         $self->$method($context, @{$method_args});
+         $model->$method($context, @{$method_args});
+         $last_method = $method;
+      }
+      else {
+         if (my $forward = delete $stash->{forward}) {
+            $context->stash(%{$forward});
+            goto FORWARD;
+         }
       }
 
       return $stash->{response} if $stash->{response};
 
-      $stash->{$nav_key}->finalise_script_request if exists $stash->{$nav_key};
+      $stash->{$nav_key}->stash_http_code if exists $stash->{$nav_key};
 
       return if $stash->{finalised} || exists $stash->{redirect};
-
-      $last_method = $method;
    }
 
    $self->_finalise_stash($context, $last_method);

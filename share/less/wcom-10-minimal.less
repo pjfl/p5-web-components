@@ -1,5 +1,5 @@
 /* @author  pjfl@cpan.org (Peter Flanigan)
- * @version 0.13.41
+ * @version 0.13.42
  */
 @import "wcom-05-constants";
 *, *::before, *::after {
@@ -26,12 +26,14 @@ body {
     --btn-bg: linear-gradient(0deg, var(--bg-base), var(--bg-lighter));
     --btn-bg-disabled: linear-gradient(0deg, @btn-border, var(--bg-lighter));
     --btn-bg-highlight: radial-gradient(@btn-highlight,transparent,transparent);
-    background: var(--body-bg); display: grid;
+    background: var(--body-bg);
+    display: grid;
     grid-template-areas: 'header header' 'sidebar main';
     grid-template-columns: (@nav-width-both + 0.5rem) 1fr;
     grid-template-rows: auto 1fr;
+    margin: 0;
     min-height: 100vh; min-height: 100dvh;
-    margin: 0; padding: 0;
+    padding: 0;
     &:has(aside.nav-link-icon) {
         grid-template-columns: (@nav-width-icon + 0.5rem) 1fr;
     }
@@ -49,7 +51,8 @@ body {
             label, legend {
                 color: @text-light;
             }
-            select, .alert-info, select.select-multiple option {
+            select, .alert-info, select.select-multiple option,
+            .checkbox-group label {
                 color: @text-dark;
             }
         }

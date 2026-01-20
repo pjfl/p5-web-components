@@ -1,5 +1,7 @@
 Revision history for Web::Components
 
+          - Implements forward stash response
+          - Exposes Navigation logger static function
           - Improves page animations
           - Adds user features
           - Added API logger endpoint

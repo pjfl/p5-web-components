@@ -676,7 +676,7 @@ sub finalise {
    return;
 }
 
-=item C<finalise_script_request>
+=item C<stash_http_code>
 
 If C<is_script_request> is true then stash an OK HTTP return code. When using
 JS navigation all HTTP responses must be OK or the browser (which sniffs the
@@ -684,7 +684,7 @@ fetch responses) will automatically navigate
 
 =cut
 
-sub finalise_script_request {
+sub stash_http_code {
    my $self = shift;
 
    $self->context->stash(code => HTTP_OK) if $self->is_script_request;
@@ -819,9 +819,9 @@ sub _add_global {
    my $list = $self->list('_global');
 
    for my $action (@{$self->global}) {
-      my ($moniker, $method) = split m{ / }mx, $action;
-
       if ($self->_is_authorised($action)) {
+         my ($moniker, $method) = split m{ / }mx, $action;
+
          if ($method and $method eq 'menu') {
             my $model = $self->context->models->{$moniker};
 
@@ -851,11 +851,13 @@ sub _get_nav_label {
 }
 
 sub _is_authorised {
-   my ($self, $action) = @_;
+   my ($self, $actionp) = @_;
 
-   my $method = $self->authorised_method;
+   my ($moniker) = split m{ / }mx, $actionp;
+   my $model     = $self->context->models->{$moniker};
+   my $is_auth   = $self->authorised_method;
 
-   return $self->model->$method($self->context, $action);
+   return $model->$is_auth($self->context, $actionp);
 }
 
 sub _uri {

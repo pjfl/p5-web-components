@@ -389,6 +389,7 @@ sub _render {
 
    $req->session->update if $req->can('session');
 
+#   TODO: with 'CatalystX::LeakChecker' if $ENV{CATALYST_LEAK_CHECK};
 #   memory_cycle_ok( $context, 'Context has no memory cycles' );
 
    return $res;

@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.41
+    @version 0.13.42
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -775,10 +775,12 @@ WCom.Util = (function() {
                 a callable function, the object it will be bound to, and the
                 arguments should be passed to it when called
          */
-         parseJS(statements) {
+         parseJS(source) {
             /* Eval string is bad so this instead */
             const tuples = [];
-            for (const statement of statements.match(/([^;]+);?[ ]?/g)) {
+            const statements = source.match(/([^;]+);?[ ]?/g);
+            if (!statements) return tuples;
+            for (const statement of statements) {
                if (!statement.match(/^WCom\./)) {
                   console.warn(`Statement not recognised: ${statement}`);
                   continue;
