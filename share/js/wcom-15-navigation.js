@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.42
+    @version 0.13.43
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -283,10 +283,10 @@ WCom.Navigation = (function() {
       }
       _animatedReplace(panel, oldPanel) {
          const container = this.contentContainer;
-         panel.classList.add('fade');
-         panel.classList.add('loading');
-         oldPanel.classList.add('fade');
          oldPanel.classList.add('unloading');
+         oldPanel.classList.add('fade');
+         panel.classList.add('loading');
+         panel.classList.add('fade');
          container.appendChild(panel);
          setTimeout(function() {
             panel.classList.remove('fade')
@@ -297,7 +297,7 @@ WCom.Navigation = (function() {
                   break;
                }
             }, 1000);
-         }, 250);
+         }, 100);
          return panel;
       }
       async _redirectAfterGet(href, location) {

@@ -15,6 +15,7 @@ my $prereqs  = {
     'version' => '0.88'
   },
   'requires' => {
+    'Devel::Cycle' => '1.12',
     'Exporter::Tiny' => '1.006000',
     'File::DataClass' => 'v0.73.1',
     'HTML::Tiny' => '1.08',

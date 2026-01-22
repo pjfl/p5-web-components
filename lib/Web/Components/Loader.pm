@@ -13,9 +13,10 @@ use Web::Components::Util qw( deref exception load_components throw );
 use Try::Tiny;
 use Web::ComposableRequest;
 use Web::Simple::Role;
-#use Test::Memory::Cycle;
 
 requires qw( config log );
+
+with 'Web::Components::LeakChecker';
 
 =pod
 
@@ -173,6 +174,16 @@ sub dispatch_request { # uncoverable subroutine
 }
 
 around 'dispatch_request' => sub { \&_filter, @{$_[1]->_routes} };
+
+=item C<finalise>
+
+Does nothing. Called with the context object. Used by leak checker
+
+=cut
+
+sub finalise {
+   my ($self, $context) = @_; return;
+}
 
 # Attribute constructors
 sub _build_factory_args {
@@ -389,8 +400,7 @@ sub _render {
 
    $req->session->update if $req->can('session');
 
-#   TODO: with 'CatalystX::LeakChecker' if $ENV{CATALYST_LEAK_CHECK};
-#   memory_cycle_ok( $context, 'Context has no memory cycles' );
+   $self->finalise($context);
 
    return $res;
 }

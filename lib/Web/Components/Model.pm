@@ -171,11 +171,10 @@ sub execute {
          $model->$method($context, @{$method_args});
          $last_method = $method;
       }
-      else {
-         if (my $forward = delete $stash->{forward}) {
-            $context->stash(%{$forward});
-            goto FORWARD;
-         }
+
+      if (my $forward = delete $stash->{forward}) {
+         $context->stash(%{$forward});
+         goto FORWARD;
       }
 
       return $stash->{response} if $stash->{response};

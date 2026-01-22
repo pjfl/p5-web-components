@@ -370,7 +370,7 @@ the current request
 
 =cut
 
-has 'model' => is => 'ro', isa => Object, required => TRUE;
+has 'model' => is => 'ro', isa => Object, required => TRUE, weak_ref => TRUE;
 
 =item C<title>
 

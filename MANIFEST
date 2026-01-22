@@ -3,6 +3,7 @@ Changes
 MANIFEST
 lib/Web/Components.pm
 lib/Web/Components/ConfigLoader.pm
+lib/Web/Components/LeakChecker.pm
 lib/Web/Components/Loader.pm
 lib/Web/Components/Model.pm
 lib/Web/Components/Navigation.pm
@@ -12,7 +13,8 @@ lib/Web/Components/Util.pm
 share/js/wcom-10-util.js
 share/js/wcom-15-navigation.js
 share/js/wcom-16-modal.js
-share/less/wcom-minimal.less
+share/less/wcom-05-constants.less
+share/less/wcom-10-minimal.less
 t/02pod.t
 t/03podcoverage.t
 t/05kwalitee.t

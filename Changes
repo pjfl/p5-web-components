@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds LeakChecker
           - Implements forward stash response
           - Exposes Navigation logger static function
           - Improves page animations
