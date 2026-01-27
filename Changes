@@ -1,5 +1,7 @@
 Revision history for Web::Components
 
+          - Addition meta data for ConfigLoader. For form builder
+          - Enhanced use of FE logger
           - Adds LeakChecker
           - Implements forward stash response
           - Exposes Navigation logger static function

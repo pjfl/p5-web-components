@@ -34,7 +34,7 @@ This is the directory that the loader has chosen to call home
 
 =cut
 
-has 'home' => is => 'ro', isa => Directory;
+has 'home' => is => 'ro', isa => Directory, documentation => 'NoUpdate';
 
 =item C<config_home>
 
@@ -47,9 +47,10 @@ Predicate
 =cut
 
 has 'config_home' =>
-   is        => 'ro',
-   isa       => Directory,
-   predicate => 'has_config_home';
+   is            => 'ro',
+   isa           => Directory,
+   documentation => 'NoUpdate',
+   predicate     => 'has_config_home';
 
 =item C<config_file>
 
@@ -62,7 +63,11 @@ Predicate
 
 =cut
 
-has 'config_file' => is => 'ro', isa => File, predicate => 'has_config_file';
+has 'config_file' =>
+   is            => 'ro',
+   isa           => File,
+   documentation => 'NoUpdate',
+   predicate     => 'has_config_file';
 
 =item C<local_config_file>
 
@@ -76,10 +81,19 @@ Predicate
 =cut
 
 has 'local_config_file' =>
-   is        => 'ro',
-   isa       => File|Path,
-   coerce    => TRUE,
-   predicate => 'has_local_config_file';
+   is            => 'ro',
+   isa           => File|Path,
+   coerce        => TRUE,
+   documentation => 'NoUpdate',
+   predicate     => 'has_local_config_file';
+
+sub _dist_indicator_files () {
+   return qw( Makefile.PL Build.PL dist.ini cpanfile );
+}
+
+sub _home_indicator_dirs () {
+   return qw( var );
+}
 
 sub _config_file_list ($) {
    my $attr = shift;
@@ -90,14 +104,6 @@ sub _config_file_list ($) {
    my $extensions = $attr->{config_extensions} // 'json yaml';
 
    return map { "${file}.${_}" } split m{ \s }mx, $extensions;
-}
-
-sub _home_indicator_dirs () {
-   return qw( var );
-}
-
-sub _dist_indicator_files () {
-   return qw( Makefile.PL Build.PL dist.ini cpanfile );
 }
 
 sub _find_config ($) {

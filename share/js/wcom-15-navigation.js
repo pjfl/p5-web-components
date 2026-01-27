@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.43
+    @version 0.13.44
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -19,7 +19,8 @@ WCom.Navigation = (function() {
           @desc Append the title to the container and applies
              {@link Navigation/Navigation#popstateHandler popstate}
              and {@link Navigation/Navigation#resizeHandler resize} handlers to
-             the window
+             the window. If the 'relative' feature is enabled set the base
+             colour on the style of the body element
           @param {element} container The application title and control menu
              are rendered here
           @param {object} config
@@ -167,11 +168,7 @@ WCom.Navigation = (function() {
             }
          }
          else if (text) { this.renderHTML(text) }
-         else {
-            this.logger(
-               'warn', 'Neither content nor redirect in response to post'
-            );
-         }
+         else { this.logger('warn', `Post ${action} no content/redirect`) }
       }
       /** @function
           @desc Renders messages and the context sensitive menus.
@@ -185,7 +182,9 @@ WCom.Navigation = (function() {
       /** @function
           @async
           @desc Renders the supplied HTML by replacing the existing panel with
-             a new one
+             a new one. If the 'animation' feature is enabled, animate the
+             transition from old to new panels. Scans the new panel for anchors
+             and forms
           @param {string} html Markup for the content of the new panel
       */
       renderHTML(html) {
@@ -215,20 +214,19 @@ WCom.Navigation = (function() {
          url.searchParams.delete('mid');
          const opt = { headers: { prefer: 'render=partial' }, response: 'text'};
          const { location, text } = await this.bitch.sucks(url, opt);
-         if (text && text.length > 0) {
-            this.renderHTML(text);
-            await this.menu.loadMenuData(url);
-            this._setHeadTitle();
-            this.menu.render();
-         }
-         else if (location) {
+         if (location) {
             this.messages.render(location);
             this._redirectAfterGet(href, location);
          }
          else {
-            this.logger(
-               'warn', 'Neither content nor redirect in response to get'
-            );
+            if (text && text.length > 0) { this.renderHTML(text) }
+            else {
+               this.logger('warn', `Get ${url} no content/redirect`);
+               this.renderHTML('');
+            }
+            await this.menu.loadMenuData(url);
+            this._setHeadTitle();
+            this.menu.render();
          }
       }
       /** @function
@@ -342,12 +340,13 @@ WCom.Navigation = (function() {
           @param {object} navigation An instance of the
              {@link Navigation/Navigation Navigation} object
           @param {object} config Optional configuration provided by the server
-          @properties {string} footer-id The id of the footer element. Defaults
-             to 'footer'
-          @properties {integer} token-lifetime Time in seconds that the
+          @properties {string} config.footer-id The id of the footer element.
+             Defaults to 'footer'
+          @properties {integer} config.token-lifetime Time in seconds that the
              CSRF token will last for. Defaults to one hour
-          @properties {integer} update-frequency How frequently in seconds to
-             update the CSRF token timeout counter. Defaults to one minute
+          @properties {integer} config.update-frequency How frequently in
+             seconds to update the CSRF token timeout counter. Defaults to
+             one minute
       */
       constructor(navigation, config = {}) {
          this.navigation = navigation;
@@ -373,6 +372,7 @@ WCom.Navigation = (function() {
             this.element.replaceChild(this.footers[source.action],oldContainer);
          }
          else {
+            const nav = this.navigation;
             const headers = { prefer: 'render=partial' };
             const opt = { headers, response: 'text' };
             const { location, text } = await this.bitch.sucks(source.url, opt);
@@ -383,16 +383,10 @@ WCom.Navigation = (function() {
                this.footers[source.action] = newContainer;
             }
             else if (location) {
-               this.navigation.logger(
-                  'warn', 'Footer.render - Unexpected redirect ' + location
-               );
-               this.navigation.renderLocation(location);
+               nav.logger('warn', `Get ${source.url} unexpected redirect`);
+               nav.renderLocation(location);
             }
-            else {
-               this.navigation.logger(
-                  'warn', 'Footer.render - Neither location nor text'
-               );
-            }
+            else { nav.logger('warn', `Get ${source.url} no content/redirect`) }
          }
          this.currentAction = source.action;
          this.navigation.addEventListeners(this.element);
@@ -522,7 +516,10 @@ WCom.Navigation = (function() {
          history.pushState(state, 'Unused', url); // API Darwin award
          url.searchParams.set('navigation', true);
          const { object } = await this.bitch.sucks(url);
-         if (!object || !object['menus']) return;
+         if (!object || !object['menus']) {
+            this.navigation.logger('warn', `Get ${url} no content`);
+            return;
+         }
          this.config = object['menus'];
          this.token = object['verify-token'];
          this.navigation.containerLayout = object['container-layout'];
