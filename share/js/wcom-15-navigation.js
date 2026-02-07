@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.44
+    @version 0.13.45
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -759,10 +759,10 @@ WCom.Navigation = (function() {
       _animate(item) {
          setTimeout(function() {
             item.classList.add('fade');
+            setTimeout(function() {
+               item.classList.add('hide');
+            }, 1000 * (this.displayTime + 2));
          }, 1000 * this.displayTime);
-         setTimeout(function() {
-            item.classList.add('hide');
-         }, 1000 * (this.displayTime + 3));
       }
    }
    Object.assign(Messages.prototype, WCom.Util.Bitch);
@@ -797,6 +797,18 @@ WCom.Navigation = (function() {
          if (!el) return;
          this.navigator = new Navigation(el, JSON.parse(el.dataset[dsName]));
          this.navigator.render();
+      }
+      /** @function
+          @desc Returns the feature name if it is present in the features
+             attribute from the {@link Navigation/Navigation Navigation} object
+          @param {string} candidate The feature to be tested
+          @returns {string} The candidate iff the feature is turned on. Returns
+             the null string otherwise
+      */
+      feature(candidate) {
+         if (!this.navigator) return '';
+         if (this.navigator.features.includes(candidate)) return candidate;
+         return '';
       }
       /** @function
           @desc Calls {@link Navigation/Navigation#logger logger} method on
@@ -852,6 +864,10 @@ WCom.Navigation = (function() {
    /** @module Navigation
     */
    return {
+      /** @function
+          @desc Calls {@link Navigation/Factory#feature}
+      */
+      feature: factory.feature.bind(factory),
       /** @function
           @desc Calls {@link Navigation/Factory#logger}
       */

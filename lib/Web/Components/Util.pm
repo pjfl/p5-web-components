@@ -108,7 +108,7 @@ sub dump_file ($$) {
    my ($path, $data) = @_;
 
    if ($path->extension eq 'json') {
-      $path->print(_json_parser()->encode($data));
+      $path->println(_json_parser()->encode($data))->flush;
    }
    else { throw('File type [_1] unsupported', [$path->extension]) }
 

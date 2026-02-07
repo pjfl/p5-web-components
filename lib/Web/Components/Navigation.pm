@@ -115,7 +115,7 @@ A lazy immutable string which defaults to B<content_name>
 has 'content_class' =>
    is      => 'lazy',
    isa     => Str,
-   default => sub { $_[0]->content_name };
+   default => sub { shift->content_name };
 
 =item C<content_name>
 

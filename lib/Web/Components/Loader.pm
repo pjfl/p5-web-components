@@ -11,6 +11,7 @@ use Scalar::Util          qw( blessed );
 use Unexpected::Functions qw( inflate_placeholders );
 use Web::Components::Util qw( deref exception load_components throw );
 use Try::Tiny;
+use Web::Components::Context;
 use Web::ComposableRequest;
 use Web::Simple::Role;
 
@@ -237,7 +238,7 @@ sub _get_context {
 
    return $model->get_context($args) if $model->can('get_context');
 
-   return Web::Components::Loader::Context->new($args);
+   return Web::Components::Context->new($args);
 }
 
 sub _internal_server_error {
@@ -407,46 +408,6 @@ sub _render {
 
 sub _filter () {
    my $self = shift; return response_filter { $self->_render(@_) };
-}
-
-package
-   Web::Components::Loader::Context;
-
-use List::Util qw( pairs );
-use Moo;
-
-has 'action'  => is => 'ro';
-
-has 'controllers'  => is => 'ro';
-
-has 'models'  => is => 'ro';
-
-has 'request' => is => 'ro', required => 1;
-
-has 'views'  => is => 'ro';
-
-has '_stash' => is => 'ro', default => sub { {} };
-
-sub get_body_parameters {
-   return {};
-}
-
-sub stash {
-   my ($self, @args) = @_;
-
-   return $self->_stash unless $args[0];
-
-   return $self->_stash->{$args[0]} unless $args[1];
-
-   for my $pair (pairs @args) {
-      $self->_stash->{$pair->key} = $pair->value;
-   }
-
-   return $self->_stash;
-}
-
-sub verify_form_post {
-   return 'Not implemented';
 }
 
 use namespace::autoclean;

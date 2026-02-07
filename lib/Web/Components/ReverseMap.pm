@@ -42,7 +42,8 @@ has 'action_path_map' => is => 'lazy', isa => HashRef, default => sub {
    my $map   = {};
 
    for my $pair (pairs $self->dispatch_request) {
-      my @parts  = split m{ / }mx, $pair->value->()->[0];
+      my $value  = $pair->value->()->[0];
+      my @parts  = split m{ / }mx, $value;
       my $action = $parts[0] . '/' . $parts[-1];
       my ($uri)  = $pair->key =~ m{ [\+] \s* / ([^\+]+) }mx;
 
@@ -51,7 +52,7 @@ has 'action_path_map' => is => 'lazy', isa => HashRef, default => sub {
       $uri =~ s{ [ ]+ \z }{}mx;
       $uri = [ split m{ \s+? \| \s+? /? }mx, $uri ] if $uri =~ m{ \| }mx;
 
-      $map->{$action} = $uri;
+      $map->{$action} = { methods => $value, uri => $uri };
    }
 
    $self->log->warn("No routes found in ${class}") unless scalar keys %{$map};

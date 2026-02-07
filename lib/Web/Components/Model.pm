@@ -46,10 +46,12 @@ has 'context_class' =>
    isa     => LoadableClass,
    coerce  => TRUE,
    default => sub {
-      my $self = shift;
+      my $self   = shift;
+      my $config = $self->config;
 
-      return $self->config->can('context_class')
-           ? $self->config->context_class : 'Web::Components::Loader::Context';
+      return $config->context_class if $config->can('context_class');
+
+      return 'Web::Components::Context';
    };
 
 =item C<navigation_key>
@@ -67,28 +69,33 @@ has '_default_view' =>
    default => sub {
       my $self = shift;
 
-      return $self->config->can('default_view')
-           ? $self->config->default_view : 'HTML';
+      return $self->config->default_view if $self->config->can('default_view');
+
+      return 'HTML';
    };
 
 has '_exception_layout' =>
    is      => 'lazy',
    isa     => Str,
    default => sub {
-      my $self = shift;
+      my $self   = shift;
+      my $config = $self->config;
 
-      return $self->config->can('exception_layout')
-           ? $self->config->exception_layout : 'misc/exception';
+      return $config->exception_layout if $config->can('exception_layout');
+
+      return 'misc/exception';
    };
 
 has '_template_wrappers' =>
    is      => 'lazy',
    isa     => HashRef,
    default => sub {
-      my $self = shift;
+      my $self   = shift;
+      my $config = $self->config;
 
-      return $self->config->can('template_wrappers')
-           ? $self->config->template_wrappers : {};
+      return $config->template_wrappers if $config->can('template_wrappers');
+
+      return {};
    };
 
 =back
@@ -157,7 +164,6 @@ sub execute {
    my $uri_args = $context->request->uri_params->($options);
    my $last_method;
 
- FORWARD:
    for my $method (split m{ / }mx, $context->stash('method_chain')) {
       my $stash   = $context->stash;
       my $model   = $stash->{model} // $self;
@@ -172,9 +178,8 @@ sub execute {
          $last_method = $method;
       }
 
-      if (my $forward = delete $stash->{forward}) {
-         $context->stash(%{$forward});
-         goto FORWARD;
+      if (my $action = delete $stash->{forward}) {
+         return $self->_forward_action($context, $action);
       }
 
       return $stash->{response} if $stash->{response};
@@ -250,6 +255,18 @@ sub _finalise_stash { # Add necessary defaults for the view to render
    $stash->{page}->{layout} //= $self->moniker . "/${method}";
    $stash->{view} //= $self->_default_view;
    return;
+}
+
+sub _forward_action {
+   my ($self, $context, $action) = @_;
+
+   my @parts    = split m{ / }mx, $context->method_chain($action);
+   my $moniker  = shift @parts;
+   my $endpoint = $parts[-1];
+
+   $context->action("${moniker}/${endpoint}");
+
+   return $context->models->{$moniker}->execute($context, join '/', @parts);
 }
 
 use namespace::autoclean;
