@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.45
+    @version 0.13.46
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -31,6 +31,8 @@ WCom.Navigation = (function() {
              {@link Navigation/Menus Menus} object
           @property {object} config.messages Initialises the
              {@link Navigation/Messages Messages} object
+          @property {object} config.properties.service-worker Initialises the
+             service worker push notifications
           @property {string} config.properties.base-colour
           @property {string} config.properties.base-url
           @property {string} config.properties.confirm
@@ -72,6 +74,7 @@ WCom.Navigation = (function() {
          this.loggerURL        = this.properties['logger-url'];
          this.logo             = this.properties['logo'];
          this.mediaBreak       = this.properties['media-break'];
+         this.serviceWorker    = this.properties['service-worker'];
          this.skin             = this.properties['skin'];
          this.title            = this.properties['title'];
          this.titleAbbrev      = this.properties['title-abbrev'];
@@ -88,6 +91,7 @@ WCom.Navigation = (function() {
          if (this.features.includes('relative') && this.baseColour) {
             document.body.setAttribute('style','--bg-base: ' + this.baseColour);
          }
+         this._unregisterServiceWorker();
       }
       /** @function
           @desc Attaches 'click' and 'submit' handlers to anchors and forms
@@ -169,6 +173,30 @@ WCom.Navigation = (function() {
          }
          else if (text) { this.renderHTML(text) }
          else { this.logger('warn', `Post ${action} no content/redirect`) }
+      }
+      /** @function
+          @async
+          @desc Register service worker
+      */
+      async registerServiceWorker() {
+         const config = this.serviceWorker;
+         if (!this.features.includes('notifications') || !config) return;
+         const worker = window.navigator.serviceWorker;
+         const registration = await worker.register(this.baseURL + config.url);
+         let subscription = await registration.pushManager.getSubscription();
+         if (!subscription) {
+            const url = this.baseURL + config.publickey;
+            const { object } = await this.bitch.sucks(url, {});
+            const publickey = this.decodeBase64(object.publickey);
+            subscription = await registration.pushManager.subscribe({
+               userVisibleOnly: true,
+               applicationServerKey: publickey,
+            });
+         }
+         const url = this.baseURL + config.register;
+         const json = JSON.stringify({ data: { subscription } });
+         const { object } = await this.bitch.blows(url, { json });
+         this.logger('info', object.text);
       }
       /** @function
           @desc Renders messages and the context sensitive menus.
@@ -325,6 +353,13 @@ WCom.Navigation = (function() {
          const title = head.querySelector('title');
          const entry = this.capitalise(this.titleEntry);
          title.replaceWith(this.h.title(this.titleAbbrev + ' - ' + entry));
+      }
+      async _unregisterServiceWorker() {
+         const config = this.serviceWorker;
+         if (!this.features.includes('notifications') || !config) return;
+         const worker = window.navigator.serviceWorker;
+         const registration = await worker.register(this.baseURL + config.url);
+         if (registration) registration.unregister();
       }
    }
    Object.assign(Navigation.prototype, WCom.Util.Bitch);
@@ -831,6 +866,12 @@ WCom.Navigation = (function() {
          if (el) this.navigator.addEventListeners(el);
       }
       /** @function
+          @desc Registers the service worker
+      */
+      registerServiceWorker() {
+         if (this.navigator) this.navigator.registerServiceWorker();
+      }
+      /** @function
           @desc Fetches and renders the supplied location by calling
              {@link Navigation/Navigation#renderLocation render location}
              on the {@link Navigation/Navigation Navigation} object
@@ -876,6 +917,10 @@ WCom.Navigation = (function() {
           @desc Calls {@link Navigation/Factory#onContentLoad}
       */
       onContentLoad: factory.onContentLoad.bind(factory),
+      /** @function
+          @desc Calls {@link Navigation/Factory#registerServiceWorker}
+      */
+      registerServiceWorker: factory.registerServiceWorker.bind(factory),
       /** @function
           @desc Calls {@link Navigation/Factory#renderLocation}
           @param {string} href The location to render

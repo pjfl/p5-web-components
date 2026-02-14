@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.42
+    @version 0.13.46
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -835,6 +835,22 @@ WCom.Util = (function() {
             const words = [];
             for (const word of s.split(' ')) words.push(ucfirst(word));
             return words.join(' ');
+         },
+         /** @function
+             @desc Decode base64 strings
+             @param {string} base64String
+             @returns {array}
+         */
+         decodeBase64(base64String) {
+            var padding = '='.repeat((4 - base64String.length % 4) % 4);
+            var base64 = (base64String + padding)
+                .replace(/\-/g, '+').replace(/_/g, '/');
+            var rawData = window.atob(base64);
+            var outputArray = new Uint8Array(rawData.length);
+            for (var i = 0; i < rawData.length; ++i) {
+               outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
          },
          /** @function
              @desc Creates a unique identity string

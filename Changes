@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds service worker
           - Makes Context a base class
           - Addition meta data for ConfigLoader. For form builder
           - Enhanced use of FE logger

@@ -372,6 +372,25 @@ the current request
 
 has 'model' => is => 'ro', isa => Object, required => TRUE, weak_ref => TRUE;
 
+=item C<service-worker>
+
+A hash reference used to configure the service worker push notifications
+
+=cut
+
+has 'service_worker' =>
+   is      => 'lazy',
+   isa     => HashRef,
+   default => sub {
+      my $self = shift;
+
+      return {
+         publickey => 'api/push/publickey',
+         register  => 'api/push/register',
+         url       => 'service-worker',
+      };
+   };
+
 =item C<title>
 
 An immutable string which defaults to null. If set will be displayed as the
@@ -480,6 +499,7 @@ has '_data' =>
                'logo'             => $self->logo,
                'logger-url'       => $self->_logger_uri,
                'media-break'      => $self->media_break,
+               'service-worker'   => $self->service_worker,
                'skin'             => $self->_skin,
                'title'            => $self->title,
                'title-abbrev'     => $self->title_abbrev,
@@ -564,7 +584,7 @@ has '_messages' =>
 
       return {
          %{$self->messages},
-         'messages-url' => $context->uri_for_action($self->message_action)
+         'messages-url' => $context->uri_for_action($self->message_action),
       };
    };
 
