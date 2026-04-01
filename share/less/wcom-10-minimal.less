@@ -1,5 +1,5 @@
 /* @author  pjfl@cpan.org (Peter Flanigan)
- * @version 0.13.46
+ * @version 0.13.47
  */
 @import "wcom-05-constants";
 *, *::before, *::after {
@@ -110,7 +110,7 @@ main {
         display: flex; flex-direction: column; height: 100%;
         justify-content: space-between; position: absolute; width: 100%;
         h1, h2, h3, h4, h5 {
-            font-family: #fonts[sans]; margin: 1rem; text-wrap: balance;
+            font-family: #fonts[sans]; text-wrap: balance;
             label.separator {
                 display: inline-block; margin-right: 0.5rem;
                 min-width: @label-min-width; text-align: right;
@@ -587,22 +587,36 @@ footer {
         align-items: center; display: flex; column-gap: 0.5rem;
     }
 }
+.input-field.documentation h2 {
+    counter-increment: docheader; font-size: 1rem;
+    &::before {
+        content: counter(docheader) '. ';
+    }
+}
 .documentation {
-    counter-reset: subheader; font-family: #fonts[sans];
+    counter-reset: docheader; font-family: #fonts[sans];
+    &:not(.input-field) {
+        h1 {
+            font-size: 2rem;
+        }
+        h2 {
+            font-size: 1.75rem;
+        }
+        h3 {
+            font-size: 1.5rem;
+        }
+        h4 {
+            font-size: 1.25rem;
+        }
+        h5 {
+            font-size: 1rem;
+        }
+    }
     a {
         color: @text-link;
     }
-    h1 {
-        font-size: 1.25rem;
-    }
-    h2 {
-        counter-increment: subheader; font-size: 1rem;
-        &::before {
-            content: counter(subheader) '. ';
-        }
-    }
-    h1, h2 {
-        margin: 0 0 0.25rem 0;
+    h1, h2, h2, h4, h5 {
+        margin: 0.25rem 0;
     }
     p, ul {
         font-size: 1rem; margin: 0 0 0.5rem 0;
@@ -613,12 +627,25 @@ footer {
             font-family: #fonts[mono]; font-size: @doc-code-font-size;
         }
     }
+    .argument-list, .contents-list {
+        background: var(--bg-light);
+        border: 1px solid @line-border; border-radius: 5px;
+        border-spacing: @field-col-gap; text-align: left;
+        margin-bottom: @field-row-gap;
+    }
+    .method {
+        border-top: 1px solid @line-border;
+    }
 }
 .file-preview {
     p, pre {
         font-size: @preview-font-size; line-height: 1.25rem; margin: 0;
     }
 }
+.jsdocumentation {
+    width: 80vw; height: 60vw;
+}
+
 .main .exception, .modal .exception {
     background: @exception-bg; border: 1px solid @line-border;
     border-radius: 5px; box-shadow: 3px 3px 3px @panel-shadow;
@@ -769,6 +796,21 @@ footer {
             .loading {
                 margin: 1rem;
             }
+        }
+    }
+}
+.restapi.documentation {
+    display: flex;
+    .entity h2 {
+        counter-increment: docheader;
+        &::before {
+            content: counter(docheader) '. ';
+        }
+    }
+    .entity-index {
+        min-width: 10rem;
+        .contents-list {
+            width: 100%;
         }
     }
 }

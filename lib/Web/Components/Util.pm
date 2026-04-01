@@ -354,8 +354,12 @@ sub _setup_component {
    $composite //= $class;
 
   (my $klass = $class) =~ s{ \A $appclass :: }{}mx;
-   my $attr  = { %{ $comp_cfg->{ $klass } // {} }, %{ $opts } };
-   my $comp  = $composite->new( $attr );
+   my $attr  = { %{ $comp_cfg->{ $klass } // {} }, %{$opts} };
+
+   return unless $composite->DOES('Web::Components::Role');
+   return unless $composite->can('new');
+
+   my $comp  = $composite->new($attr);
 
    $compos->{ $comp->moniker } = $comp;
    return;
