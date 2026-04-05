@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Navigation/menu supports entry without link
           - Component loading checks for does Web::Component::Role
           - Adds service worker
           - Makes Context a base class

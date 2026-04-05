@@ -806,11 +806,14 @@ nested lists
 =cut
 
 sub menu {
-   my ($self, $name) = @_;
+   my ($self, $name, $no_link) = @_;
 
    my $lists = $self->_lists;
 
-   push @{$lists->{$self->_name}->[1]}, $name if exists $lists->{$name};
+   if (exists $lists->{$name}) {
+      push @{$lists->{$self->_name}->[1]}, $name;
+      push @{$lists->{$self->_name}->[1]}, [$name => NUL] if $no_link;
+   }
 
    return $self;
 }

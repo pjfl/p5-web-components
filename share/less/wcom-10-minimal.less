@@ -1,5 +1,5 @@
 /* @author  pjfl@cpan.org (Peter Flanigan)
- * @version 0.13.47
+ * @version 0.13.48
  */
 @import "wcom-05-constants";
 *, *::before, *::after {
@@ -261,7 +261,7 @@ footer {
         }
         &.context {
             width: 100%;
-            li.context:has(> a:hover, > form:hover) > .slide-out {
+            li.context:has(> a:hover, > form:hover, > span:hover) > .slide-out {
                 overflow-x: hidden; width: @nav-context-width;
             }
         }
@@ -595,23 +595,6 @@ footer {
 }
 .documentation {
     counter-reset: docheader; font-family: #fonts[sans];
-    &:not(.input-field) {
-        h1 {
-            font-size: 2rem;
-        }
-        h2 {
-            font-size: 1.75rem;
-        }
-        h3 {
-            font-size: 1.5rem;
-        }
-        h4 {
-            font-size: 1.25rem;
-        }
-        h5 {
-            font-size: 1rem;
-        }
-    }
     a {
         color: @text-link;
     }
@@ -627,14 +610,38 @@ footer {
             font-family: #fonts[mono]; font-size: @doc-code-font-size;
         }
     }
-    .argument-list, .contents-list {
-        background: var(--bg-light);
-        border: 1px solid @line-border; border-radius: 5px;
-        border-spacing: @field-col-gap; text-align: left;
-        margin-bottom: @field-row-gap;
-    }
-    .method {
-        border-top: 1px solid @line-border;
+    &.restapi {
+        display: flex;
+        h1 {
+            font-size: 2rem;
+        }
+        h2 {
+            font-size: 1.75rem;
+        }
+        h3 {
+            font-size: 1.5rem;
+        }
+        h4 {
+            font-size: 1.25rem;
+        }
+        h5 {
+            font-size: 1rem;
+        }
+        .argument-list, .contents-list {
+            background: var(--bg-light);
+            border: 1px solid @line-border; border-radius: 5px;
+            border-spacing: @field-col-gap; text-align: left;
+            margin-bottom: @field-row-gap;
+        }
+        .entity-index {
+            min-width: 10rem;
+            .contents-list {
+                width: 100%;
+            }
+        }
+        .method {
+            border-top: 1px solid @line-border;
+        }
     }
 }
 .file-preview {
@@ -796,21 +803,6 @@ footer {
             .loading {
                 margin: 1rem;
             }
-        }
-    }
-}
-.restapi.documentation {
-    display: flex;
-    .entity h2 {
-        counter-increment: docheader;
-        &::before {
-            content: counter(docheader) '. ';
-        }
-    }
-    .entity-index {
-        min-width: 10rem;
-        .contents-list {
-            width: 100%;
         }
     }
 }
