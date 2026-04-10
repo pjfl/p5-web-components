@@ -47,8 +47,8 @@ Defines the following attributes;
 
 =item C<authorised_method>
 
-Defaults to the string B<is_authorised>. A method on the C<model> object which
-is called with C<context> and the action path to an endpoint. Returns true if
+Defaults to the string B<is_authorised>. A method on the C<context> object which
+is called with the action path to an endpoint. Returns true if
 access is authorised, false otherwise
 
 =cut
@@ -876,11 +876,9 @@ sub _get_nav_label {
 sub _is_authorised {
    my ($self, $actionp) = @_;
 
-   my ($moniker) = split m{ / }mx, $actionp;
-   my $model     = $self->context->models->{$moniker};
-   my $is_auth   = $self->authorised_method;
+   my $method = $self->authorised_method;
 
-   return $model->$is_auth($self->context, $actionp);
+   return $self->context->$method($actionp);
 }
 
 sub _uri {

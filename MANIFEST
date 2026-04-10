@@ -3,6 +3,7 @@ Changes
 MANIFEST
 lib/Web/Components.pm
 lib/Web/Components/ConfigLoader.pm
+lib/Web/Components/Context.pm
 lib/Web/Components/LeakChecker.pm
 lib/Web/Components/Loader.pm
 lib/Web/Components/Model.pm

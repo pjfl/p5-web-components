@@ -76,7 +76,7 @@ order
 has 'controllers' =>
    is      => 'lazy',
    isa     => HashRef[Object],
-   default => sub { load_components 'Controller', application => $_[0] };
+   default => sub { load_components 'Controller', application => shift };
 
 =item C<models>
 
@@ -88,10 +88,10 @@ has 'models' =>
    is      => 'lazy',
    isa     => HashRef[Object],
    default => sub {
-      my $self   = shift;
-      my @others = (controllers => $self->controllers, views => $self->views);
+      my $self  = shift;
+      my @comps = (controllers => $self->controllers, views => $self->views);
 
-      return load_components 'Model', application => $self, @others
+      return load_components 'Model', application => $self, @comps;
    };
 
 =item C<views>
@@ -103,13 +103,13 @@ A hash reference of view object references
 has 'views' =>
    is      => 'lazy',
    isa     => HashRef[Object],
-   default => sub { load_components 'View', application => $_[0] };
+   default => sub { load_components 'View', application => shift };
 
 # Private attributes
 has '_action_suffix' =>
    is      => 'lazy',
    isa     => NonEmptySimpleStr,
-   default => sub { deref $_[0]->config, 'action_suffix', '_action' };
+   default => sub { deref shift->config, 'action_suffix', '_action' };
 
 has '_config_attr' =>
    is      => 'lazy',
@@ -133,7 +133,7 @@ has '_routes' => is => 'lazy', isa => ArrayRef, builder => '_build__routes';
 has '_tunnel_method' =>
    is      => 'lazy',
    isa     => NonEmptySimpleStr,
-   default => sub { deref $_[0]->config, 'tunnel_method', 'from_request' };
+   default => sub { deref shift->config, 'tunnel_method', 'from_request' };
 
 =back
 
@@ -254,11 +254,11 @@ sub _parse_sig {
 
    return @{$args} if exists $self->models->{$args->[0]};
 
-   my ($moniker, $method) = split m{ / }mx, $args->[0], 2;
+   my ($moniker, $method_chain) = split m{ / }mx, $args->[0], 2;
 
    if (exists $self->models->{$moniker}) {
       shift @{$args};
-      return $moniker, $method, @{$args};
+      return $moniker, $method_chain, @{$args};
    }
 
    return;

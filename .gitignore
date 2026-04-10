@@ -19,6 +19,8 @@ nytprof.out
 pm_to_blib
 README
 README.pod
+lib/Web/Components/API
+lib/Web/Components/API.pm
 lib/Web/Components/Forms
 lib/Web/Components/Forms.pm
 lib/Web/Components/Role/TT.pm
