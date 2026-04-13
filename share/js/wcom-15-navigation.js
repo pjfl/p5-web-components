@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.46
+    @version 0.13.50
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -115,6 +115,7 @@ WCom.Navigation = (function() {
             else {
                const href = el.href + '';
                if (href.length && url == href.substring(0, url.length)
+                   && !href.match(/#/)
                    && !el.getAttribute('clicklistener')) {
                   const handler = this.menu.clickHandler(href, options);
                   el.addEventListener('click', handler);
@@ -602,8 +603,10 @@ WCom.Navigation = (function() {
          return true;
       }
       _isCurrentHref(href) {
-         return history.state && history.state.href.split('?')[0]
-            == href.split('?')[0] ? true : false;
+         if (!history.state) return false;
+         const stateHref = history.state.href.split('?')[0];
+         const itemHref = href.split('?')[0];
+         return stateHref == itemHref ? true : false;
       }
       _mobileClickHandler(item) {
          return function(event) {
