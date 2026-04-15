@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds Tabs. Creates and displays multiple persistent nav links
           - CSS documentation improvements
           - Navigation uses context is_authorised
           - Navigation/menu supports entry without link

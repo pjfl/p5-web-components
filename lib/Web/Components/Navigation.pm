@@ -269,9 +269,13 @@ has 'link_display_class' =>
 An optional string which if supplied will provide the JS with an endpoint
 to log messages. No default
 
+=item C<has_logger_action>
+
+Predicate
+
 =cut
 
-has 'logger_action' => is => 'ro', isa => Str;
+has 'logger_action' => is => 'ro', isa => Str, predicate => TRUE;
 
 =item C<logo>
 
@@ -331,16 +335,16 @@ has '_menu_location' =>
 
 =item C<message_action>
 
-An immutable string which defaults to B<api/collect_messages>. This is the
-action path for the API call that the message object in the JS will make to
-collect messages
+This is the action path for the API call that the message object in the JS will
+make to collect messages. An immutable string with no default
+
+=item C<has_message_action>
+
+Predicate
 
 =cut
 
-has 'message_action' =>
-   is      => 'ro',
-   isa     => Str,
-   default => 'api/collect_messages';
+has 'message_action' => is => 'ro', isa => Str, predicate => TRUE;
 
 =item C<messages>
 
@@ -390,6 +394,19 @@ has 'service_worker' =>
          url       => 'service-worker',
       };
    };
+
+=item C<tabs_action>
+
+Provides the JS with an endpoint to store navigation tabs preferences. No
+default
+
+=item C<has_tabs_action>
+
+Predicate
+
+=cut
+
+has 'tabs_action' => is => 'ro', isa => Str, predicate => TRUE;
 
 =item C<title>
 
@@ -482,6 +499,7 @@ has '_data' =>
             'menus'      => $self->_menus,
             'messages'   => $self->_messages,
             'moniker'    => $self->model->moniker,
+            'tabs'       => $self->_tabs,
             'properties' => {
                'base-colour'      => $self->_base_colour,
                'base-url'         => $self->_base_url,
@@ -503,6 +521,7 @@ has '_data' =>
                'skin'             => $self->_skin,
                'title'            => $self->title,
                'title-abbrev'     => $self->title_abbrev,
+               'title-entry'      => $self->title_entry,
                'verify-token'     => $context->verification_token,
             },
          }),
@@ -558,7 +577,7 @@ has '_logger_uri' =>
    default => sub {
       my $self = shift;
 
-      return json_bool FALSE unless $self->logger_action;
+      return json_bool FALSE unless $self->has_logger_action;
 
       my $context = $self->context;
       my $args    = ['%level'];
@@ -579,13 +598,17 @@ has '_messages' =>
    is      => 'lazy',
    isa     => HashRef,
    default => sub {
-      my $self    = shift;
-      my $context = $self->context;
+      my $self     = shift;
+      my $context  = $self->context;
+      my $messages = { %{$self->messages} };
 
-      return {
-         %{$self->messages},
-         'messages-url' => $context->uri_for_action($self->message_action),
-      };
+      if ($self->has_message_action) {
+         my $url = $context->uri_for_action($self->message_action);
+
+         $messages->{'messages-url'} = $url;
+      }
+
+      return $messages;
    };
 
 has '_name' => is => 'rwp', isa => Str, default => NUL;
@@ -600,6 +623,26 @@ has '_skin' =>
       my $session = $self->context->session;
 
       return $session->can('skin') ? $session->skin : NUL;
+   };
+
+has '_tabs' =>
+   is      => 'lazy',
+   isa     => HashRef,
+   default => sub {
+      my $self = shift;
+
+      return { 'preference-url' => $self->_tabs_preference_url };
+   };
+
+has '_tabs_preference_url' =>
+   is      => 'lazy',
+   isa     => Str|ScalarRef,
+   default => sub {
+      my $self = shift;
+
+      return json_bool FALSE unless $self->has_tabs_action;
+
+      return $self->context->uri_for_action($self->tabs_action)->as_string;
    };
 
 =back

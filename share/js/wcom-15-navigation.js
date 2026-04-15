@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.50
+    @version 0.13.51
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -78,14 +78,14 @@ WCom.Navigation = (function() {
          this.skin             = this.properties['skin'];
          this.title            = this.properties['title'];
          this.titleAbbrev      = this.properties['title-abbrev'];
+         this.titleEntry       = this.properties['title-entry'];
          this.token            = this.properties['verify-token'];
          this.contentContainer = document.getElementById(this.containerName);
          this.contentPanel     = document.getElementById(this.contentName);
          this.footer           = new Footer(this, config['footer']);
          this.menu             = new Menus(this, config['menus']);
          this.messages         = new Messages(config['messages']);
-         this.titleEntry       = 'Loading';
-         container.append(this._renderTitle());
+         this.tabs             = new Tabs(this, config['tabs']);
          window.addEventListener('popstate', this.popstateHandler());
          window.addEventListener('resize', this.resizeHandler());
          if (this.features.includes('relative') && this.baseColour) {
@@ -256,6 +256,7 @@ WCom.Navigation = (function() {
             await this.menu.loadMenuData(url);
             this._setHeadTitle();
             this.menu.render();
+            this.tabs.select(url);
          }
       }
       /** @function
@@ -343,11 +344,6 @@ WCom.Navigation = (function() {
             if (++count > 3) break;
          }
          this.logger('info', 'Recovered state ' + count + ' ' + state.href);
-      }
-      _renderTitle() {
-         const title = this.logo.length ? [this.menu.iconImage(this.logo)] : [];
-         title.push(this.h.span({ className: 'title-text' }, this.title));
-         return this.h.div({ className: 'nav-title' }, title);
       }
       _setHeadTitle() {
          const head = (document.getElementsByTagName('head'))[0];
@@ -805,6 +801,111 @@ WCom.Navigation = (function() {
    }
    Object.assign(Messages.prototype, WCom.Util.Bitch);
    Object.assign(Messages.prototype, WCom.Util.Markup);
+   /** @class
+       @classdesc Tabs object creates and displays multiple navigation tabs
+       @alias Navigation/Tabs
+   */
+   class Tabs {
+      /** @constructs
+          @desc Constructs Tabs object
+          @param {object} navigation An instance of the
+             {@link Navigation/Navigation Navigation} object
+      */
+      constructor(navigation, options) {
+         this.navigation = navigation;
+         this.icons = navigation.icons;
+         this.logo = navigation.logo;
+         this.menu = navigation.menu;
+         this.title = navigation.title;
+         this.preferenceURL = options['preference-url'];
+         this.index = 0;
+         this.tabs = {};
+         this.tabbar = this._renderTabBar();
+         navigation.container.append(this.tabbar);
+         this._renderTabs();
+      }
+      /** @function
+          @desc Selects the active tab
+          @param {string} url URL of currently active page
+      */
+      select(url) {
+         url.searchParams.delete('navigation');
+         for (const id of Object.keys(this.tabs)) {
+            const tab = document.getElementById(id);
+            if (!tab) continue;
+            if (url.pathname == this.tabs[id].url.pathname) {
+               tab.classList.remove('unselected');
+            }
+            else { tab.classList.add('unselected') }
+         }
+      }
+      _renderTabBar() {
+         const addIcon = this._tabIcon('add');
+         addIcon.addEventListener('click', this._open.bind(this));
+         const addTab = this.h.div({ className: 'nav-tab-add' }, addIcon);
+         const title = this.logo.length ? [this.menu.iconImage(this.logo)] : [];
+         title.push(this.h.span({ className: 'title-text' }, this.title));
+         const titleTab = this.h.div({ className: 'nav-title' }, title);
+         const tabs = [titleTab, addTab];
+         return this.h.div({ className: 'nav-tab-bar' }, tabs);
+      }
+      async _renderTabs() {
+         const { object } = await this.bitch.sucks(this.preferenceURL);
+         if (!object) return;
+         for (const id of Object.keys(object).sort()) {
+            this._renderTab(object[id].title, new URL(object[id].url));
+         }
+         this.select(new URL(window.location.href));
+      }
+      _renderTab(title, url) {
+         const id = this._nextId();
+         this.tabs[id] = { title, url };
+         const anchor = this.h.a({ href: url }, title);
+         const closeIcon = this._tabIcon('close');
+         closeIcon.addEventListener('click', this._close(id));
+         const els = [anchor, closeIcon];
+         const tab = this.h.div({ id, className: 'nav-tab' }, els);
+         this.navigation.addEventListeners(tab);
+         this.tabbar.insertBefore(tab, this.tabbar.lastChild);
+      }
+      _close(id) {
+         return function(event) {
+            this.tabbar.removeChild(document.getElementById(id));
+            delete this.tabs[id];
+            this._storeTabs();
+         }.bind(this);
+      }
+      _findTab(url) {
+         for (const id of Object.keys(this.tabs)) {
+            if (url.pathname == this.tabs[id].url.pathname) return true;
+         }
+         return false;
+      }
+      _nextId() {
+         const index = this.index + 1;
+         const id = `nav-tab-${index}`;
+         this.index += 1;
+         return id;
+      }
+      _open() {
+         const url = new URL(window.location.href);
+         if (this._findTab(url)) return;
+         this._renderTab(this.navigation.titleEntry, url);
+         this._storeTabs();
+      }
+      _storeTabs() {
+         if (!this.preferenceURL) return;
+         const options = { json: JSON.stringify({ data: this.tabs }) };
+         this.bitch.blows(this.preferenceURL, options);
+      }
+      _tabIcon(name) {
+         const icons = this.icons;
+         const className = `nav-tab-${name}icon`;
+         return this.h.icon({ className, height: 24, icons, name, width: 24 });
+      }
+   }
+   Object.assign(Tabs.prototype, WCom.Util.Bitch);
+   Object.assign(Tabs.prototype, WCom.Util.Markup);
    /** @class
        @classdesc Creates the Navigation object on page load. These are the
           public methods exposed by this package
