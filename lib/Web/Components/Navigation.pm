@@ -514,12 +514,10 @@ has '_data' =>
                'icons'            => $self->icons,
                'link-display'     => $self->link_display,
                'location'         => $self->menu_location,
-               'logo'             => $self->logo,
                'logger-url'       => $self->_logger_uri,
                'media-break'      => $self->media_break,
                'service-worker'   => $self->service_worker,
                'skin'             => $self->_skin,
-               'title'            => $self->title,
                'title-abbrev'     => $self->title_abbrev,
                'title-entry'      => $self->title_entry,
                'verify-token'     => $context->verification_token,
@@ -631,7 +629,11 @@ has '_tabs' =>
    default => sub {
       my $self = shift;
 
-      return { 'preference-url' => $self->_tabs_preference_url };
+      return {
+         'logo'           => $self->logo,
+         'preference-url' => $self->_tabs_preference_url,
+         'title'          => $self->title,
+      };
    };
 
 has '_tabs_preference_url' =>

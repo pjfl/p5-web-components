@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.51
+    @version 0.13.52
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -41,17 +41,16 @@ WCom.Navigation = (function() {
           @property {string} config.properties.content-name
           @property {string} config.properties.content-icon
           @property {string} config.properties.content-title
-          @property {number} config.properties.dom-wait
+          @property {integer} config.properties.dom-wait
           @property {array}  config.properties.features
           @property {string} config.properties.icons
           @property {string} config.properties.link-display
           @property {string} config.properties.location
           @property {string} config.properties.logger-url
-          @property {string} config.properties.logo
-          @property {string} config.properties.media-break
+          @property {integer} config.properties.media-break
           @property {string} config.properties.skin
-          @property {string} config.properties.title
           @property {string} config.properties.title-abbrev
+          @property {string} config.properties.title-entry
           @property {string} config.properties.verify-token
        */
       constructor(container, config) {
@@ -72,11 +71,9 @@ WCom.Navigation = (function() {
          this.linkDisplay      = this.properties['link-display'];
          this.location         = this.properties['location'];
          this.loggerURL        = this.properties['logger-url'];
-         this.logo             = this.properties['logo'];
          this.mediaBreak       = this.properties['media-break'];
          this.serviceWorker    = this.properties['service-worker'];
          this.skin             = this.properties['skin'];
-         this.title            = this.properties['title'];
          this.titleAbbrev      = this.properties['title-abbrev'];
          this.titleEntry       = this.properties['title-entry'];
          this.token            = this.properties['verify-token'];
@@ -810,14 +807,17 @@ WCom.Navigation = (function() {
           @desc Constructs Tabs object
           @param {object} navigation An instance of the
              {@link Navigation/Navigation Navigation} object
+          @param {object} options
+          @param {string} options.logo
+          @param {string} options.preference-url
+          @param {string} options.title
       */
       constructor(navigation, options) {
          this.navigation = navigation;
-         this.icons = navigation.icons;
-         this.logo = navigation.logo;
-         this.menu = navigation.menu;
-         this.title = navigation.title;
+         this.enabled = navigation.features.includes('tabs') ? true : false;
+         this.logo = options['logo'];
          this.preferenceURL = options['preference-url'];
+         this.title = options['title'] || '[No Title]';
          this.index = 0;
          this.tabs = {};
          this.tabbar = this._renderTabBar();
@@ -840,16 +840,19 @@ WCom.Navigation = (function() {
          }
       }
       _renderTabBar() {
+         const menu = this.navigation.menu;
          const addIcon = this._tabIcon('add');
          addIcon.addEventListener('click', this._open.bind(this));
          const addTab = this.h.div({ className: 'nav-tab-add' }, addIcon);
-         const title = this.logo.length ? [this.menu.iconImage(this.logo)] : [];
+         const title = this.logo.length ? [menu.iconImage(this.logo)] : [];
          title.push(this.h.span({ className: 'title-text' }, this.title));
          const titleTab = this.h.div({ className: 'nav-title' }, title);
-         const tabs = [titleTab, addTab];
+         const tabs = [titleTab];
+         if (this.enabled) tabs.push(addTab);
          return this.h.div({ className: 'nav-tab-bar' }, tabs);
       }
       async _renderTabs() {
+         if (!this.enabled || !this.preferenceURL) return;
          const { object } = await this.bitch.sucks(this.preferenceURL);
          if (!object) return;
          for (const id of Object.keys(object).sort()) {
@@ -858,6 +861,7 @@ WCom.Navigation = (function() {
          this.select(new URL(window.location.href));
       }
       _renderTab(title, url) {
+         if (!title || !url) return;
          const id = this._nextId();
          this.tabs[id] = { title, url };
          const anchor = this.h.a({ href: url }, title);
@@ -899,7 +903,7 @@ WCom.Navigation = (function() {
          this.bitch.blows(this.preferenceURL, options);
       }
       _tabIcon(name) {
-         const icons = this.icons;
+         const icons = this.navigation.icons;
          const className = `nav-tab-${name}icon`;
          return this.h.icon({ className, height: 24, icons, name, width: 24 });
       }

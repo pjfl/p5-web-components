@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Navigation tabs enabled by feature
           - Adds Tabs. Creates and displays multiple persistent nav links
           - CSS documentation improvements
           - Navigation uses context is_authorised
