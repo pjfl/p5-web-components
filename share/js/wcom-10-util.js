@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.46
+    @version 0.13.53
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -108,30 +108,32 @@ WCom.Util = (function() {
          this._setHeaders(options);
          options.method ||= 'GET';
          const response = await fetch(url, options);
+         const status = response.status;
          if (!response.ok) {
             if (want == 'object') {
                console.warn(`HTTP error! Status: ${response.statusText}`);
-               return { object: false, status: response.status };
+               return { object: false, status };
             }
             throw new Error(`HTTP error! Status: ${response.statusText}`);
          }
          const headers = response.headers;
-         const location = headers.get('location');
+         const location = headers.get('Location');
+         const contentType = headers.get('Content-Type');
+         const contentDisp = headers.get('Content-Disposition');
          if (location) return { location, status: 302 };
          if (want == 'blob') {
             const blob = await response.blob();
-            const contentDisp = headers.get('Content-Disposition');
             const disposition = this._dispositionParser(contentDisp);
             const filename = disposition ? disposition.filename : '';
-            return { blob, filename, status: response.status };
+            return { blob, filename, status };
          }
-         if (want == 'object') return {
-            object: await response.json(), status: response.status
-         };
-         if (want == 'text') return {
-            status: response.status,
-            text: await new Response(await response.blob()).text()
-         };
+         if (want == 'object' && contentType.match(/^application\/json/)) {
+            return { object: await response.json(), status };
+         }
+         if (want == 'text') {
+            const text = await new Response(await response.blob()).text();
+            return { status, text };
+         }
          return { response };
       }
       _newHeaders() {
@@ -193,7 +195,7 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for an anchor element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
+          @param {array} content An array of content appended to the element
           @returns {string}
       */
       a(attr, content)        { return this._tag('a', attr, content) }
@@ -203,7 +205,7 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for a div element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
+          @param {array} content An array of content appended to the element
           @returns {string}
       */
       div(attr, content)      { return this._tag('div', attr, content) }
@@ -212,14 +214,14 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for a form element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
+          @param {array} content An array of content appended to the element
           @returns {string}
       */
       form(attr, content)     { return this._tag('form', attr, content) }
       /** @function
           @desc Return markup for an h1 element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
+          @param {array} content An array of content appended to the element
           @returns {string}
       */
       h1(attr, content)       { return this._tag('h1', attr, content) }
@@ -230,14 +232,14 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for an image element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
+          @param {array} content An array of content appended to the element
           @returns {string}
       */
       img(attr)               { return this._tag('img', attr) }
       /** @function
           @desc Return markup for an input element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
+          @param {array} content An array of content appended to the element
           @returns {string}
       */
       input(attr, content)    { return this._tag('input', attr, content) }
@@ -250,7 +252,7 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for a select element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
+          @param {array} content An array of content appended to the element
           @returns {string}
       */
       select(attr, content)   { return this._tag('select', attr, content) }
@@ -262,7 +264,7 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for a textarea element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
+          @param {array} content An array of content appended to the element
           @returns {string}
       */
       textarea(attr, content) { return this._tag('textarea', attr, content) }
@@ -275,7 +277,7 @@ WCom.Util = (function() {
       /** @function
           @desc Return markup for a button input element
           @param {object} attr Attributes to set on the document element
-          @param {array} content An array of content appened to the element
+          @param {array} content An array of content appended to the element
           @returns {string}
       */
       button(attr, content) {

@@ -2,7 +2,7 @@
     @file Web Components - Modal
     @classdesc Displays modal dialogues
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.42
+    @version 0.13.53
     @alias WCom/Modal
 */
 WCom.Modal = (function() {
@@ -79,7 +79,7 @@ WCom.Modal = (function() {
    }
    Object.assign(Backdrop.prototype, WCom.Util.Markup);
    /** @class
-       @classdesc Creates buttons for the modal dialogue
+       @classdesc Creates buttons for the modal dialog
        @alias Modal/Button
    */
    class Button {
@@ -95,7 +95,6 @@ WCom.Modal = (function() {
              is appended to this
           @property {string} options.text Button/link text to display
           @property {string} options.title Title text for the button element
-          @property {string} options.type Either 'button' or 'a'
           @property {string} options.url The 'href' for the anchor created
       */
       constructor(options = {}) {
@@ -408,7 +407,7 @@ WCom.Modal = (function() {
    }
    Object.assign(Drag.prototype, WCom.Util.Markup);
    /** @class
-       @classdesc Implements the modal dialogues
+       @classdesc Implements the modal dialog
        @alias Modal/Modal
    */
    class Modal {
@@ -454,7 +453,7 @@ WCom.Modal = (function() {
          window.addEventListener('keydown', this.keyHandler);
       }
       /** @function
-          @desc Closes the open modal dialogue
+          @desc Closes the open modal dialog
        */
       close() {
          if (!this.open) return;
@@ -642,7 +641,7 @@ WCom.Modal = (function() {
       /** @function
           @desc Creates a container for the dialogue content and fetches the
              content from the server
-          @returns {element}
+          @returns {element} The modal frame container
        */
       createModalContainer() {
          const spinner = this._createSpinner();
@@ -1010,8 +1009,18 @@ WCom.Modal = (function() {
    };
    let CurrentModal;
    /** @module Modal
+       @desc Implements modal dialogs. Three type; regular, alert, and selector
     */
    return {
+      /** @function
+          @desc Accessor/mutator for the current modal
+          @param {object} modal The modal to set as current
+          @returns {object} The current modal
+      */
+      current: function(modal) {
+         if (modal) CurrentModal = modal;
+         return CurrentModal;
+      },
       /** @function
           @desc Closes the current modal
       */
@@ -1029,7 +1038,7 @@ WCom.Modal = (function() {
        */
       create,
       /** @function
-          @desc Creates and renders a modal dialogue alert
+          @desc Creates and renders a modal alert dialog
           @param {object} options
           @property {function} options.callback Called when the Okay button is
              clicked
@@ -1060,7 +1069,7 @@ WCom.Modal = (function() {
          return modal;
       },
       /** @function
-          @desc Creates a modal dialogue selector
+          @desc Creates a modal selector dialog
           @param {object} options
           @property {string} options.callback Evaluated when the selector value
              changes
@@ -1089,15 +1098,6 @@ WCom.Modal = (function() {
             modal.render();
             return modal;
          }
-      },
-      /** @function
-          @desc Accessor/mutator for the current modal
-          @param {object} modal The modal to set as current
-          @returns {object} The current modal
-      */
-      current: function(modal) {
-         if (modal) CurrentModal = modal;
-         return CurrentModal;
       }
    };
 })();

@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.52
+    @version 0.13.53
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -33,25 +33,54 @@ WCom.Navigation = (function() {
              {@link Navigation/Messages Messages} object
           @property {object} config.properties.service-worker Initialises the
              service worker push notifications
-          @property {string} config.properties.base-colour
-          @property {string} config.properties.base-url
-          @property {string} config.properties.confirm
-          @property {string} config.properties.container-layout
-          @property {string} config.properties.container-name
-          @property {string} config.properties.content-name
-          @property {string} config.properties.content-icon
-          @property {string} config.properties.content-title
-          @property {integer} config.properties.dom-wait
-          @property {array}  config.properties.features
-          @property {string} config.properties.icons
-          @property {string} config.properties.link-display
-          @property {string} config.properties.location
-          @property {string} config.properties.logger-url
-          @property {integer} config.properties.media-break
-          @property {string} config.properties.skin
-          @property {string} config.properties.title-abbrev
-          @property {string} config.properties.title-entry
-          @property {string} config.properties.verify-token
+          @property {string} config.properties.base-colour If the 'relative'
+             feature is enabled sets this colour value on the document body
+             as the '--bg-base' attribute
+          @property {string} config.properties.base-url Limits the scope of
+             {@link Navigation/Navigation#addEventListeners addEventListeners}.
+             Used by
+             {@link Navigation/Navigation#registerServiceWorker registerServiceWorker}
+             to reach the endpoints provided by it's configuration
+          @property {string} config.properties.confirm Used by
+             {@link Navigation/Menus#confirmHandler confirmHandler}. The
+             '*' character is replaced the the name passed to the method
+          @property {string} config.properties.container-layout This CSS class
+             name is added the container of the panel containing the page
+             content
+          @property {string} config.properties.container-name This CSS class
+             name is the class name for the the container of the panel
+             contaning the page content
+          @property {string} config.properties.content-name The id and CSS
+             class name of the panel containing the page content
+          @property {string} config.properties.control-icon The name of the
+             icon displayed by the control menu
+          @property {string} config.properties.control-title Tip text displayed
+             when hovering over the control menu icon
+          @property {number} config.properties.dom-wait How long to wait in
+             seconds for the DOM to stabalise
+          @property {array}  config.properties.features List of feature names.
+             If a feature is present then it is enabled
+          @property {string} config.properties.icons URI is the icons SVG
+             containing the symbols used on pages
+          @property {string} config.properties.link-display Can be 'both',
+             'icon', or 'text'. Determines what is dispayed by
+             {@link Navigation/Menus Menus}
+          @property {string} config.properties.location Can by 'header' or
+             'sidebar'. The location of the
+             {@link Navigation/Menus Menus} object
+          @property {string} config.properties.logger-uri URI of the endpoint
+             where log message can be stored
+          @property {integer} config.properties.media-break When the window
+             width is less than this force link display to 'icon'
+          @property {string} config.properties.skin The name of the current
+             skin. On the server this selects which CSS and templates are
+             used
+          @property {string} config.properties.title-abbrev Forms the first
+             part of the text used in the browser tab and back button
+          @property {string} config.properties.title-entry Forms the second
+             part of the text used in the browser tab and back button
+          @property {string} config.properties.verify-token Form posts
+             from the menus require this CSRF token to succeed
        */
       constructor(container, config) {
          this.container        = container;
@@ -70,7 +99,7 @@ WCom.Navigation = (function() {
          this.icons            = this.properties['icons'];
          this.linkDisplay      = this.properties['link-display'];
          this.location         = this.properties['location'];
-         this.loggerURL        = this.properties['logger-url'];
+         this.loggerURI        = this.properties['logger-uri'];
          this.mediaBreak       = this.properties['media-break'];
          this.serviceWorker    = this.properties['service-worker'];
          this.skin             = this.properties['skin'];
@@ -124,11 +153,11 @@ WCom.Navigation = (function() {
       /** @function
           @desc Server side logging. Also console logs/warns
           @param {string} level One of; alert, debug, error, info, or warn
-          @param {string} message
+          @param {string} message The message that is logged on the server
       */
       logger(level, message) {
-         if (this.loggerURL) {
-            const url = new URL(this.loggerURL.replace(/\%level/, level));
+         if (this.loggerURI) {
+            const url = new URL(this.loggerURI.replace(/\%level/, level));
             this.bitch.blows(url, { json: JSON.stringify({ data: message }) });
          }
 
@@ -174,7 +203,7 @@ WCom.Navigation = (function() {
       }
       /** @function
           @async
-          @desc Register service worker
+          @desc Register service worker. Logs success at the 'info' level
       */
       async registerServiceWorker() {
          const config = this.serviceWorker;
@@ -233,7 +262,7 @@ WCom.Navigation = (function() {
       /** @function
           @async
           @desc Fetch and render the specified location
-          @param {string} href The location to fetch and render
+          @param {string} href The URI of the location to fetch and render
       */
       async renderLocation(href) {
          const url = new URL(href);
@@ -369,11 +398,11 @@ WCom.Navigation = (function() {
           @param {object} navigation An instance of the
              {@link Navigation/Navigation Navigation} object
           @param {object} config Optional configuration provided by the server
-          @properties {string} config.footer-id The id of the footer element.
+          @property {string} config.footer-id The id of the footer element.
              Defaults to 'footer'
-          @properties {integer} config.token-lifetime Time in seconds that the
+          @property {integer} config.token-lifetime Time in seconds that the
              CSRF token will last for. Defaults to one hour
-          @properties {integer} config.update-frequency How frequently in
+          @property {integer} config.update-frequency How frequently in
              seconds to update the CSRF token timeout counter. Defaults to
              one minute
       */
@@ -390,7 +419,7 @@ WCom.Navigation = (function() {
           @desc Fetch and render the footer contents. Attaches event handlers
           @param {object} options Configuration for the fetch and render
           @property {object} options.action Key used to cache footer markup
-          @property {object} options.url URL to fetch footer markup from
+          @property {object} options.url URI to fetch footer markup from
       */
       async render(source) {
          this.sessionDT = new Date();
@@ -476,9 +505,11 @@ WCom.Navigation = (function() {
       }
       /** @function
           @desc Returns a bound function which handles the 'click' event
-          @param {string} href
+             by rendering the new location
+          @param {string} href URI of the location to render
           @param {object} options
-          @property {object} options.renderLocation
+          @property {object} options.renderLocation Optional custom renderer
+             for the location
           @returns {function}
       */
       clickHandler(href, options = {}) {
@@ -496,7 +527,9 @@ WCom.Navigation = (function() {
       }
       /** @function
           @desc Returns a bound function which handles dialog confirmation
-          @param {string} name
+          @param {string} name Name of the entity being operated on.
+             Substituted in for a '*' character if it appears in the
+             confirmation message
           @returns {function}
       */
       confirmHandler(name) {
@@ -512,7 +545,7 @@ WCom.Navigation = (function() {
       /** @function
           @desc Returns either an image element or an icon element if icons
              are available
-          @param {string} icon Either an icon name or a URL for an image
+          @param {string} icon Either an icon name or a URI for an image
           @returns {element}
       */
       iconImage(icon) {
@@ -538,7 +571,8 @@ WCom.Navigation = (function() {
       /** @function
           @async
           @desc Fetches the menu data. Updates this objects 'config' attribute
-          @param {string} url
+          @param {string} url Server endpoint from which to fetch the menu
+             data
       */
       async loadMenuData(url) {
          const state = { href: url + '' };
@@ -551,6 +585,7 @@ WCom.Navigation = (function() {
          }
          this.config = object['menus'];
          this.token = object['verify-token'];
+         this.navigation.authenticated = object['authenticated'];
          this.navigation.containerLayout = object['container-layout'];
          this.navigation.titleEntry = object['title-entry'] || 'Not found';
          this.navigation.footer.render(object['footer-config']);
@@ -574,9 +609,10 @@ WCom.Navigation = (function() {
       }
       /** @function
           @desc Returns a bound function that handles the 'submit' event
-          @param {element} form
+          @param {element} form The DOM form element being submitted
           @param {object} options
-          @property {function} options.onUnload
+          @property {function} options.onUnload An optional custom 'onUnload'
+             event handler called in place of the default one
           @returns {function}
       */
       submitHandler(form, options = {}) {
@@ -744,7 +780,7 @@ WCom.Navigation = (function() {
              Defaults to 3
           @property {integer} options.display-time How long to display each
              message. Defaults to 20 seconds
-          @property {string} options.messages-url Where to fetch the messages
+          @property {string} options.messages-uri Where to fetch the messages
       */
       constructor(options) {
          const attr = { className: 'messages-panel', id: 'messages' };
@@ -752,7 +788,7 @@ WCom.Navigation = (function() {
          document.body.append(this.panel);
          this.bufferLimit = options['buffer-limit'] || 3;
          this.displayTime = options['display-time'] || 20;
-         this.messagesURL = options['messages-url'];
+         this.messagesURI = options['messages-uri'];
          this.items = [];
       }
       /** @function
@@ -769,7 +805,7 @@ WCom.Navigation = (function() {
          const url = new URL(href);
          const mid = url.searchParams.get('mid');
          if (!mid) return;
-         const messagesURL = new URL(this.messagesURL);
+         const messagesURL = new URL(this.messagesURI);
          messagesURL.searchParams.set('mid', mid);
          const { object } = await this.bitch.sucks(messagesURL);
          if (!object) return;
@@ -808,15 +844,17 @@ WCom.Navigation = (function() {
           @param {object} navigation An instance of the
              {@link Navigation/Navigation Navigation} object
           @param {object} options
-          @param {string} options.logo
-          @param {string} options.preference-url
-          @param {string} options.title
+          @property {string} options.logo URI of the logo image file
+          @property {string} options.preference-uri URI of the persistance
+             endpoint
+          @property {string} options.title Displayed with the logo in the
+             header
       */
       constructor(navigation, options) {
          this.navigation = navigation;
          this.enabled = navigation.features.includes('tabs') ? true : false;
          this.logo = options['logo'];
-         this.preferenceURL = options['preference-url'];
+         this.preferenceURL = options['preference-uri'];
          this.title = options['title'] || '[No Title]';
          this.index = 0;
          this.tabs = {};
@@ -826,7 +864,7 @@ WCom.Navigation = (function() {
       }
       /** @function
           @desc Selects the active tab
-          @param {string} url URL of currently active page
+          @param {object} url URL of currently active page
       */
       select(url) {
          url.searchParams.delete('navigation');
@@ -957,7 +995,7 @@ WCom.Navigation = (function() {
           @desc Calls {@link Navigation/Navigation#logger logger} method on
              the {@link Navigation/Navigation Navigation} object
           @param {string} level One of; alert, debug, error, info, or warn
-          @param {string} message
+          @param {string} message The message which is logged
       */
       logger(level, message) {
          if (!this.navigator) return;

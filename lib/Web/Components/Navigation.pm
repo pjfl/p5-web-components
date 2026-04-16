@@ -311,7 +311,7 @@ has 'media_break' => is => 'ro', isa => PositiveInt, default => 680;
 
 =item C<menu_location>
 
-A lazy string which defaults to B<header>. Can be set to B<sidebar>. Effects
+A lazy string which defaults to B<sidebar>. Can be set to B<header>. Effects
 where the navigation menus are rendered
 
 =cut
@@ -331,7 +331,7 @@ has '_menu_location' =>
    is       => 'ro',
    isa      => Str,
    init_arg => 'menu_location',
-   default  => 'header';
+   default  => 'sidebar';
 
 =item C<message_action>
 
@@ -514,7 +514,7 @@ has '_data' =>
                'icons'            => $self->icons,
                'link-display'     => $self->link_display,
                'location'         => $self->menu_location,
-               'logger-url'       => $self->_logger_uri,
+               'logger-uri'       => $self->_logger_uri,
                'media-break'      => $self->media_break,
                'service-worker'   => $self->service_worker,
                'skin'             => $self->_skin,
@@ -601,9 +601,9 @@ has '_messages' =>
       my $messages = { %{$self->messages} };
 
       if ($self->has_message_action) {
-         my $url = $context->uri_for_action($self->message_action);
+         my $uri = $context->uri_for_action($self->message_action);
 
-         $messages->{'messages-url'} = $url;
+         $messages->{'messages-uri'} = $uri->as_string;
       }
 
       return $messages;
@@ -631,12 +631,12 @@ has '_tabs' =>
 
       return {
          'logo'           => $self->logo,
-         'preference-url' => $self->_tabs_preference_url,
+         'preference-uri' => $self->_tabs_preference_uri,
          'title'          => $self->title,
       };
    };
 
-has '_tabs_preference_url' =>
+has '_tabs_preference_uri' =>
    is      => 'lazy',
    isa     => Str|ScalarRef,
    default => sub {
@@ -720,6 +720,7 @@ sub finalise {
    $self->_add_global;
 
    my $data = {
+      'authenticated'    => json_bool $context->session->authenticated,
       'container-layout' => $self->container_layout,
       'menus'            => $self->_menus,
       'title-entry'      => $self->title_entry,
