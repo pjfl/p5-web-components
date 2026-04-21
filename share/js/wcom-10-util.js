@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.53
+    @version 0.13.54
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -199,7 +199,6 @@ WCom.Util = (function() {
           @returns {string}
       */
       a(attr, content)        { return this._tag('a', attr, content) }
-      canvas(attr, content)   { return this._tag('canvas', attr, content) }
       caption(attr, content)  { return this._tag('caption', attr, content) }
       datalist(attr, content) { return this._tag('datalist', attr, content) }
       /** @function

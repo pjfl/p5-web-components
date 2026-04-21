@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.53
+    @version 0.13.54
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -16,11 +16,7 @@ WCom.Navigation = (function() {
    */
    class Navigation {
       /** @constructs
-          @desc Append the title to the container and applies
-             {@link Navigation/Navigation#popstateHandler popstate}
-             and {@link Navigation/Navigation#resizeHandler resize} handlers to
-             the window. If the 'relative' feature is enabled set the base
-             colour on the style of the body element
+          @desc Constructs the Navigation object
           @param {element} container The application title and control menu
              are rendered here
           @param {object} config
@@ -112,11 +108,9 @@ WCom.Navigation = (function() {
          this.menu             = new Menus(this, config['menus']);
          this.messages         = new Messages(config['messages']);
          this.tabs             = new Tabs(this, config['tabs']);
-         window.addEventListener('popstate', this.popstateHandler());
-         window.addEventListener('resize', this.resizeHandler());
-         if (this.features.includes('relative') && this.baseColour) {
-            document.body.setAttribute('style','--bg-base: ' + this.baseColour);
-         }
+         this._addPopstateListener();
+         this._addResizeListener();
+         this._setBodyStyle();
          this._unregisterServiceWorker();
       }
       /** @function
@@ -168,22 +162,10 @@ WCom.Navigation = (function() {
          else { console.log(message) }
       }
       /** @function
-          @desc Returns a bound function which handles the 'popstate' event.
-             If the event has a state with an href attribute call
-             {@link Navigation/Navigation#renderLocation render location}
-             on that
-          @returns {function}
-      */
-      popstateHandler() {
-         return function(event) {
-            const state = event.state;
-            if (state && state.href) this.renderLocation(state.href);
-         }.bind(this);
-      }
-      /** @function
           @async
-          @desc Posts a form back to the server. Request a partial render of
-             the response
+          @desc {@link Util/Bitch#blows Posts} a form back to the server.
+             Request a partial
+             {@link Navigation/Navigation#renderLocation render} of the response
           @param {string} action The URL to post back to
           @param {element} form The form to post
       */
@@ -238,7 +220,8 @@ WCom.Navigation = (function() {
           @async
           @desc Renders the supplied HTML by replacing the existing panel with
              a new one. If the 'animation' feature is enabled, animate the
-             transition from old to new panels. Scans the new panel for anchors
+             transition from old to new panel.
+             {@link Navigation/Navigation#scan Scans} the new panel for anchors
              and forms
           @param {string} html Markup for the content of the new panel
       */
@@ -261,7 +244,12 @@ WCom.Navigation = (function() {
       }
       /** @function
           @async
-          @desc Fetch and render the specified location
+          @desc {@link Util/Bitch#sucks Fetch} and
+             {@link Navigation/Navigation#renderHTML render}
+             the specified location. Request a partial render. Display
+             {@link Navigation/Messages#render messages} if the response is a
+             redirect. Reload and display
+             {@link Navigation/Menus#render Menus} if the request was successful
           @param {string} href The URI of the location to fetch and render
       */
       async renderLocation(href) {
@@ -286,11 +274,30 @@ WCom.Navigation = (function() {
          }
       }
       /** @function
-          @desc Returns a bound function which handles the 'resize' event
-          @returns {function}
+          @async
+          @desc Scans the panel with the registered onload callbacks then
+             adds 'click' and 'submit' handlers
+          @param {element} panel The element to scan
+          @param {object} options Passed to the onload callbacks and
+             'addEventListeners'. Defaults to an empty object
       */
-      resizeHandler() {
-         return function(event) {
+      async scan(panel, options = {}) {
+         await WCom.Util.Event.onLoad(panel, options);
+         setTimeout(function() {
+            if (this.footer.element) {
+               this.addEventListeners(this.footer.element, options);
+            }
+            this.addEventListeners(panel, options);
+         }.bind(this), 1000 * this.domWait);
+      }
+      _addPopstateListener() {
+         window.addEventListener('popstate', function(event) {
+            const state = event.state;
+            if (state && state.href) this.renderLocation(state.href);
+         }.bind(this));
+      }
+      _addResizeListener() {
+         window.addEventListener('resize', function(event) {
             const linkDisplay = this.linkDisplay;
             const navigation = document.getElementById('navigation');
             const sidebar = document.getElementById('sidebar');
@@ -316,24 +323,7 @@ WCom.Navigation = (function() {
                this.menu.linkDisplay = this.linkDisplay;
                this.menu.render();
             }
-         }.bind(this);
-      }
-      /** @function
-          @async
-          @desc Scans the panel with the registered onload callbacks then
-             adds 'click' and 'submit' handlers
-          @param {element} panel The element to scan
-          @param {object} options Passed to the onload callbacks and
-             'addEventListeners'. Defaults to an empty object
-      */
-      async scan(panel, options = {}) {
-         await WCom.Util.Event.onLoad(panel, options);
-         setTimeout(function() {
-            if (this.footer.element) {
-               this.addEventListeners(this.footer.element, options);
-            }
-            this.addEventListeners(panel, options);
-         }.bind(this), 1000 * this.domWait);
+         }.bind(this));
       }
       _animatedReplace(panel, oldPanel) {
          const container = this.contentContainer;
@@ -370,6 +360,10 @@ WCom.Navigation = (function() {
             if (++count > 3) break;
          }
          this.logger('info', 'Recovered state ' + count + ' ' + state.href);
+      }
+      _setBodyStyle() {
+         if (!this.features.includes('relative') || !this.baseColour) return;
+         document.body.setAttribute('style', '--bg-base: ' + this.baseColour);
       }
       _setHeadTitle() {
          const head = (document.getElementsByTagName('head'))[0];
@@ -992,8 +986,7 @@ WCom.Navigation = (function() {
          return '';
       }
       /** @function
-          @desc Calls {@link Navigation/Navigation#logger logger} method on
-             the {@link Navigation/Navigation Navigation} object
+          @see {@link Navigation/Navigation#logger Logger}
           @param {string} level One of; alert, debug, error, info, or warn
           @param {string} message The message which is logged
       */
@@ -1002,9 +995,7 @@ WCom.Navigation = (function() {
          this.navigator.logger(level, message);
       }
       /** @function
-          @desc Calls
-             {@link Navigation/Navigation#addEventListeners add event listeners}
-             on the {@link Navigation/Navigation Navigation} object
+          @see {@link Navigation/Navigation#addEventListeners|Aadd event listeners}
       */
       onContentLoad() {
          if (!this.navigator) return;
@@ -1018,18 +1009,16 @@ WCom.Navigation = (function() {
          if (this.navigator) this.navigator.registerServiceWorker();
       }
       /** @function
-          @desc Fetches and renders the supplied location by calling
-             {@link Navigation/Navigation#renderLocation render location}
-             on the {@link Navigation/Navigation Navigation} object
+          @desc Fetches and renders the supplied location
+          @see {@link Navigation/Navigation#renderLocation|Render location}
           @param {string} href The location to render
       */
       renderLocation(href) {
          if (this.navigator) this.navigator.renderLocation(href);
       }
       /** @function
-          @desc Fetches and renders any pending server messages by calling
-             {@link Navigation/Messages#render render} on the
-             {@link Navigation/Messages messages} object
+          @desc Fetches and renders any pending server messages
+          @see {@link Navigation/Messages#render Render}
           @param {string} href Should have a message id in the query string
       */
       renderMessage(href) {
@@ -1037,9 +1026,8 @@ WCom.Navigation = (function() {
       }
       /** @function
           @desc Scans the supplied element. Inflates forms and tables then
-             adds 'click' and 'submit' handlers. Calls
-             {@link Navigation/Navigation#scan scan} on the
-             {@link Navigation/Navigation Navigation} object
+             adds 'click' and 'submit' handlers
+          @see {@link Navigation/Navigation#scan Scan}
           @param {element} content The element to scan for links and forms
           @param {object} options Passed to the 'Navigation' scan method
       */
@@ -1049,36 +1037,37 @@ WCom.Navigation = (function() {
    }
    const factory = new Factory();
    /** @module Navigation
+       @desc Takes navigation away from the browser
     */
    return {
       /** @function
-          @desc Calls {@link Navigation/Factory#feature}
+          @see {@link Navigation/Factory#feature|Factory feature}
       */
       feature: factory.feature.bind(factory),
       /** @function
-          @desc Calls {@link Navigation/Factory#logger}
+          @see {@link Navigation/Factory#logger|Factory logger}
       */
       logger: factory.logger.bind(factory),
       /** @function
-          @desc Calls {@link Navigation/Factory#onContentLoad}
+          @see {@link Navigation/Factory#onContentLoad|Factory on content load}
       */
       onContentLoad: factory.onContentLoad.bind(factory),
       /** @function
-          @desc Calls {@link Navigation/Factory#registerServiceWorker}
+          @see {@link Navigation/Factory#registerServiceWorker|Register service worker}
       */
       registerServiceWorker: factory.registerServiceWorker.bind(factory),
       /** @function
-          @desc Calls {@link Navigation/Factory#renderLocation}
+          @see {@link Navigation/Factory#renderLocation|Factory render location}
           @param {string} href The location to render
       */
       renderLocation: factory.renderLocation.bind(factory),
       /** @function
-          @desc Calls {@link Navigation/Factory#renderMessage}
+          @see {@link Navigation/Factory#renderMessage|Factory render message}
           @param {string} href The location to fetch the message from
       */
       renderMessage: factory.renderMessage.bind(factory),
       /** @function
-          @desc Calls {@link Navigation/Factory#scan}
+          @see {@link Navigation/Factory#scan|Factory scan}
           @param {object} content The element to scan for links and forms
           @param {object} options Passed to the 'Navigation' scan method
       */

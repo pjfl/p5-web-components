@@ -186,6 +186,21 @@ An immutable string which defaults to C<footer>. The id of the footer div
 
 has 'footer_id' => is => 'ro', isa => Str, default => 'footer';
 
+=item C<footer_template>
+
+Relative path string to the footer template
+
+=cut
+
+has 'footer_template' =>
+   is      => 'lazy',
+   isa     => Str,
+   default => sub {
+      my $skin = shift->_skin;
+
+      return "${skin}/site/footer.tt";
+   };
+
 =item C<global>
 
 An immutable array reference with an empty default. Contains a list of action
