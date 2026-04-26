@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.54
+    @version 0.13.55
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -189,7 +189,7 @@ WCom.Navigation = (function() {
       */
       async registerServiceWorker() {
          const config = this.serviceWorker;
-         if (!this.features.includes('notifications') || !config) return;
+         if (!config) return;
          const worker = window.navigator.serviceWorker;
          const registration = await worker.register(this.baseURL + config.url);
          let subscription = await registration.pushManager.getSubscription();
@@ -373,7 +373,7 @@ WCom.Navigation = (function() {
       }
       async _unregisterServiceWorker() {
          const config = this.serviceWorker;
-         if (!this.features.includes('notifications') || !config) return;
+         if (!config) return;
          const worker = window.navigator.serviceWorker;
          const registration = await worker.register(this.baseURL + config.url);
          if (registration) registration.unregister();

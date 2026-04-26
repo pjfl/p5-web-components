@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.54
+    @version 0.13.55
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -188,7 +188,7 @@ WCom.Util = (function() {
    /** @class
        @classdesc The document createElement API is sub optimal. The methods
           here mostly generate markup whilst setting attributes and appending
-          content. The class supports more HTML elements than are listed here
+          content
        @alias Util/HtmlTiny
    */
    class HtmlTiny {
@@ -199,7 +199,11 @@ WCom.Util = (function() {
           @returns {string}
       */
       a(attr, content)        { return this._tag('a', attr, content) }
+      /** @function
+      */
       caption(attr, content)  { return this._tag('caption', attr, content) }
+      /** @function
+      */
       datalist(attr, content) { return this._tag('datalist', attr, content) }
       /** @function
           @desc Return markup for a div element
@@ -208,7 +212,11 @@ WCom.Util = (function() {
           @returns {string}
       */
       div(attr, content)      { return this._tag('div', attr, content) }
+      /** @function
+      */
       fieldset(attr, content) { return this._tag('fieldset', attr, content) }
+      /** @function
+      */
       figure(attr, content)   { return this._tag('figure', attr, content) }
       /** @function
           @desc Return markup for a form element
@@ -224,9 +232,17 @@ WCom.Util = (function() {
           @returns {string}
       */
       h1(attr, content)       { return this._tag('h1', attr, content) }
+      /** @function
+      */
       h2(attr, content)       { return this._tag('h2', attr, content) }
+      /** @function
+      */
       h3(attr, content)       { return this._tag('h3', attr, content) }
+      /** @function
+      */
       h4(attr, content)       { return this._tag('h4', attr, content) }
+      /** @function
+      */
       h5(attr, content)       { return this._tag('h5', attr, content) }
       /** @function
           @desc Return markup for an image element
@@ -242,11 +258,23 @@ WCom.Util = (function() {
           @returns {string}
       */
       input(attr, content)    { return this._tag('input', attr, content) }
+      /** @function
+      */
       label(attr, content)    { return this._tag('label', attr, content) }
+      /** @function
+      */
       legend(attr, content)   { return this._tag('legend', attr, content) }
+      /** @function
+      */
       li(attr, content)       { return this._tag('li', attr, content) }
+      /** @function
+      */
       nav(attr, content)      { return this._tag('nav', attr, content) }
+      /** @function
+      */
       optgroup(attr, content) { return this._tag('optgroup', attr, content) }
+      /** @function
+      */
       option(attr, content)   { return this._tag('option', attr, content) }
       /** @function
           @desc Return markup for a select element
@@ -255,10 +283,20 @@ WCom.Util = (function() {
           @returns {string}
       */
       select(attr, content)   { return this._tag('select', attr, content) }
+      /** @function
+      */
       span(attr, content)     { return this._tag('span', attr, content) }
+      /** @function
+      */
       strong(attr, content)   { return this._tag('strong', attr, content) }
+      /** @function
+      */
       table(attr, content)    { return this._tag('table', attr, content) }
+      /** @function
+      */
       tbody(attr, content)    { return this._tag('tbody', attr, content) }
+      /** @function
+      */
       td(attr, content)       { return this._tag('td', attr, content) }
       /** @function
           @desc Return markup for a textarea element
@@ -267,11 +305,23 @@ WCom.Util = (function() {
           @returns {string}
       */
       textarea(attr, content) { return this._tag('textarea', attr, content) }
+      /** @function
+      */
       th(attr, content)       { return this._tag('th', attr, content) }
+      /** @function
+      */
       thead(attr, content)    { return this._tag('thead', attr, content) }
+      /** @function
+      */
       title(attr, content)    { return this._tag('title', attr, content) }
+      /** @function
+      */
       tr(attr, content)       { return this._tag('tr', attr, content) }
+      /** @function
+      */
       ul(attr, content)       { return this._tag('ul', attr, content) }
+      /** @function
+      */
       upload(attr, content)   { return this._tag('upload', attr, content) }
       /** @function
           @desc Return markup for a button input element
@@ -685,6 +735,31 @@ WCom.Util = (function() {
             if (_typeof(s) != 'string') return false;
             if (!s.match(new RegExp(`class="${className}"`))) return false;
             return true;
+         },
+         /** @function
+             @desc Create mouseover title tool tips
+             @param {element} container Element to append the tool tip to
+             @param {string} name Name included in the element id
+             @param {string} title The tips text being displayed
+             @param {number} wait How long to hover for in seconds before tip
+                appears
+         */
+         tooltip: function(container, name, title, wait = 0.85) {
+            const id = `tooltip-${name}`;
+            const attr = { className: 'tooltip hide', id };
+            const tooltip = this.h.div(attr, this.h.frag(title));
+            let timeoutId;
+            container.addEventListener('mouseover', (event) => {
+               event.preventDefault();
+               timeoutId = setTimeout(function() {
+                  tooltip.classList.remove('hide');
+               }, 1000 * wait);
+            });
+            container.addEventListener('mouseout', () => {
+               if (timeoutId) clearTimeout(timeoutId);
+               tooltip.classList.add('hide');
+            });
+            container.appendChild(tooltip);
          }
       },
       /** @mixin
