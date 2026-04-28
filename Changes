@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Tidied some POD
           - Adds tooltips to Util.Markup
           - Adds Navigation footer_template attribute
           - More Navigation JSDoc

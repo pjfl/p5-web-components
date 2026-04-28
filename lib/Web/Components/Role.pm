@@ -20,7 +20,7 @@ Web::Components::Role - Attributes used when instantiating a Web::Components obj
 
 =head1 Description
 
-Attributes used when instantiating a Web::Components object
+Attributes used when instantiating a L<Web::Components> object
 
 =head1 Configuration and Environment
 

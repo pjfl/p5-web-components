@@ -17,6 +17,8 @@ Web::Components::Context - Context base class
 
 =head1 Synopsis
 
+   package MyApp::Context;
+
    use Moo;
 
    extends 'Web::Components::Context';
@@ -31,11 +33,11 @@ Defines the following attributes;
 
 =over 3
 
-=item action
+=item C<action>
 
 Action path of the current request. Immutable string
 
-=item has_action
+=item C<has_action>
 
 Predicate
 
@@ -43,7 +45,7 @@ Predicate
 
 has 'action' => is => 'rw', isa => Str, predicate => 'has_action';
 
-=item body_parameters
+=item C<body_parameters>
 
 Returns a hash reference of the posted body parameters
 
@@ -54,7 +56,7 @@ has 'body_parameters' =>
    isa     => HashRef,
    default => sub { shift->request->body_parameters };
 
-=item button_pressed
+=item C<button_pressed>
 
 Returns the string value of the button that was pressed to submit the form
 
@@ -65,7 +67,7 @@ has 'button_pressed' =>
    isa     => Str,
    default => sub { shift->body_parameters->{_submit} // FALSE };
 
-=item controllers
+=item C<controllers>
 
 A hash reference of controller component objects
 
@@ -73,7 +75,7 @@ A hash reference of controller component objects
 
 has 'controllers' => is => 'ro', isa => HashRef, default => sub { {} };
 
-=item models
+=item C<models>
 
 A hash reference of model component objects
 
@@ -81,7 +83,7 @@ A hash reference of model component objects
 
 has 'models' => is => 'ro', isa => HashRef, default => sub { {} };
 
-=item posted
+=item C<posted>
 
 A boolean which is true if the request is a post
 
@@ -92,7 +94,7 @@ has 'posted' =>
    isa     => Bool,
    default => sub { lc shift->request->method eq 'post' ? TRUE : FALSE };
 
-=item request
+=item C<request>
 
 A weakened reference to the request object
 
@@ -104,7 +106,7 @@ has 'request' =>
    required => TRUE,
    weak_ref => TRUE;
 
-=item session
+=item C<session>
 
 A weakened reference to the session object
 
@@ -115,7 +117,7 @@ has 'session' =>
    weak_ref => TRUE,
    default  => sub { shift->request->session };
 
-=item views
+=item C<views>
 
 A hash reference of view component objects
 
@@ -133,7 +135,9 @@ Defines the following methods;
 
 =over 3
 
-=item clear_redirect
+=item C<clear_redirect>
+
+   $self->clear_redirect;
 
 Clears the redirect key from the stash
 
@@ -143,9 +147,12 @@ sub clear_redirect {
    return delete shift->stash->{redirect};
 }
 
-=item endpoint
+=item C<endpoint>
 
-Last method in the chain of methods called in response to this request
+   $self->endpoint;
+
+Returns the name of the last method in the chain of methods called in response
+to this request
 
 =cut
 
@@ -153,9 +160,12 @@ sub endpoint {
    return (split m{ / }mx, (shift->stash('method_chain') // NUL))[-1];
 }
 
-=item method_chain
+=item C<method_chain>
 
-Returns the supplied action path. Should be overridden in the subclass
+   $chain = $self->method_chain($action);
+
+Returns the supplied C<action> path. Should be overridden in the subclass
+to return the dispatch method chain
 
 =cut
 
@@ -163,7 +173,11 @@ sub method_chain {
    my ($self, $action) = @_; return $action;
 }
 
-=item stash
+=item C<stash>
+
+   $value = $self->stash($key);
+   $value = $self->stash($key => $value, $key2 => $value2, ...);
+   $hash  = $self->stash;
 
 Accessor/mutator for the stash
 
@@ -183,7 +197,9 @@ sub stash {
    return $self->_stash;
 }
 
-=item verify_form_post
+=item C<verify_form_post>
+
+   $reason = $self->verify_form_post;
 
 Should be implemented in the subclass
 
@@ -193,14 +209,16 @@ sub verify_form_post {
    return 'Not implemented';
 }
 
-=item view
+=item C<view>
 
-Returns the object references of the supplied view moniker
+   $view = $self->view($moniker);
+
+Returns the object reference of the supplied view moniker
 
 =cut
 
 sub view {
-   my ($self, $view) = @_; return $self->views->{$view};
+   my ($self, $moniker) = @_; return $self->views->{$moniker};
 }
 
 use namespace::autoclean;

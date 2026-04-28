@@ -861,7 +861,7 @@ sub list {
 
    $self = $self->menu('list name');
 
-If the named list exists add it to the current list. This is how you created
+If the named list exists add it to the current list. This is how you create
 nested lists
 
 =cut

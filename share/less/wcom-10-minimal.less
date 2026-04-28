@@ -1,5 +1,5 @@
 /* @author  pjfl@cpan.org (Peter Flanigan)
- * @version 0.13.55
+ * @version 0.13.56
  */
 @import "wcom-05-constants";
 *, *::before, *::after {
@@ -670,39 +670,41 @@ footer {
         background: var(--bg-dark) !important;
     }
     &.application {
-        --index-width : 18rem;
+        --index-width: 18rem;
+        --font-weight-h2: 350;
     }
     &.restapi {
-        --index-width : 28rem;
+        --index-width: 28rem;
+        --font-weight-h2: normal;
     }
     &.application, &.restapi {
         padding-right: 0.5rem;
         h1, h2, h3, h4 {
-            font-family: #fonts[sans]; font-weight: normal; margin: 0;
-            white-space: nowrap;
+            font-family: #fonts[sans]; font-weight: normal;
+            margin: 0; white-space: nowrap;
         }
         h1 {
-            font-size: 2.25rem; font-weight: 200; letter-spacing: -0.125rem;
-            margin: 0.75rem 1.5rem 1.25rem;
+            font-size: 2.25rem; font-weight: 200;
+            letter-spacing: -0.125rem; margin: 0.75rem 1.5rem 1.25rem;
             &.index {
                 margin: 0.75rem 1rem 1.25rem 0;
             }
         }
         h2 {
-            font-size: 2rem; letter-spacing: -0.0625rem;
-            margin-bottom: 0.75rem;
+            font-size: 2rem; font-weight: var(--font-weight-h2);
+            letter-spacing: -0.0625rem; margin-bottom: 0.75rem;
         }
         h3 {
-            font-size: 1.5rem; font-weight: 500; letter-spacing: -0.03125rem;
-            margin-bottom: 0.75rem;
+            font-size: 1.5rem; font-weight: 500;
+            letter-spacing: -0.03125rem; margin-bottom: 0.75rem;
         }
         h4 {
-            font-size: 1.25rem; font-weight: 400; letter-spacing: -0.0208rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.25rem; font-weight: 400;
+            letter-spacing: -0.0208rem; margin-bottom: 0.5rem;
         }
         h5 {
-            font-size: 1.25rem; font-weight: bold; letter-spacing: -0.01rem;
-            margin: 0.5rem 0 0.25rem 0;
+            font-size: 1.25rem; font-weight: bold;
+            letter-spacing: -0.01rem; margin: 0.5rem 0 0.25rem 0;
         }
         .argument-list, .contents-list {
             background: var(--bg-light);
