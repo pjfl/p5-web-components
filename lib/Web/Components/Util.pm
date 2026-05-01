@@ -11,6 +11,7 @@ use Scalar::Util                      qw( blessed );
 use Sys::Hostname                     qw( hostname );
 use Ref::Util                         qw( is_hashref );
 use JSON::MaybeXS                     qw( );
+use YAML::PP                          qw( );
 use Module::Pluggable::Object;
 use Moo::Role ();
 
@@ -109,6 +110,9 @@ sub dump_file ($$) {
 
    if ($path->extension eq 'json') {
       $path->println(_json_parser()->encode($data))->flush;
+   }
+   elsif ($path->extension eq 'yaml') {
+      $path->println(_yaml_parser()->dump_string($data))->flush;
    }
    else { throw('File type [_1] unsupported', [$path->extension]) }
 
@@ -290,6 +294,9 @@ sub load_file ($;$) {
 
       $data = _json_parser($args)->decode(scalar io($path)->slurp);
    }
+   elsif ($path->extension eq 'yaml') {
+      $data = _yaml_parser()->load_string(scalar io($path)->slurp);
+   }
    else { throw('File type [_1] unsupported', [$path->extension]) }
 
    return $data;
@@ -333,6 +340,15 @@ sub _json_parser {
    return JSON::MaybeXS->new({
       utf8 => 1, pretty => 1, convert_blessed => 1, %{$args}
    });
+}
+
+sub _yaml_parser {
+   my $args = shift // {};
+
+   $args->{indent} //= 3;
+   $args->{schema} //= ['JSON'];
+
+   return YAML::PP->new($args);
 }
 
 sub _qualify {

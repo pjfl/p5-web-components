@@ -30,6 +30,7 @@ my $prereqs  = {
     'Unexpected' => 'v1.0.1',
     'Web::ComposableRequest' => 'v0.21.1',
     'Web::Simple' => '0.033',
+    'YAML::PP' => 'v0.40.0',
     'namespace::autoclean' => '0.29',
     'perl' => '5.010001',
     'strictures' => '2'

@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds support for YAML configuration files
           - Tidied some POD
           - Adds tooltips to Util.Markup
           - Adds Navigation footer_template attribute

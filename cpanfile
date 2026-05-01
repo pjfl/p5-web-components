@@ -16,6 +16,7 @@ requires "Type::Tiny" => "2.002001";
 requires "Unexpected" => "v1.0.1";
 requires "Web::ComposableRequest" => "v0.21.1";
 requires "Web::Simple" => "0.033";
+requires "YAML::PP" => "v0.40.0";
 requires "namespace::autoclean" => "0.29";
 requires "perl" => "5.010001";
 requires "strictures" => "2";
