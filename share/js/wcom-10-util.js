@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.55
+    @version 0.13.58
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -917,7 +917,7 @@ WCom.Util = (function() {
              @param {string} base64String
              @returns {array}
          */
-         decodeBase64(base64String) {
+         decodeBase64: function(base64String) {
             var padding = '='.repeat((4 - base64String.length % 4) % 4);
             var base64 = (base64String + padding)
                 .replace(/\-/g, '+').replace(/_/g, '/');

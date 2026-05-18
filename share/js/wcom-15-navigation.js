@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.55
+    @version 0.13.58
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -111,7 +111,7 @@ WCom.Navigation = (function() {
          this._addPopstateListener();
          this._addResizeListener();
          this._setBodyStyle();
-         this._unregisterServiceWorker();
+         this._registerServiceWorker();
       }
       /** @function
           @desc Attaches 'click' and 'submit' handlers to anchors and forms
@@ -182,30 +182,6 @@ WCom.Navigation = (function() {
          }
          else if (text) { this.renderHTML(text) }
          else { this.logger('warn', `Post ${action} no content/redirect`) }
-      }
-      /** @function
-          @async
-          @desc Register service worker. Logs success at the 'info' level
-      */
-      async registerServiceWorker() {
-         const config = this.serviceWorker;
-         if (!config) return;
-         const worker = window.navigator.serviceWorker;
-         const registration = await worker.register(this.baseURL + config.url);
-         let subscription = await registration.pushManager.getSubscription();
-         if (!subscription) {
-            const url = this.baseURL + config.publickey;
-            const { object } = await this.bitch.sucks(url, {});
-            const publickey = this.decodeBase64(object.publickey);
-            subscription = await registration.pushManager.subscribe({
-               userVisibleOnly: true,
-               applicationServerKey: publickey,
-            });
-         }
-         const url = this.baseURL + config.register;
-         const json = JSON.stringify({ data: { subscription } });
-         const { object } = await this.bitch.blows(url, { json });
-         this.logger('info', object.text);
       }
       /** @function
           @desc Renders messages and the context sensitive menus.
@@ -361,6 +337,32 @@ WCom.Navigation = (function() {
          }
          this.logger('info', 'Recovered state ' + count + ' ' + state.href);
       }
+      async _registerServiceWorker() {
+         const config = this.serviceWorker;
+         if (!config) return;
+         const worker = window.navigator.serviceWorker;
+         const registration = await worker.register(this.baseURL + config.url);
+         let subscription = await registration.pushManager.getSubscription();
+         if (subscription) await subscription.unsubscribe();
+         const publicurl = this.baseURL + config.publickey;
+         const { object } = await this.bitch.sucks(publicurl, {});
+         const publickey = this.decodeBase64(object.publickey);
+         subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: publickey,
+         });
+         if (subscription) {
+            const regurl = this.baseURL + config.register;
+            const json = JSON.stringify({ data: { subscription } });
+            const { object } = await this.bitch.blows(regurl, { json });
+         }
+         worker.addEventListener('message', function (event) {
+            const data = event.data;
+            if (data.events && data.events.length > 0) {
+               this.renderLocation(window.location.href);
+            }
+         }.bind(this));
+      }
       _setBodyStyle() {
          if (!this.features.includes('relative') || !this.baseColour) return;
          document.body.setAttribute('style', '--bg-base: ' + this.baseColour);
@@ -371,15 +373,9 @@ WCom.Navigation = (function() {
          const entry = this.capitalise(this.titleEntry);
          title.replaceWith(this.h.title(this.titleAbbrev + ' - ' + entry));
       }
-      async _unregisterServiceWorker() {
-         const config = this.serviceWorker;
-         if (!config) return;
-         const worker = window.navigator.serviceWorker;
-         const registration = await worker.register(this.baseURL + config.url);
-         if (registration) registration.unregister();
-      }
    }
    Object.assign(Navigation.prototype, WCom.Util.Bitch);
+   Object.assign(Navigation.prototype, WCom.Util.Event);
    Object.assign(Navigation.prototype, WCom.Util.Markup);
    Object.assign(Navigation.prototype, WCom.Util.String);
    /** @class
@@ -1003,12 +999,6 @@ WCom.Navigation = (function() {
          if (el) this.navigator.addEventListeners(el);
       }
       /** @function
-          @desc Registers the service worker
-      */
-      registerServiceWorker() {
-         if (this.navigator) this.navigator.registerServiceWorker();
-      }
-      /** @function
           @desc Fetches and renders the supplied location
           @see {@link Navigation/Navigation#renderLocation|Render location}
           @param {string} href The location to render
@@ -1052,10 +1042,6 @@ WCom.Navigation = (function() {
           @see {@link Navigation/Factory#onContentLoad|Factory on content load}
       */
       onContentLoad: factory.onContentLoad.bind(factory),
-      /** @function
-          @see {@link Navigation/Factory#registerServiceWorker|Register service worker}
-      */
-      registerServiceWorker: factory.registerServiceWorker.bind(factory),
       /** @function
           @see {@link Navigation/Factory#renderLocation|Factory render location}
           @param {string} href The location to render
