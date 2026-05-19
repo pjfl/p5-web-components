@@ -3,7 +3,7 @@ package Web::Components::Model;
 use Web::ComposableRequest::Constants
                           qw( EXCEPTION_CLASS FALSE NUL TRUE );
 use HTTP::Status          qw( HTTP_OK HTTP_INTERNAL_SERVER_ERROR );
-use Unexpected::Types     qw( HashRef LoadableClass Str );
+use Unexpected::Types     qw( Bool HashRef LoadableClass Str );
 use Unexpected::Functions qw( BadCSRFToken UnknownMethod );
 use Scalar::Util          qw( blessed );
 use Web::Components::Util qw( exception throw );
@@ -52,6 +52,22 @@ has 'context_class' =>
       return $config->context_class if $config->can('context_class');
 
       return 'Web::Components::Context';
+   };
+
+=item C<debug>
+
+A boolean which takes it's value from the applications C<DEBUG> environment
+variable
+
+=cut
+
+has 'debug' =>
+   is      => 'lazy',
+   isa     => Bool,
+   default => sub {
+      my $debug = shift->config->appclass->env_var('debug');
+
+      return defined $debug ? ($debug ? TRUE : FALSE) : FALSE;
    };
 
 =item C<navigation_key>

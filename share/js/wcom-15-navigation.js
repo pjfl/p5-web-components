@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.58
+    @version 0.13.59
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -34,9 +34,6 @@ WCom.Navigation = (function() {
              as the '--bg-base' attribute
           @property {string} config.properties.base-url Limits the scope of
              {@link Navigation/Navigation#addEventListeners addEventListeners}.
-             Used by
-             {@link Navigation/Navigation#registerServiceWorker registerServiceWorker}
-             to reach the endpoints provided by it's configuration
           @property {string} config.properties.confirm Used by
              {@link Navigation/Menus#confirmHandler confirmHandler}. The
              '*' character is replaced the the name passed to the method
@@ -90,6 +87,7 @@ WCom.Navigation = (function() {
          this.contentName      = this.properties['content-name'];
          this.controlIcon      = this.properties['control-icon'];
          this.controlTitle     = this.properties['control-title'];
+         this.debug            = this.properties['debug'];
          this.domWait          = this.properties['dom-wait'];
          this.features         = this.properties['features'];
          this.icons            = this.properties['icons'];
@@ -150,11 +148,10 @@ WCom.Navigation = (function() {
           @param {string} message The message that is logged on the server
       */
       logger(level, message) {
-         if (this.loggerURI) {
+         if (this.loggerURI && (level != 'debug' || this.debug)) {
             const url = new URL(this.loggerURI.replace(/\%level/, level));
             this.bitch.blows(url, { json: JSON.stringify({ data: message }) });
          }
-
          if (level == 'debug') { console.debug(message) }
          else if (level == 'error') { console.error(message) }
          else if (level == 'info') { console.info(message) }
@@ -176,7 +173,9 @@ WCom.Navigation = (function() {
          if (location) {
             if (reload) { window.location.href = location }
             else {
-               this.renderLocation(location);
+               const wlh = new URL(window.location.href);
+               const loc = new URL(location);
+               if (loc.pathname != wlh.pathname) this.renderLocation(location);
                this.messages.render(location);
             }
          }
@@ -355,13 +354,8 @@ WCom.Navigation = (function() {
             const regurl = this.baseURL + config.register;
             const json = JSON.stringify({ data: { subscription } });
             const { object } = await this.bitch.blows(regurl, { json });
+            this.logger('debug', object.message);
          }
-         worker.addEventListener('message', function (event) {
-            const data = event.data;
-            if (data.events && data.events.length > 0) {
-               this.renderLocation(window.location.href);
-            }
-         }.bind(this));
       }
       _setBodyStyle() {
          if (!this.features.includes('relative') || !this.baseColour) return;
@@ -375,7 +369,6 @@ WCom.Navigation = (function() {
       }
    }
    Object.assign(Navigation.prototype, WCom.Util.Bitch);
-   Object.assign(Navigation.prototype, WCom.Util.Event);
    Object.assign(Navigation.prototype, WCom.Util.Markup);
    Object.assign(Navigation.prototype, WCom.Util.String);
    /** @class
@@ -511,7 +504,7 @@ WCom.Navigation = (function() {
             if (options.renderLocation) {
                if (options.renderLocation(href, event)) return;
             }
-            WCom.Util.Event.onUnload();
+            WCom.Util.Event.onUnload(href);
             this.navigation.renderLocation(href);
          }.bind(this);
       }
@@ -611,7 +604,7 @@ WCom.Navigation = (function() {
          return function(event) {
             event.preventDefault();
             if (options.onUnload) options.onUnload();
-            else WCom.Util.Event.onUnload();
+            else WCom.Util.Event.onUnload(action);
             if (event.submitter)
                form.setAttribute('submitter', event.submitter.value);
             this.navigation.process(action, form);

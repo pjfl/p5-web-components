@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.58
+    @version 0.13.59
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -604,9 +604,10 @@ WCom.Util = (function() {
          },
          /** @function
              @desc Execute the registered unload callbacks
+             @param {string} uri URI of the location we are navigating to
          */
-         onUnload: function() {
-            for (const cb of registeredOnunloadCallbacks) cb();
+         onUnload: function(uri) {
+            for (const cb of registeredOnunloadCallbacks) cb(uri);
          },
          /** @function
              @desc Register the supplied onload callback

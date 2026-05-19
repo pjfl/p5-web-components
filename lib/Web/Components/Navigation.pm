@@ -3,8 +3,8 @@ package Web::Components::Navigation;
 use Web::ComposableRequest::Constants
                           qw( EXCEPTION_CLASS FALSE NUL SPC TRUE );
 use HTTP::Status          qw( HTTP_OK );
-use Unexpected::Types     qw( ArrayRef Bool HashRef Num
-                              Object PositiveInt ScalarRef Str Undef);
+use Unexpected::Types     qw( ArrayRef HashRef Num Object PositiveInt
+                              ScalarRef Str Undef );
 use HTML::Forms::Util     qw( json_bool );
 use Ref::Util             qw( is_hashref );
 use Scalar::Util          qw( blessed );
@@ -524,6 +524,7 @@ has '_data' =>
                'content-name'     => $self->content_name,
                'control-icon'     => $self->control_icon,
                'control-title'    => $self->control_title,
+               'debug'            => $self->_debug,
                'dom-wait'         => $self->dom_wait,
                'features'         => $context->session->features,
                'icons'            => $self->icons,
@@ -540,6 +541,11 @@ has '_data' =>
          }),
       };
    };
+
+has '_debug' =>
+   is      => 'lazy',
+   isa     => ScalarRef,
+   default => sub { json_bool shift->model->debug };
 
 has '_footer' =>
    is      => 'lazy',
