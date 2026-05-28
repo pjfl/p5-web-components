@@ -1,5 +1,5 @@
 /* @author  pjfl@cpan.org (Peter Flanigan)
- * @version 0.13.58
+ * @version 0.13.60
  */
 @import "wcom-05-constants";
 *, *::before, *::after {
@@ -367,7 +367,7 @@ footer {
         }
         .nav-hamburger {
             align-items: center; display: flex; justify-content: center;
-            padding: 0.375rem 0.25rem 0.375rem 0.5rem;
+            padding: 0.375rem 0.5rem 0.375rem 0.25rem;
             span {
                 cursor: pointer; display: block; font-size: 1.5rem;
                 height: 24px; line-height: 1rem; width: 24px;
@@ -415,7 +415,7 @@ footer {
         height: @nav-header-height; width: @nav-width-both;
         @media (max-width: @lower-break) {
             border-bottom: 1px solid @line-border-light;
-            width: 3.5rem !important;
+            width: 2.5rem !important;
         }
     }
     &.nav-link-icon::before {
@@ -488,6 +488,11 @@ footer {
             content: ''; display: inline-block;
             height: (@nav-header-height - 0.5rem);
             transform: translate(0, 0.2rem); width: 1rem;
+        }
+    }
+    .nav-tab, .nav-tab-add {
+        @media (max-width: @lower-break) {
+            display: none !important;
         }
     }
     .nav-tab {
@@ -580,7 +585,7 @@ footer {
                 width: @nav-indicator-width;
             }
             a, .drop-menu {
-                padding: 0.5rem !important;
+                padding: 0.5rem 0.5rem 0.5rem 0.75rem !important;
             }
         }
         &.global {
@@ -794,12 +799,15 @@ footer {
 .messages-panel {
     bottom: 2rem; left: 1rem; position: absolute; z-index: 7;
     .message-item {
-        background: var(--bg-lighter); border: 2px solid @message-border;
+        background: var(--bg-lighter); border: 2px solid @message-info-border;
         border-radius: 5px; box-shadow: 3px 3px 3px @panel-shadow;
         color: @text-dark; font-family: #fonts[cursive];
         opacity: 1; position: relative; margin-top: 1rem;
         max-width: @message-max-width; padding: 0.5rem;
         transition: opacity 1s; word-wrap: anywhere;
+        &.error {
+            border-color: @message-error-border;
+        }
         &.fade {
             opacity: 0;
         }

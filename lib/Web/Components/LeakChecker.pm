@@ -26,9 +26,20 @@ Check for memory leaks in the context object
 
 =head1 Configuration and Environment
 
-Defines no attributes
+Defines the following attributes;
 
 =over 3
+
+=item C<leak_checking>
+
+Reads the environment variable C<WEB_COMPONENTS_LEAK_CHECK>. If true turn leak
+checking on
+
+=cut
+
+has 'leak_checking' =>
+   is      => 'ro',
+   default => sub { $ENV{WEB_COMPONENTS_LEAK_CHECK} };
 
 =back
 
@@ -40,16 +51,15 @@ Defines the following methods;
 
 =item C<finalise>
 
-Modifies the method in the consuming class. Does nothing unless the environment
-variable C<WEB_COMPONENTS_LEAK_CHECK> is true. If leaks are found log them
-at the debug level
+Modifies the method in the consuming class. Does nothing unless leak checking
+is turned on. If leaks are found log them at the debug level
 
 =cut
 
 around 'finalise' => sub {
    my ($orig, $self, $context) = @_;
 
-   return unless $ENV{WEB_COMPONENTS_LEAK_CHECK};
+   return unless $self->leak_checking;
 
    my $weak_context = $context; weaken $weak_context;
    my @leaks;

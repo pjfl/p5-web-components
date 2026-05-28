@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds audible warning to messages
           - Adds debug attribute to Navigation
           - Adds registerServiceWorker to Navigation
           - Adds support for YAML configuration files

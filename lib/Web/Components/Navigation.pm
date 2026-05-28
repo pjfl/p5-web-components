@@ -627,6 +627,12 @@ has '_messages' =>
          $messages->{'messages-uri'} = $uri->as_string;
       }
 
+      if ($messages->{'beep-uri'}) {
+         my $uri = $context->request->uri_for($messages->{'beep-uri'});
+
+         $messages->{'beep-uri'} = $uri->as_string;
+      }
+
       return $messages;
    };
 

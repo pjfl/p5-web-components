@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.59
+    @version 0.13.60
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -110,6 +110,7 @@ WCom.Navigation = (function() {
          this._addResizeListener();
          this._setBodyStyle();
          this._registerServiceWorker();
+         this._addMessageListener();
       }
       /** @function
           @desc Attaches 'click' and 'submit' handlers to anchors and forms
@@ -152,7 +153,9 @@ WCom.Navigation = (function() {
             const url = new URL(this.loggerURI.replace(/\%level/, level));
             this.bitch.blows(url, { json: JSON.stringify({ data: message }) });
          }
-         if (level == 'debug') { console.debug(message) }
+         if (level == 'debug') {
+            if (this.debug) console.debug(message);
+         }
          else if (level == 'error') { console.error(message) }
          else if (level == 'info') { console.info(message) }
          else if (level == 'warn') { console.warn(message) }
@@ -265,6 +268,15 @@ WCom.Navigation = (function() {
             this.addEventListeners(panel, options);
          }.bind(this), 1000 * this.domWait);
       }
+      _addMessageListener() { // TODO: Prevent multiple listeners
+         const worker = window.navigator.serviceWorker;
+         worker.addEventListener('message', function(event) {
+            const data = event.data;
+            if (data.message && data.message.length > 0) {
+               this.messages.renderMessage(data.message, data.options);
+            }
+         }.bind(this));
+      }
       _addPopstateListener() {
          window.addEventListener('popstate', function(event) {
             const state = event.state;
@@ -345,6 +357,10 @@ WCom.Navigation = (function() {
          if (subscription) await subscription.unsubscribe();
          const publicurl = this.baseURL + config.publickey;
          const { object } = await this.bitch.sucks(publicurl, {});
+         if (!object) {
+            this.logger('error', 'Fetching service worker public key');
+            return;
+         }
          const publickey = this.decodeBase64(object.publickey);
          subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
@@ -769,6 +785,7 @@ WCom.Navigation = (function() {
          const attr = { className: 'messages-panel', id: 'messages' };
          this.panel = this.h.div(attr);
          document.body.append(this.panel);
+         this.beepURI     = options['beep-uri'];
          this.bufferLimit = options['buffer-limit'] || 3;
          this.displayTime = options['display-time'] || 20;
          this.messagesURI = options['messages-uri'];
@@ -793,14 +810,22 @@ WCom.Navigation = (function() {
          const { object } = await this.bitch.sucks(messagesURL);
          if (!object) return;
          for (const message of object) {
-            if (!message) continue;
-            const item = this.h.div({ className: 'message-item' }, message);
-            item.addEventListener('click', function(event) {
-               item.classList.add('hide');
-            });
-            this.panel.appendChild(item);
-            this.items.unshift(item);
-            this._animate(item);
+            if (message) this.renderMessage(message);
+         }
+      }
+      renderMessage(message, options = {}) {
+         const { messageClass, beep } = options;
+         const className = 'message-item'
+               + (messageClass ? ` ${messageClass}` : '');
+         const item = this.h.div({ className }, message);
+         const click = function(event) { item.classList.add('hide') };
+         item.addEventListener('click', click);
+         this.panel.appendChild(item);
+         this.items.unshift(item);
+         this._animate(item);
+         if (this.beepURI && beep) {
+            const audio = new Audio(this.beepURI);
+            audio.play();
          }
          while (this.items.length > this.bufferLimit) {
             this.items.pop().remove();
