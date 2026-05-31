@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.60
+    @version 0.13.61
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -178,12 +178,20 @@ WCom.Navigation = (function() {
             else {
                const wlh = new URL(window.location.href);
                const loc = new URL(location);
+               // TODO: Don't always want this. Some forms redirect to self
                if (loc.pathname != wlh.pathname) this.renderLocation(location);
                this.messages.render(location);
             }
          }
          else if (text) { this.renderHTML(text) }
          else { this.logger('warn', `Post ${action} no content/redirect`) }
+      }
+      /** @function
+          @desc Reload the current page. Prevents the animation and replaces
+             content instead
+      */
+      reload() {
+         this.renderLocation(window.location.href, { animate: false });
       }
       /** @function
           @desc Renders messages and the context sensitive menus.
@@ -202,15 +210,17 @@ WCom.Navigation = (function() {
              {@link Navigation/Navigation#scan Scans} the new panel for anchors
              and forms
           @param {string} html Markup for the content of the new panel
+          @param {object} options If 'animate' is false replace the page
+             without animation even if the feature is turned on
       */
-      renderHTML(html) {
+      renderHTML(html, options = {}) {
          let className = this.containerName;
          if (this.containerLayout) className += ' ' + this.containerLayout;
          this.contentContainer.setAttribute('class', className);
          const attr = { id: this.contentName, className: this.contentName };
          const panel = this.h.div(attr, this.h.frag(html));
          this.contentPanel = document.getElementById(this.contentName);
-         if (this.features.includes('animation')) {
+         if (this.features.includes('animation') && !options.animate) {
             this.contentPanel = this._animatedReplace(panel, this.contentPanel);
          }
          else {
@@ -229,8 +239,10 @@ WCom.Navigation = (function() {
              redirect. Reload and display
              {@link Navigation/Menus#render Menus} if the request was successful
           @param {string} href The URI of the location to fetch and render
+          @param {object} options If 'animate' is false replace the page
+             without animation
       */
-      async renderLocation(href) {
+      async renderLocation(href, options = {}) {
          const url = new URL(href);
          url.searchParams.delete('mid');
          const opt = { headers: { prefer: 'render=partial' }, response: 'text'};
@@ -240,7 +252,7 @@ WCom.Navigation = (function() {
             this._redirectAfterGet(href, location);
          }
          else {
-            if (text && text.length > 0) { this.renderHTML(text) }
+            if (text && text.length > 0) { this.renderHTML(text, options) }
             else {
                this.logger('warn', `Get ${url} no content/redirect`);
                this.renderHTML('');
@@ -1017,6 +1029,13 @@ WCom.Navigation = (function() {
          if (el) this.navigator.addEventListeners(el);
       }
       /** @function
+          @desc Reload the current page
+          @see {@link Navigation/Navigation#reload|Reload location}
+      */
+      reload() {
+         if (this.navigator) this.navigator.reload();
+      }
+      /** @function
           @desc Fetches and renders the supplied location
           @see {@link Navigation/Navigation#renderLocation|Render location}
           @param {string} href The location to render
@@ -1060,6 +1079,10 @@ WCom.Navigation = (function() {
           @see {@link Navigation/Factory#onContentLoad|Factory on content load}
       */
       onContentLoad: factory.onContentLoad.bind(factory),
+      /** @function
+          @see {@link Navigation/Factory#reload|Factory reload location}
+       */
+      reload: factory.reload.bind(factory),
       /** @function
           @see {@link Navigation/Factory#renderLocation|Factory render location}
           @param {string} href The location to render

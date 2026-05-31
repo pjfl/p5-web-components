@@ -1,7 +1,7 @@
 /** @file Web Components - Utilities
     @classdesc Exports mixins used by the other Web Component Modules
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.59
+    @version 0.13.61
     @example Object.assign(YourClass.prototype, WCom.Util.Markup);
 */
 if (!window.WCom) window.WCom = {};
@@ -808,12 +808,20 @@ WCom.Util = (function() {
             };
          },
          /** @function
+             @desc Parse and execute the statements
+             @param {string} statements Static semi-colon separated function
+                call statements to execute
+         */
+         execute: function(statements) {
+            for (const c of this.parseJS(statements)) {
+               c[0].call(c[1], c[2], c[3], c[4], c[5], c[6]);
+            }
+         },
+         /** @function
              @desc Looks up the requested functions on the WCom object. Wraps
                 a call to them and returns it as an event handler
              @param {string} statements Static semi-colon separated function
                 call statements to lookup, inflate, and wrap
-             @param {boolean} allowDefault Unless true default event propagation
-                is prevented
              @returns {function} Event handler function
           */
          getEventHandler: function(statements) {
@@ -852,7 +860,7 @@ WCom.Util = (function() {
                 a callable function, the object it will be bound to, and the
                 arguments should be passed to it when called
          */
-         parseJS(source) {
+         parseJS: function(source) {
             /* Eval string is bad so this instead */
             const tuples = [];
             const statements = source.match(/([^;]+);?[ ]?/g);
