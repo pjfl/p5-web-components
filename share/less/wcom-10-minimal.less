@@ -1,5 +1,5 @@
 /* @author  pjfl@cpan.org (Peter Flanigan)
- * @version 0.13.61
+ * @version 0.13.62
  */
 @import "wcom-05-constants";
 *, *::before, *::after {
@@ -804,8 +804,8 @@ footer {
         opacity: 1; position: relative; margin-top: 1rem;
         max-width: @message-max-width; padding: 0.5rem;
         transition: opacity 1s; word-wrap: anywhere;
-        &.error {
-            border-color: @message-error-border;
+        &.alert {
+            border-color: @message-alert-border;
         }
         &.fade {
             opacity: 0;

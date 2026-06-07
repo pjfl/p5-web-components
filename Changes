@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Adds json_bool to Utils. Removes dependency
           - Adds reload method to Navigation
           - Adds audible warning to messages
           - Adds debug attribute to Navigation

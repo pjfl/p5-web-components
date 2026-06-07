@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.61
+    @version 0.13.62
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -74,7 +74,7 @@ WCom.Navigation = (function() {
              part of the text used in the browser tab and back button
           @property {string} config.properties.verify-token Form posts
              from the menus require this CSRF token to succeed
-       */
+      */
       constructor(container, config) {
          this.container        = container;
          this.moniker          = config['moniker'];
@@ -178,8 +178,10 @@ WCom.Navigation = (function() {
             else {
                const wlh = new URL(window.location.href);
                const loc = new URL(location);
-               // TODO: Don't always want this. Some forms redirect to self
-               if (loc.pathname != wlh.pathname) this.renderLocation(location);
+               const reload = loc.searchParams.get('noreload') ? false : true;
+               if (reload && loc.pathname != wlh.pathname) {
+                  this.renderLocation(location);
+               }
                this.messages.render(location);
             }
          }
@@ -280,14 +282,17 @@ WCom.Navigation = (function() {
             this.addEventListeners(panel, options);
          }.bind(this), 1000 * this.domWait);
       }
-      _addMessageListener() { // TODO: Prevent multiple listeners
-         const worker = window.navigator.serviceWorker;
-         worker.addEventListener('message', function(event) {
+      _addMessageListener() {
+         if (this._messageListenerAdded) return;
+         const handler = function(event) {
             const data = event.data;
             if (data.message && data.message.length > 0) {
                this.messages.renderMessage(data.message, data.options);
             }
-         }.bind(this));
+         }.bind(this);
+         const worker = window.navigator.serviceWorker;
+         worker.addEventListener('message', handler);
+         this._messageListenerAdded = true;
       }
       _addPopstateListener() {
          window.addEventListener('popstate', function(event) {
@@ -360,10 +365,14 @@ WCom.Navigation = (function() {
          }
          this.logger('info', 'Recovered state ' + count + ' ' + state.href);
       }
-      async _registerServiceWorker() {
+      async _registerServiceWorker() { // TODO: This is not working properly
+         // VAPID keys expire after 86400 secs. When expired does unsubscribe
+         // fail?
          const config = this.serviceWorker;
          if (!config) return;
          const worker = window.navigator.serviceWorker;
+         const registrations = await worker.getRegistrations();
+         for (const oldreg of registrations) await oldreg.unregister();
          const registration = await worker.register(this.baseURL + config.url);
          let subscription = await registration.pushManager.getSubscription();
          if (subscription) await subscription.unsubscribe();
@@ -501,6 +510,7 @@ WCom.Navigation = (function() {
       constructor(navigation, config) {
          this.config        = config;
          this.navigation    = navigation;
+         this.confirm       = navigation.confirm || 'Are you sure?';
          this.container     = navigation.container;
          this.controlIcon   = navigation.controlIcon || 'settings';
          this.controlTitle  = navigation.controlTitle || 'Control';
@@ -545,10 +555,8 @@ WCom.Navigation = (function() {
       */
       confirmHandler(name) {
          return function(event) {
-            if (this.confirm) {
-               if (confirm(this.confirm.replace(/\*/, name))) return true;
-            }
-            else if (confirm()) return true;
+            const message = this.confirm;
+            if (confirm(message.replace(/\*/, name))) return true;
             event.preventDefault();
             return false;
          }.bind(this);
@@ -826,9 +834,8 @@ WCom.Navigation = (function() {
          }
       }
       renderMessage(message, options = {}) {
-         const { messageClass, beep } = options;
-         const className = 'message-item'
-               + (messageClass ? ` ${messageClass}` : '');
+         const { status, beep } = options;
+         const className = 'message-item' + (status ? ` ${status}` : '');
          const item = this.h.div({ className }, message);
          const click = function(event) { item.classList.add('hide') };
          item.addEventListener('click', click);

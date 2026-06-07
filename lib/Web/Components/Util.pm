@@ -16,7 +16,7 @@ use Module::Pluggable::Object;
 use Moo::Role ();
 
 our @EXPORT_OK = qw( build_routes clear_redirect deref dump_file
-                     exception first_char formpost forward fqdn
+                     exception first_char formpost forward fqdn json_bool
                      load_components load_file ns_environment throw );
 
 =pod
@@ -187,6 +187,19 @@ Call C<gethostbyname> on the supplied hostname which defaults to this host
 
 sub fqdn (;$) {
    my $x = shift // hostname; return (gethostbyname($x))[0];
+}
+
+=item json_bool
+
+   $scalar_ref = json_bool $scalar;
+
+Evaluates the scalar value provided and returns references to true/false values
+for serialising to JSON
+
+=cut
+
+sub json_bool ($) {
+   return (shift) ? \1 : \0;
 }
 
 =item C<load_components>

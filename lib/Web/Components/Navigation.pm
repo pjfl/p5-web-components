@@ -5,12 +5,11 @@ use Web::ComposableRequest::Constants
 use HTTP::Status          qw( HTTP_OK );
 use Unexpected::Types     qw( ArrayRef HashRef Num Object PositiveInt
                               ScalarRef Str Undef );
-use HTML::Forms::Util     qw( json_bool );
 use Ref::Util             qw( is_hashref );
 use Scalar::Util          qw( blessed );
 use Type::Utils           qw( class_type );
 use Unexpected::Functions qw( UnknownMethod Unspecified );
-use Web::Components::Util qw( clear_redirect formpost throw );
+use Web::Components::Util qw( clear_redirect formpost json_bool throw );
 use HTML::Tiny;
 use JSON::MaybeXS;
 use Try::Tiny;
@@ -57,11 +56,14 @@ has 'authorised_method' => is => 'ro', isa => Str, default => 'is_authorised';
 
 =item C<confirm_message>
 
-Immutable string. The default "Are you sure ?" message
+Immutable string. The default "Are you sure?" message
 
 =cut
 
-has 'confirm_message' => is => 'ro', isa => Str, default => 'Are you sure ?';
+has 'confirm_message' =>
+   is      => 'ro',
+   isa     => Str,
+   default => 'Are you sure about that?';
 
 =item C<container_class>
 
@@ -505,6 +507,7 @@ has '_data' =>
       my $self     = shift;
       my $context  = $self->context;
       my $location = 'navigation-' . $self->menu_location;
+      my $features = [ @{$context->session->features} ];
 
       return {
          'id'    => 'navigation',
@@ -526,13 +529,13 @@ has '_data' =>
                'control-title'    => $self->control_title,
                'debug'            => $self->_debug,
                'dom-wait'         => $self->dom_wait,
-               'features'         => $context->session->features,
+               'features'         => $features,
                'icons'            => $self->icons,
                'link-display'     => $self->link_display,
                'location'         => $self->menu_location,
                'logger-uri'       => $self->_logger_uri,
                'media-break'      => $self->media_break,
-               'service-worker'   => $self->service_worker,
+               'service-worker'   => { %{$self->service_worker} },
                'skin'             => $self->_skin,
                'title-abbrev'     => $self->title_abbrev,
                'title-entry'      => $self->title_entry,
