@@ -1,5 +1,6 @@
 Revision history for Web::Components
 
+          - Supports message options in redirects
           - Adds json_bool to Utils. Removes dependency
           - Adds reload method to Navigation
           - Adds audible warning to messages

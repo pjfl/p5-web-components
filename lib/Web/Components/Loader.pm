@@ -306,9 +306,10 @@ sub _redirect {
          my $session = $req->session;
 
          if ($session->can('add_status_message')) {
-            if (my $mid = $session->add_status_message($message)) {
-               $location->query_form($location->query_form, 'mid' => $mid);
-            }
+            my $options = $redirect->{message_options};
+            my $mid     = $session->add_status_message($message, $options);
+
+            $location->query_form($location->query_form, 'mid' => $mid) if $mid;
          }
       }
    }

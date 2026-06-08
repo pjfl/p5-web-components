@@ -4,7 +4,7 @@
        context sensitive menus. Loads and displays server messages. Load caches
        and displays footers
     @author pjfl@cpan.org (Peter Flanigan)
-    @version 0.13.62
+    @version 0.13.63
     @alias WCom/Navigation
 */
 WCom.Navigation = (function() {
@@ -829,8 +829,8 @@ WCom.Navigation = (function() {
          messagesURL.searchParams.set('mid', mid);
          const { object } = await this.bitch.sucks(messagesURL);
          if (!object) return;
-         for (const message of object) {
-            if (message) this.renderMessage(message);
+         for (const item of object) {
+            if (item) this.renderMessage(item.message, item);
          }
       }
       renderMessage(message, options = {}) {
